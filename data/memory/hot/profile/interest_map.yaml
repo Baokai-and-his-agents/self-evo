@@ -1,0 +1,10 @@
+version: 0.1
+
+interests:
+  - name: autonomous_agent_workflows
+    status: active
+    notes: "Designing a local Code worker that learns, executes, records evidence, and collaborates through GitHub Issues."
+
+negative_patterns:
+  - name: unreviewable_autonomy
+    notes: "Avoid agent behavior that changes rules or uses resources without explicit approval."

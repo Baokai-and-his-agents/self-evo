@@ -1,0 +1,4 @@
+# The agent account should not be able to approve or bypass these paths.
+
+/rules/ @jlcbk
+/.github/CODEOWNERS @jlcbk

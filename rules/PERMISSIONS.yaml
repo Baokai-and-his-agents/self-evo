@@ -1,0 +1,63 @@
+# Permission and path policy for local Code workers.
+
+version: 0.1
+
+path_permissions:
+  rules:
+    path: "rules/**"
+    access: read_only
+    note: "Agent must not directly edit rules. Propose changes under data/proposals/rule_changes/."
+
+  data:
+    path: "data/**"
+    access: read_write
+    note: "Primary workspace for notes, runs, exploration, proposals, and memory candidates."
+
+  state:
+    path: "state/**"
+    access: read_write
+    note: "Runtime claims, locks, and heartbeat files."
+
+  docs:
+    path: "docs/**"
+    access: proposal_required
+    note: "Blueprint and long-term docs. Changes should be tied to an issue or explicit user request."
+
+  github_config:
+    path: ".github/**"
+    access: proposal_required
+    note: "GitHub templates and protection-related files should be reviewed by the human owner."
+
+allowed_without_human_confirmation:
+  - read_repository_files
+  - write_data_files
+  - write_state_files
+  - summarize_approved_sources
+  - create_local_notes
+  - create_run_summaries
+  - propose_rule_changes
+  - push_agent_named_branch
+  - create_draft_pr
+
+requires_human_confirmation:
+  - modify_rules_files
+  - use_unapproved_external_resource
+  - install_global_software
+  - modify_system_environment
+  - use_private_account
+  - use_api_token_or_private_credential
+  - use_paid_service
+  - use_server_gpu_or_cloud_resource
+  - push_main_or_protected_branch
+  - mark_pr_ready_for_review
+  - merge_pr
+  - deploy_to_production
+  - contact_real_users_or_customers
+
+forbidden:
+  - delete_important_data_without_explicit_request
+  - read_or_upload_private_keys_tokens_or_passwords
+  - execute_blockchain_transaction
+  - mass_post_or_auto_dm
+  - bypass_platform_limits
+  - publicly_publish_without_confirmation

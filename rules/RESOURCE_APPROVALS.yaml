@@ -1,0 +1,45 @@
+# Approved external resources.
+#
+# The agent may only use a resource when:
+# - status is approved
+# - the intended use is inside scope
+# - budget and expiration limits are respected
+#
+# Never store secrets here. Use credential_ref such as env:NAME.
+
+version: 0.1
+
+resources:
+  - id: github-repo-issue-and-branch-work
+    type: github
+    provider: GitHub
+    status: approved
+    scope:
+      - read_issues
+      - comment_on_issues
+      - create_agent_branches
+      - push_agent_named_branches
+      - create_draft_prs
+    credential_ref: agent_github_account
+    cost_limit_usd_per_day: 0
+    runtime_limit_minutes_per_day: null
+    expires_at: null
+    approved_by: user
+    approved_at: 2026-06-18
+    notes: "Does not include admin, bypass branch protection, merging PRs, or modifying protected branches."
+
+  - id: public-web-read
+    type: network
+    provider: public_web
+    status: pending
+    scope:
+      - read_public_pages
+      - search_public_web
+      - read_public_docs
+    credential_ref: none
+    cost_limit_usd_per_day: 0
+    runtime_limit_minutes_per_day: null
+    expires_at: null
+    approved_by: null
+    approved_at: null
+    notes: "Pending until the user explicitly approves public web access for autonomous exploration."
