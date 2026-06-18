@@ -14,10 +14,14 @@ No claimed tasks yet.
 
 ## Review
 
+No tasks awaiting review.
+
+## Done
+
 ### T-20260618-001 · Issue #1
 
 - type: review
-- status: review
+- status: done
 - risk: low
 - permission: data-write
 - goal: 对本仓库的本地 Code worker 协议做一次低风险 dry run,验证 agent 能否按规则工作
@@ -37,8 +41,7 @@ No claimed tasks yet.
 - released_at: 2026-06-18T11:49:11+0800
 - claim: released(lease removed)
 - heartbeat: stopped
-- delivery: draft PR opened by `clawbie` agent account for `jlcbk` review/merge(PR URL 见 issue #1 comment)
-
-## Done
-
-No completed tasks yet.
+- delivery: PR #3 opened by `clawbie`, approved by `jlcbk`, and merged
+- merge_commit: 59be7ede916493cb74e26ab633281910833cfd92
+- issue_state: closed
+- completed_at: 2026-06-18
