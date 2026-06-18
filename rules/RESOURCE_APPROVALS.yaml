@@ -31,7 +31,7 @@ resources:
   - id: public-web-read
     type: network
     provider: public_web
-    status: pending
+    status: approved
     scope:
       - read_public_pages
       - search_public_web
@@ -40,6 +40,6 @@ resources:
     cost_limit_usd_per_day: 0
     runtime_limit_minutes_per_day: null
     expires_at: null
-    approved_by: null
-    approved_at: null
-    notes: "Pending until the user explicitly approves public web access for autonomous exploration."
+    approved_by: user
+    approved_at: 2026-06-18
+    notes: "Read-only public web access. Does not permit login, form submission, posting, messaging, purchases, downloads requiring confirmation, or use of private credentials."

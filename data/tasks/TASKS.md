@@ -32,6 +32,10 @@ No open tasks.
 - lease_until: 2026-06-18T13:36:07+0800
 - claimed_at: 2026-06-18T10:36:07+0800
 
+## Review
+
+No tasks awaiting review yet.
+
 ## Done
 
 No completed tasks yet.
