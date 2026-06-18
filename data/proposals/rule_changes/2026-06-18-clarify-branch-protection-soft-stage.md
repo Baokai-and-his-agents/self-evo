@@ -4,7 +4,8 @@
 - run_id: 2026-06-18-run-001
 - related_issue: 1
 - date: 2026-06-18
-- status: proposed
+- status: implemented
+- resolved_via: PR #2 (commit fd0930d, 2026-06-18) 「Tighten agent delivery and access rules」
 
 ## 目标规则文件
 
@@ -12,7 +13,7 @@
 
 ## 现状与问题
 
-`rules/GITHUB_POLICY.md` 的「Main Branch」小节写道:
+`rules/GITHUB_POLICY.md` 的「Main Branch」小节原写道:
 
 > `main` should be protected:
 > - no direct pushes
@@ -20,13 +21,13 @@
 > - code owner review required for `rules/**`
 > - agent account cannot bypass protection
 
-但当前仓库的 main 分支保护**未在 GitHub 实际配置**;`.github/CODEOWNERS` 已写入 `@jlcbk`,但只构成软提示。也就是说,规则文件描述的是一个尚未落地、靠 agent 自觉与后续人工 review 兜底的状态。
+但当时 main 分支保护未在 GitHub 实际配置;`.github/CODEOWNERS` 已写入 `@jlcbk`,但只构成软提示。规则文件描述的是一个尚未落地、靠 agent 自觉与后续人工 review 兜底的状态。
 
-风险:规则文本与现实不一致,可能让后续 worker(或多 worker 场景)误以为 `rules/**` 已有硬保护,从而降低警觉;也可能误导人类协作者。
+风险:规则文本与现实不一致,可能让后续 worker(或多 worker 场景)误以为 `rules/**` 已有硬保护,从而降低警觉。
 
 ## 建议的修改(供用户审阅后写入)
 
-在「Main Branch」小节增加阶段性说明,明确当前为软约束阶段,例如:
+在「Main Branch」小节增加阶段性说明,明确当前为软约束阶段:
 
 ```md
 ## Main Branch
@@ -57,6 +58,8 @@
 - `data/runs/2026-06-18/run-001.summary.md`
 - 用户确认:`.github/CODEOWNERS` 当前为软规则约束(对话 2026-06-18)。
 
-## 备注
+## Resolution (2026-06-18)
 
-本提案仅为「阶段说明」的增量。真正的修复是落实 MVP 1.5(GitHub 分支保护 / rulesets),那是配置动作,不属于 agent 可直接执行的范围,需用户在 GitHub 侧操作。
+已落实(implemented)。`jlcbk` 通过 **PR #2**「Tighten agent delivery and access rules」在 `rules/GITHUB_POLICY.md`「Main Branch」小节加入了 stage note,记录了当前为软约束阶段、当前 plan 不暴露分支保护/rulesets,以及 MVP 1.5 待办。本提案建议的文字已进入 `main`,故标记为 implemented;不再需要人类对该提案做进一步决定。
+
+真正的硬保护(GitHub branch protection / rulesets)仍留待 MVP 1.5,那属于人类在 GitHub 侧的配置动作。
