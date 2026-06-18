@@ -22,6 +22,7 @@ from __future__ import annotations
 import fnmatch
 import json
 import os
+import re
 from typing import Any, Iterable
 
 # --------------------------------------------------------------------------- #
@@ -214,12 +215,152 @@ def classify_command(command: str, policy: dict[str, Any]) -> list[dict[str, str
 
 
 # --------------------------------------------------------------------------- #
+# Shell-write classification (pure, best-effort)                              #
+# --------------------------------------------------------------------------- #
+
+def _strip_quotes(token: str) -> str:
+    token = token.strip()
+    if len(token) >= 2 and token[0] in "\"'" and token[-1] == token[0]:
+        return token[1:-1]
+    return token
+
+
+# Tokens that appear after a redirect/operator but are not file targets.
+_NON_FILE_TARGETS = {"&1", "&2", "&-", "/dev/null", "nul", "con", "prn", "aux"}
+
+
+def _extract_write_paths(command: str) -> list[str]:
+    """Best-effort extraction of file paths a shell command writes to.
+
+    Covers the deterministic write surfaces across Bash and PowerShell:
+    redirections (``>``/``>>``/``1>``/``&>``), ``tee``/``Tee-Object``, the
+    PowerShell content cmdlets (``Set-Content``/``Add-Content``/``Out-File``/
+    ``New-Item``/``Clear-Content``), ``cp``/``mv``/``Copy-Item``/``Move-Item``
+    destinations, ``[System.IO.File]::WriteAllText`` style writes, and the
+    common ``python|node|perl -c "<inline open(...)>"`` interpreter pattern.
+
+    Arbitrary interpreter writes (``python -c "..."``) cannot be perfectly
+    classified before execution; we catch the common inline ``open(...)``
+    pattern and rely on the Stop hook's committed-diff check as the reliable
+    backstop for anything that slips through. See scripts/README.md.
+    """
+    paths: list[str] = []
+
+    def add(tok: str) -> None:
+        tok = _strip_quotes(tok)
+        if tok and tok.lower() not in _NON_FILE_TARGETS and not tok.startswith("-"):
+            paths.append(tok)
+
+    # 1. Redirections:  >  >>  1>  2>  &>  (skip 2>&1 / >&2 / &-).
+    for m in re.finditer(
+        r"(?:\d|&)?>{1,2}\s*(\"[^\"]+\"|'[^']+'|[^\s|;&<>]+)", command
+    ):
+        add(m.group(1))
+
+    # 2. tee / Tee-Object <target>  (optional flags / -FilePath).
+    for m in re.finditer(
+        r"\b(?:tee|Tee-Object)\b(?:\s+-(?:[A-Za-z]+))*(?:\s+(?:-FilePath|-Path))?\s+"
+        r"(\"[^\"]+\"|'[^']+'|[^\s|;&]+)",
+        command, re.I,
+    ):
+        add(m.group(1))
+
+    # 3. PowerShell write cmdlets with an explicit -Path / -FilePath.
+    for m in re.finditer(
+        r"\b(?:Set-Content|Add-Content|Out-File|Tee-Object|New-Item|Clear-Content)\b"
+        r"[^|;&\n]*?(?:-Path|-FilePath)\s+(\"[^\"]+\"|'[^']+'|[^\s|;&]+)",
+        command, re.I,
+    ):
+        add(m.group(1))
+
+    # 4. PowerShell write cmdlets positional: Set-Content <path> ...
+    for m in re.finditer(
+        r"\b(?:Set-Content|Add-Content|Out-File)\s+(\"[^\"]+\"|'[^']+'|[^\s|;&]+)",
+        command, re.I,
+    ):
+        add(m.group(1))
+
+    # 5. cp/mv/Copy-Item/Move-Item — destination is the last non-flag token.
+    for m in re.finditer(r"\b(?:cp|mv|copy|move|Copy-Item|Move-Item)\b(.+)", command, re.I):
+        toks = re.findall(r"(\"[^\"]+\"|'[^']+'|[^\s]+)", m.group(1))
+        toks = [t for t in toks if not _strip_quotes(t).startswith("-")]
+        if len(toks) >= 2:
+            add(toks[-1])
+
+    # 6. .NET static file writes: [System.IO.File]::WriteAllText('path', ...)
+    for m in re.finditer(
+        r"\[?(?:System\.IO\.File|IO\.File|io\.file)\]?\s*::\s*"
+        r"(?:WriteAll(?:Text|Lines|Bytes)|AppendAll(?:Text|Lines))\s*\(\s*"
+        r"(\"[^\"]+\"|'[^']+'|[^,)\s]+)",
+        command, re.I,
+    ):
+        add(m.group(1))
+
+    # 7. Interpreter inline write: python -c "...open('path','w')..."
+    for m in re.finditer(
+        r"(?:python|python3|py|node|perl|ruby)\b(?:\s+-\S+)*\s+(?:-c|-e)\s+"
+        r"(\"[^\"]*\"|'[^']*')",
+        command, re.I,
+    ):
+        snippet = m.group(1)
+        for om in re.finditer(
+            r"(?:open|WriteAllText|WriteAllLines|AppendAllText)\s*\(\s*"
+            r"([\"'][^\"']+[\"'])", snippet, re.I,
+        ):
+            add(om.group(1))
+
+    return [p for p in paths if p]
+
+
+def classify_shell_write(command: str, policy: dict[str, Any]) -> list[dict[str, Any]]:
+    """Detect shell-level writes to protected / out-of-zone paths.
+
+    Returns one finding per distinct write target that lands in a read-only,
+    protected, proposal-required, or outside zone. read_write/authorized_write
+    targets produce no finding. Detection is best-effort and intentionally
+    conservative; the Stop hook's committed-diff check is the reliable backstop.
+    """
+    findings: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    for path in _extract_write_paths(command):
+        key = path.replace("\\", "/")
+        if key in seen:
+            continue
+        seen.add(key)
+        zone = classify_path(path, policy)
+        if zone == "read_only":
+            findings.append(_finding(
+                "BLOCK", "shell_write_to_rules",
+                f"Shell write to read-only zone ({zone})"))
+        elif zone in ("protected_claude_config", "protected_hook_implementation"):
+            findings.append(_finding(
+                "BLOCK", "shell_write_to_protected",
+                f"Shell write to protected path ({zone})"))
+        elif zone == "proposal_required":
+            findings.append(_finding(
+                "WARN", "shell_write_proposal_required",
+                f"Shell write to proposal-required zone ({zone})"))
+        elif zone == "outside":
+            findings.append(_finding(
+                "BLOCK", "shell_write_outside",
+                "Shell write outside authorized repository paths"))
+        # read_write / authorized_write -> allow, no finding.
+    return findings
+
+
+# --------------------------------------------------------------------------- #
 # Tool-use classification (pure)                                             #
 # --------------------------------------------------------------------------- #
 
 # Tools whose tool_input carries a writable file path.
 WRITE_TOOLS = {"Write", "Edit", "MultiEdit", "NotebookEdit"}
 READ_TOOLS = {"Read"}
+
+# Tools whose tool_input carries a shell command string. Claude Code 2.1.174+
+# ships a first-class PowerShell tool alongside Bash; both carry a "command"
+# field and must be inspected identically for dangerous operations and shell
+# writes. (PowerShell may also expose the script under "script".)
+SHELL_TOOLS = {"Bash", "PowerShell"}
 
 
 def classify_tool_use(
@@ -254,13 +395,15 @@ def classify_tool_use(
         # read_write / authorized_write -> allow, no finding.
         return findings
 
-    if tool_name == "Bash":
-        command = tool_input.get("command", "") or ""
-        # First, dangerous command patterns -> BLOCK.
+    if tool_name in SHELL_TOOLS:
+        # Bash and the first-class PowerShell tool both carry a command string.
+        command = (tool_input.get("command") or tool_input.get("script") or "")
+        # Dangerous command patterns -> BLOCK (shell-agnostic substrings).
         for f in classify_command(command, policy):
             code = f["code"]
             findings.append(_finding("BLOCK", code, f["reason"], pattern=f["pattern"]))
-        # If no dangerous command, an ordinary git push to a non-protected ref is allowed.
+        # Shell writes to protected / out-of-zone paths -> BLOCK/WARN.
+        findings.extend(classify_shell_write(command, policy))
         return findings
 
     if tool_name in READ_TOOLS:
