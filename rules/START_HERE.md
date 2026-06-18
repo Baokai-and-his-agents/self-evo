@@ -59,5 +59,8 @@ Write:
 1. A GitHub Issue progress or completion comment.
 2. A run summary under `data/runs/<date>/<run-id>.summary.md`.
 3. `data/tasks/REVIEW.md` if anything needs human confirmation.
+4. If tracked files changed, push the agent branch and create a draft PR from the agent GitHub account.
+5. If the issue moves to `status:review`, release the active claim and mark the worker heartbeat idle or stopped.
+6. Synchronize `data/tasks/TASKS.md` with the final GitHub Issue status for this run.
 
 If the work is incomplete, explain the exact next step and whether the current lease should continue.

@@ -72,6 +72,36 @@ For every run:
 
 Do not silently work on multiple issues in one run.
 
+## File Delivery And Pull Requests
+
+If a run changes any tracked repository file, the worker that performed the work must:
+
+1. Commit the changes on its agent-named branch.
+2. Push that branch using the agent GitHub account.
+3. Create a draft PR using the same agent GitHub account.
+4. Link the PR to the GitHub Issue.
+5. Leave the PR for human review and merge.
+
+Issue comments alone are sufficient only when the run produces no tracked file changes.
+
+The human account owns approval, rule changes, protected configuration, and merges. An agent must not ask the human account to create the agent's delivery PR because doing so would blur authorship and audit identity.
+
+## Review Transition And Claim Release
+
+GitHub Issue labels and comments are the authoritative coordination state.
+
+Before changing an issue to `status:review`, the worker must:
+
+1. Finish and push all file changes.
+2. Create the required draft PR when files changed.
+3. Update its claim record to `released` or `review`.
+4. Record `released_at` and remove the active lease.
+5. Mark its heartbeat `idle` or `stopped`.
+6. Move the local task mirror from Claimed or Running to Review.
+7. Add a final Issue comment with the PR, outputs, checks, risks, and requested human action.
+
+If work remains active, keep the issue in `status:claimed`, `status:running`, or `status:blocked` and explicitly state whether the lease remains valid.
+
 ## Exploration Workflow
 
 When an issue describes a broad direction, treat it as an exploration program.
@@ -115,6 +145,8 @@ If the resource is missing, expired, over budget, or out of scope:
 4. Continue only with safe subtasks, or stop if blocked.
 
 Never write secrets, tokens, passwords, or private keys into repository files.
+
+Approved public web read access is still read-only. It does not authorize account login, form submission, posting, messaging, purchases, or use of private credentials.
 
 ## Run Logs And Evidence
 

@@ -53,6 +53,8 @@ Agent claim:
 
 If an issue already has an active claim, do not work on it unless the lease has expired or the user explicitly asks you to continue it.
 
+GitHub labels and Issue comments are authoritative. Files under `state/claims/` and `data/tasks/TASKS.md` are coordination mirrors and must be synchronized before a run stops.
+
 ## Branch Naming
 
 Use:
@@ -68,9 +70,23 @@ A completed task should include:
 - issue progress or completion comment
 - run summary under `data/runs/`
 - changed files or output locations
+- draft PR created by the executing agent account whenever tracked files changed
 - sources and evidence
 - tests or checks when applicable
 - blockers and review requests
+
+## Review And Claim Release
+
+When work is ready for human review:
+
+1. Push the agent branch.
+2. Create a draft PR if tracked files changed.
+3. Change the Issue status to `status:review`.
+4. Mark the claim record `released` or `review` and record `released_at`.
+5. Mark the worker heartbeat `idle` or `stopped`.
+6. Move the local task mirror to a Review section.
+
+Do not leave an active lease or a Claimed task mirror after the Issue has entered `status:review`.
 
 ## Long-Running Directions
 
