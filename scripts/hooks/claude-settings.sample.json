@@ -1,0 +1,36 @@
+{
+  "_README": "SAMPLE ONLY — do not consume directly. Copy the 'hooks' block below into the project's .claude/settings.json (or merge it). Project-level Claude config is a protected path under this repo's policy, so the agent does not install this file itself; jlcbk owns the install. The committed rollout default is 'audit' (see scripts/hooks/config.json), so installing this sample alone does NOT block anything until the mode is raised.",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 scripts/hooks/pretooluse.py",
+            "_windows_command": "pwsh -NoProfile -File scripts/hooks/pretool-use.ps1",
+            "_note": "Use the _windows_command variant on the Windows PowerShell workspace."
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 scripts/hooks/stop.py",
+            "_windows_command": "pwsh -NoProfile -File scripts/hooks/stop.ps1"
+          }
+        ]
+      }
+    ]
+  },
+  "_enabling_modes": {
+    "audit": "default; no change needed. Findings only.",
+    "pretool-enforce": "export SELF_EVO_ROLLOUT_MODE=pretool-enforce, or set rollout_mode in scripts/hooks/config.json. PreToolUse blocks; Stop stays advisory.",
+    "full-enforce": "export SELF_EVO_ROLLOUT_MODE=full-enforce. Both hooks may block. Enable only after reviewing audit findings."
+  },
+  "_rollback": "Set SELF_EVO_ROLLOUT_MODE=audit, or delete the hooks block from .claude/settings.json and restart Claude Code. SELF_EVO_STOP_GUARD=1 escapes a Stop loop."
+}

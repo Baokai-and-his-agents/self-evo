@@ -10,7 +10,21 @@ No open tasks.
 
 ## Claimed
 
-No claimed tasks yet.
+### T-20260618-002 · Issue #5
+
+- type: build
+- status: claimed
+- risk: medium
+- permission: repo-branch-write
+- goal: 实现 MVP 1.5 — 只读 run validator + Claude Code PreToolUse/Stop 安全 hooks，默认 rollout 模式 audit
+- source: https://github.com/Baokai-and-his-agents/self-evo/issues/5
+- branch: agent/local-code-worker-01/5-hooks-validator
+- github_issue: 5
+- worker_identity: local-code-worker-01
+- run_id: 2026-06-18-run-002
+- claimed_at: 2026-06-18T17:11:00+0800
+- lease_until: 2026-06-18T20:11:00+0800
+- heartbeat: running
 
 ## Review
 

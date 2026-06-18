@@ -12,7 +12,12 @@ Use this for:
 
 ## Pending
 
-No pending review items.
+### R-20260618-003 — 项目级 Claude hooks 接线(待 jlcbk 确认)
+
+- 来源:Issue #5,run 2026-06-18-run-002。
+- 请求:`jlcbk` 将 `scripts/hooks/claude-settings.sample.json` 的 `hooks` 块安装到受保护的 `.claude/settings.json`;确认目标工作区存在 Python 3(文档化前置,agent 不安装);决定何时(是否)将 rollout 模式从 `audit` 提升。
+- 详情:`data/proposals/rule_changes/2026-06-18-issue5-claude-hooks-wiring.md`。
+- 风险:子串式命令匹配与启发式密钥检测存在误报/漏报;enforce 模式可能拒读命名合理的非密钥文件。提升模式前建议先在 `audit` 下审阅 `data/audit/hook-audit.jsonl`。
 
 ## Resolved
 
