@@ -12,6 +12,10 @@ No synced tasks yet.
 
 No claimed tasks yet.
 
+## Review
+
+No tasks awaiting review yet.
+
 ## Done
 
 No completed tasks yet.
