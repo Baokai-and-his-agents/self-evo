@@ -4,6 +4,6 @@
   "run_id": "2026-06-18-run-001",
   "branch": "agent/local-code-worker-01/1-protocol-dry-run",
   "claimed_at": "2026-06-18T10:36:07+0800",
-  "lease_until": "2026-06-18T13:36:07+0800",
-  "status": "claimed"
+  "released_at": "2026-06-18T11:49:11+0800",
+  "status": "released"
 }
