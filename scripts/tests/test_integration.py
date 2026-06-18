@@ -271,11 +271,59 @@ def test_audit_log_on_disk_secrecy():
            and "command" not in entry, str(entry))
 
 
+def test_run_summary_run_specific_real_files():
+    """Review iteration 3: with a concrete run_id known, an issue-only
+    reference in a DIFFERENT run's summary must NOT satisfy the active run."""
+    print("\n== Run-summary run-specificity with real files (review iter 3) ==")
+    tmp = tempfile.mkdtemp(prefix="selfevo-rsid-")
+    try:
+        rundir = os.path.join(tmp, "data", "runs", "2026-06-18")
+        os.makedirs(rundir, exist_ok=True)
+        # Unrelated run-001 summary that mentions Issue #5 + its own run id.
+        with open(os.path.join(rundir, "run-001.summary.md"), "w", encoding="utf-8") as fh:
+            fh.write("# Run Summary - run-001\nIssue #5\nrun id: 2026-06-18-run-001\n")
+
+        vr, pr = validate_run.REPO_ROOT, _policy.REPO_ROOT
+        orig_ident = validate_run.active_run_identity
+        validate_run.REPO_ROOT = tmp
+        _policy.REPO_ROOT = tmp
+        validate_run.active_run_identity = lambda n: {
+            "run_id": "2026-06-18-run-002", "date": "2026-06-18", "token": "run-002"}
+        try:
+            r = validate_run.check_run_summary_exists(5, "2026-06-18")
+            expect("unrelated run-001 file (mentions Issue #5) does NOT satisfy run-002",
+                   r["level"] != "PASS", str(r["detail"]))
+        finally:
+            validate_run.active_run_identity = orig_ident
+            validate_run.REPO_ROOT = vr
+            _policy.REPO_ROOT = pr
+
+        # A run-002 token-named file -> PASS.
+        os.remove(os.path.join(rundir, "run-001.summary.md"))
+        with open(os.path.join(rundir, "run-002.summary.md"), "w", encoding="utf-8") as fh:
+            fh.write("# Run Summary - run-002\nrun id: 2026-06-18-run-002\n")
+        validate_run.REPO_ROOT = tmp
+        _policy.REPO_ROOT = tmp
+        validate_run.active_run_identity = lambda n: {
+            "run_id": "2026-06-18-run-002", "date": "2026-06-18", "token": "run-002"}
+        try:
+            r = validate_run.check_run_summary_exists(5, "2026-06-18")
+            expect("run-002 token file satisfies run-002",
+                   r["level"] == "PASS", str(r["detail"]))
+        finally:
+            validate_run.active_run_identity = orig_ident
+            validate_run.REPO_ROOT = vr
+            _policy.REPO_ROOT = pr
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
 def main() -> int:
     print("self-evo integration tests -- Issue #5")
     test_changed_files_real_git()
     test_stop_backstop_protected_write()
     test_validator_subprocess_windows()
+    test_run_summary_run_specific_real_files()
     test_audit_log_on_disk_secrecy()
     print("\n" + "=" * 48)
     print(f"RESULT: {PASS} passed, {FAIL} failed")

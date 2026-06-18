@@ -186,12 +186,44 @@ def test_shell_write_bypasses():
     expect("Bash python -c open('rules/...') -> BLOCK",
            has_block(bash("python -c \"open('rules/X','w')\""), "shell_write_to_rules"))
 
+    # PowerShell -LiteralPath variants (review iteration 3).
+    expect("PowerShell Set-Content -LiteralPath rules -> BLOCK",
+           has_block(powershell("Set-Content -LiteralPath rules/PERMISSIONS.yaml -Value bad"), "shell_write_to_rules"))
+    expect("PowerShell Add-Content -LiteralPath rules -> BLOCK",
+           has_block(powershell("Add-Content -LiteralPath rules/x -Value y"), "shell_write_to_rules"))
+    expect("PowerShell Clear-Content -LiteralPath rules -> BLOCK",
+           has_block(powershell("Clear-Content -LiteralPath rules/x"), "shell_write_to_rules"))
+    expect("PowerShell Out-File -LiteralPath rules -> BLOCK",
+           has_block(powershell("Out-File -LiteralPath rules/x -InputObject z"), "shell_write_to_rules"))
+    expect("PowerShell New-Item -LiteralPath rules -> BLOCK",
+           has_block(powershell("New-Item -LiteralPath rules/new -ItemType File"), "shell_write_to_rules"))
+    expect("PowerShell Copy-Item -Destination rules -> BLOCK",
+           has_block(powershell("Copy-Item -LiteralPath data/src -Destination rules/dst"), "shell_write_to_rules"))
+
+    # Bash dd of= / install destination (review iteration 3).
+    expect("Bash dd of=rules -> BLOCK",
+           has_block(bash("dd if=/dev/zero of=rules/sneak bs=1 count=1"), "shell_write_to_rules"))
+    expect("Bash dd of=rules (minimal) -> BLOCK",
+           has_block(bash("dd of=rules/x"), "shell_write_to_rules"))
+    expect("Bash install src rules -> BLOCK",
+           has_block(bash("install src rules/PERMISSIONS.yaml"), "shell_write_to_rules"))
+    expect("Bash install -m 644 src rules -> BLOCK",
+           has_block(bash("install -m 644 src rules/x"), "shell_write_to_rules"))
+
     # No false positives on benign shell writes / dev-null / fd duplication.
     expect("Bash echo > /dev/null: no finding",
            bash("echo x > /dev/null") == [], str(codes(bash("echo x > /dev/null"))))
     expect("Bash 2>&1: no finding", bash("cmd 2>&1") == [], str(codes(bash("cmd 2>&1"))))
     expect("Bash echo > data/x: no finding (authorized)",
            bash("echo x > data/runs/x.md") == [], str(codes(bash("echo x > data/runs/x.md"))))
+    # `install` is the coreutils copy command only when it leads a sub-command;
+    # pip/npm/make install must NOT be flagged.
+    expect("pip install pkg pkg2: no finding",
+           bash("pip install requests flask") == [], str(codes(bash("pip install requests flask"))))
+    expect("npm install pkg: no finding",
+           bash("npm install left-pad") == [], str(codes(bash("npm install left-pad"))))
+    expect("make install: no finding",
+           bash("make install") == [], str(codes(bash("make install"))))
 
 
 def test_audit_log_secrecy():

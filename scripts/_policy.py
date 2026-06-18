@@ -235,14 +235,18 @@ def _extract_write_paths(command: str) -> list[str]:
     Covers the deterministic write surfaces across Bash and PowerShell:
     redirections (``>``/``>>``/``1>``/``&>``), ``tee``/``Tee-Object``, the
     PowerShell content cmdlets (``Set-Content``/``Add-Content``/``Out-File``/
-    ``New-Item``/``Clear-Content``), ``cp``/``mv``/``Copy-Item``/``Move-Item``
-    destinations, ``[System.IO.File]::WriteAllText`` style writes, and the
-    common ``python|node|perl -c "<inline open(...)>"`` interpreter pattern.
+    ``Tee-Object``/``New-Item``/``Clear-Content``) via ``-Path``/``-FilePath``/
+    ``-LiteralPath`` or positionally, ``cp``/``mv``/``Copy-Item``/``Move-Item``
+    destinations, coreutils ``dd of=`` and ``install SRC DEST``, ``[System.IO.
+    File]::WriteAllText`` style writes, and the common ``python|node|perl -c
+    "<inline open(...)>"`` interpreter pattern.
 
-    Arbitrary interpreter writes (``python -c "..."``) cannot be perfectly
-    classified before execution; we catch the common inline ``open(...)``
-    pattern and rely on the Stop hook's committed-diff check as the reliable
-    backstop for anything that slips through. See scripts/README.md.
+    Cannot be perfectly classified before execution: variable-indirect paths
+    (``$p``/``${var}``), here-docs feeding an interpreter, aliases, and any
+    Turing-complete inline interpreter code can hide the real target. We catch
+    the common literal patterns and rely on the Stop hook's committed-diff check
+    as the reliable backstop for anything that still lands on the branch. See
+    scripts/README.md.
     """
     paths: list[str] = []
 
@@ -265,10 +269,10 @@ def _extract_write_paths(command: str) -> list[str]:
     ):
         add(m.group(1))
 
-    # 3. PowerShell write cmdlets with an explicit -Path / -FilePath.
+    # 3. PowerShell write cmdlets with an explicit -Path / -FilePath / -LiteralPath.
     for m in re.finditer(
         r"\b(?:Set-Content|Add-Content|Out-File|Tee-Object|New-Item|Clear-Content)\b"
-        r"[^|;&\n]*?(?:-Path|-FilePath)\s+(\"[^\"]+\"|'[^']+'|[^\s|;&]+)",
+        r"[^|;&\n]*?(?:-Path|-FilePath|-LiteralPath)\s+(\"[^\"]+\"|'[^']+'|[^\s|;&]+)",
         command, re.I,
     ):
         add(m.group(1))
@@ -286,6 +290,25 @@ def _extract_write_paths(command: str) -> list[str]:
         toks = [t for t in toks if not _strip_quotes(t).startswith("-")]
         if len(toks) >= 2:
             add(toks[-1])
+
+    # 5b. coreutils `dd ... of=<path>` (write target).
+    for m in re.finditer(
+        r"\bdd\b[^|;&\n]*?\bof=\s*(\"[^\"]+\"|'[^']+'|[^\s|;&]+)", command, re.I
+    ):
+        add(m.group(1))
+
+    # 5c. coreutils `install SRC... DEST` (DEST is the last token). Split on
+    # shell separators so `install` is treated as the copy command only when it
+    # leads a sub-command -- never as the subcommand of pip/npm/apt/etc.
+    for seg in re.split(r"(?:&&|\|\||[;|\n])", command):
+        seg2 = re.sub(r"^(?:[A-Za-z_][\w.]*=\S+\s+)*(?:sudo\s+|time\s+)*",
+                      "", seg.strip())
+        head = seg2.split(None, 1)
+        if len(head) == 2 and head[0].lower() == "install":
+            toks = [t for t in re.findall(r"(\"[^\"]+\"|'[^']+'|[^\s]+)", head[1])
+                    if not _strip_quotes(t).startswith("-")]
+            if len(toks) >= 2:
+                add(toks[-1])
 
     # 6. .NET static file writes: [System.IO.File]::WriteAllText('path', ...)
     for m in re.finditer(

@@ -338,7 +338,18 @@ def active_run_identity(issue_number: int) -> dict | None:
 
 def _summary_references(rel_dir: str, filename: str, ident: dict,
                         issue_number: int) -> bool:
-    """True if a summary file's content names the run_id or the issue."""
+    """True only if a summary file's content names the EXACT run identity.
+
+    A bare issue reference (e.g. 'Issue #5') must NOT satisfy a different run
+    of the same issue: when two runs of Issue #5 land on the same date, run-001's
+    summary cannot satisfy run-002. With a concrete run_id known we require that
+    exact run_id string to appear in the content. (Filename-token matching is
+    handled separately in check_run_summary_exists.)
+
+    ``issue_number`` is accepted for interface stability but deliberately not
+    used as a match criterion, so an issue-only reference can never satisfy a
+    different run.
+    """
     full = os.path.join(REPO_ROOT, "data", "runs", rel_dir, filename)
     try:
         with open(full, "r", encoding="utf-8") as fh:
@@ -346,12 +357,7 @@ def _summary_references(rel_dir: str, filename: str, ident: dict,
     except OSError:
         return False
     run_id = ident.get("run_id")
-    if run_id and run_id in text:
-        return True
-    # Issue references: 'issue: 5', '#5', 'Issue #5'.
-    return (f"issue: {issue_number}" in text
-            or f"#{issue_number}" in text
-            or f"Issue #{issue_number}" in text)
+    return bool(run_id and run_id in text)
 
 
 # --------------------------------------------------------------------------- #
