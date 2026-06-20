@@ -1,0 +1,4 @@
+{
+  "rollout_mode": "audit",
+  "_note": "Committed default is audit. To raise enforcement, set rollout_mode to 'pretool-enforce' or 'full-enforce' here, or set env SELF_EVO_ROLLOUT_MODE. This file lives under scripts/** which the PreToolUse hook treats as protected hook implementation, so a confused worker cannot silently flip it; mode changes require a committed, human-reviewed edit."
+}

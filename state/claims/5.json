@@ -1,0 +1,10 @@
+{
+  "issue": 5,
+  "worker": "local-code-worker-01",
+  "run_id": "2026-06-18-run-002",
+  "branch": "agent/local-code-worker-01/5-hooks-validator",
+  "claimed_at": "2026-06-18T17:11:00+0800",
+  "released_at": "2026-06-18T17:36:35+0800",
+  "lease_until": null,
+  "status": "released"
+}

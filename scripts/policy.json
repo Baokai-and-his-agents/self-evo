@@ -1,0 +1,125 @@
+{
+  "schema_version": 1,
+  "description": "Executable guardrail contract for self-evo. Mirrors the intent of rules/PERMISSIONS.yaml and rules/GITHUB_POLICY.md. This file is the single source of truth shared by the PowerShell entrypoints, the Python hooks, and the offline tests, so the three cannot diverge on what counts as dangerous.",
+  "default_rollout_mode": "audit",
+  "rollout_modes": {
+    "audit": {
+      "description": "Report findings only. Never block a tool action and never block Stop. Findings are appended to the audit log.",
+      "pretooluse_blocks": false,
+      "stop_blocks": false
+    },
+    "pretool-enforce": {
+      "description": "PreToolUse blocks dangerous tool actions. Stop remains audit-only so a bad hook cannot lock the worker out of ending a run.",
+      "pretooluse_blocks": true,
+      "stop_blocks": false
+    },
+    "full-enforce": {
+      "description": "Both PreToolUse and Stop may block. Use only after audit has proven the rule set has acceptable false positives.",
+      "pretooluse_blocks": true,
+      "stop_blocks": true
+    }
+  },
+  "paths": {
+    "read_only": [
+      "rules/**"
+    ],
+    "proposal_required": [
+      ".github/**",
+      "docs/**"
+    ],
+    "read_write": [
+      "data/**",
+      "state/**"
+    ],
+    "protected_hook_implementation": [
+      "scripts/**"
+    ],
+    "protected_claude_config": [
+      ".claude/**"
+    ],
+    "authorized_write_roots": [
+      "data/",
+      "state/",
+      "scripts/"
+    ]
+  },
+  "branches": {
+    "protected": [
+      "main"
+    ],
+    "agent_prefix": "agent/"
+  },
+  "secrets": {
+    "description": "Likely secret / private-key reads. Reads are WARN in audit and BLOCK in pretool/full enforce. Matching is path- and name-based; it is deliberately conservative, which can produce false positives (see known limitations).",
+    "path_patterns": [
+      "**/.env",
+      "**/.env.*",
+      "**/id_rsa",
+      "**/id_rsa.*",
+      "**/id_dsa",
+      "**/id_ecdsa",
+      "**/id_ed25519",
+      "**/*.pem",
+      "**/*.key",
+      "**/.npmrc",
+      "**/.pypirc",
+      "**/credentials",
+      "**/.aws/credentials",
+      "**/.netrc",
+      "**/.pgpass"
+    ],
+    "name_fragments": [
+      "SECRET",
+      "TOKEN",
+      "PASSWORD",
+      "PASSWD",
+      "PRIVATE_KEY",
+      "API_KEY",
+      "CREDENTIAL"
+    ]
+  },
+  "dangerous_commands": {
+    "recursive_delete": {
+      "description": "Recursive deletion of home, root, or the whole repository. BLOCK in pretool/full enforce.",
+      "patterns": [
+        "rm -rf /",
+        "rm -rf /*",
+        "rm -rf ~",
+        "rm -rf ~/",
+        "rm -rf ~/*",
+        "rm -rf $HOME",
+        "rm -rf $HOME/",
+        "rm -rf .git",
+        "rm -rf --no-preserve-root",
+        "rd /s /q",
+        "remove-item -recurse -force c:"
+      ]
+    },
+    "force_push": {
+      "description": "Any force push. BLOCK in pretool/full enforce.",
+      "patterns": [
+        "push --force",
+        "push -f ",
+        "push --force-with-lease",
+        "push +"
+      ]
+    },
+    "protected_branch_push": {
+      "description": "Direct push to a protected branch (main). BLOCK in pretool/full enforce.",
+      "patterns": [
+        "push origin main",
+        "push -u origin main",
+        "push origin HEAD:main",
+        "push origin master",
+        "push main",
+        "push origin main:"
+      ]
+    }
+  },
+  "audit_log": {
+    "path": "data/audit/hook-audit.jsonl",
+    "stop_loop_counter_path": "data/audit/stop-loop.counter",
+    "stop_loop_block_limit": 2,
+    "note": "The audit log and loop counter live under data/audit/ (not state/). They are the only files the hooks write, and only in append/replace form for diagnostics. Hooks never mutate task state, never create commits, and never create PRs."
+  }
+}
