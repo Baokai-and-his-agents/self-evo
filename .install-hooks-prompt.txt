@@ -1,0 +1,5 @@
+# 安装 Claude Code Hooks
+
+阅读 `docs/CLAUDE_CODE_SETUP.md` 并执行安装脚本。
+
+完成后在 Issue comment 中确认安装状态。
