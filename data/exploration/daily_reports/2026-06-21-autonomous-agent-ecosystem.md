@@ -11,9 +11,9 @@ status: complete
 
 ## Executive Summary
 
-Research into autonomous agent ecosystems reveals a maturing but hazardous landscape. **30 frameworks archived 2024-2026** (critic-focused search sample: median lifespan 8-14 months; biased toward failure cases), **agent pilot failures widely reported but unquantified** (anecdotal evidence: runaway costs, infinite loops), and **benchmark scores mislead** (37.5% AgentBench success drops to 0% on post-training tasks). Yet production patterns exist: durable execution platforms (Temporal 35k★), observability infrastructure (Langfuse 29k★), and GitHub-native workflows (official Agentic Workflows).
+Research into autonomous agent ecosystems reveals a maturing but hazardous landscape. Production patterns exist: durable execution platforms (Temporal 35k★), observability infrastructure (Langfuse 29k★), and GitHub-native workflows. Yet agent pilot failures are widely reported (runaway costs, infinite loops), and benchmark scores can mislead on real-world tasks.
 
-**Core Finding**: Self-evo's file-first, human-reviewed approach aligns with cautious production patterns. The path forward is incremental autonomy with cost controls, not framework adoption.
+**Core Finding**: Self-evo's file-first, human-reviewed approach aligns with cautious production patterns. The path forward is **Autonomous Scout vertical slice first**, with cost controls and bounded execution.
 
 ---
 
@@ -35,405 +35,392 @@ Research into autonomous agent ecosystems reveals a maturing but hazardous lands
 - 6 safety/security tools
 - 4 GitHub integration patterns
 
-**Overlap caveat**: Same repo found via multiple queries (e.g., Langfuse via "observability" and "cost tracking"). GitHub search returns forks and integrations. Deduplication applied; counts represent unique systems analyzed, not raw search hits.
+**Overlap caveat**: Same repo found via multiple queries. GitHub search returns forks and integrations. Deduplication applied; counts represent unique systems analyzed, not raw search hits.
 
 **Deep analysis**: 10 systems with architecture-level review (Temporal, LangGraph, Mem0, ENGRAM, OpenHands, Langfuse, CrewAI, OKF, Restate, SWE-bench).
 
-**Critic validation**: Identified 30 archived frameworks (biased search: focused on failure indicators, not representative sample), zero public issues for "agent cost" or "coordination failure" → evidence gap suggests proprietary suppression, limited production multi-agent use, or issues reported through private channels.
+**Critic validation**: Identified 30 archived frameworks (biased search: focused on failure indicators, not representative sample). Zero public issues for "agent cost" or "coordination failure" suggests evidence gap.
 
 ---
 
-## Three to Five Routes Forward
+## One Primary Route: Autonomous Scout Vertical Slice
 
-### Route 1: Minimal Viable Autonomy (Recommended)
+**Approach**: Deliver the project's stated primary goal first — a proactive scouting system that explores, filters, and produces daily decision-oriented reports.
 
-**Approach**: Single-agent baseline with cost controls, no multi-agent coordination.
+**Scout Vertical Slice Components**:
 
-**Components**:
-- OKF timestamps + forgetting mechanism (1 week)
-- Token budget enforcement (1 week)
-- Local JSONL telemetry with OpenTelemetry-compatible schema (3 days)
-- ResearchPlanAssignOps workflow (1 week)
-- Self-evo-native task evaluation baseline (1 week; SWE-bench optional for coding workers)
+1. **Approved source registry** (`rules/RESOURCE_APPROVALS.yaml`)
+   - GitHub Search / REST API
+   - Hacker News API
+   - arXiv API
+   - Product Hunt API (public read)
 
-**Timeline**: 4-5 weeks to MVP
+2. **Manual trigger with scheduler placeholder**
+   - User runs Scout worker locally
+   - `rules/EXPLORATION_POLICY.md` defines approved sources, daily limits
+   - Later: add scheduled invocation
+
+3. **Incremental cursor and deduplication**
+   - Track last-seen timestamps per source
+   - Skip already-processed items (by URL/ID)
+   - Store cursor in local gitignored `state/scout_cursor.json`
+
+4. **Keep/reject ledger with evidence**
+   - Every item: kept (with reason) or rejected (with reason)
+   - Store decisions in `data/exploration/raw/<date>-<source>-ledger.jsonl`
+   - Human-reviewable provenance
+
+5. **Bounded high-token research**
+   - Scout runner enforces: max wall-clock time, max sources scanned, max items kept, max Claude invocations
+   - No promise of per-internal-LLM-call hard token cap (hooks can't see that)
+   - Unknown token/cost goes to telemetry as "unknown" with explanation
+
+6. **Daily decision report**
+   - One reuse map (existing work survey)
+   - One experiment/skill/project candidate
+   - Evidence links to ledger
+
+7. **Human review labels**
+   - User reviews daily report, marks items: `relevant`, `irrelevant`, `deep-dive`, `pause`
+   - Labels stored in `data/exploration/review_labels/<date>.yaml`
+   - Future: preference learner summarizes patterns
+
+**Scout Runner/Wrapper** (execution boundary):
+- Local script that launches Claude CLI worker with Scout task
+- Captures structured CLI output/usage where available
+- Enforces: max runtime (wall clock), max Claude process invocations, max retries, scan/keep limits
+- Detects: tool call repetition, no-progress, lifecycle violations
+- Writes: partial results on termination, cursor/ledger to gitignored state
+- Commits to repo: only summary, decisions, schemas (not growing runtime state)
+
+**Timeline**: 3-4 weeks to working Scout vertical slice
 
 **Tradeoffs**:
-- ✅ Lowest initial cost (hypothesis: $50-100 for evaluation; requires local measurement)
-- ✅ Simplest architecture (no coordination complexity)
-- ✅ Fastest to value (human reviews every phase)
-- ❌ No parallelism (one Issue at a time)
-- ❌ Unproven if autonomy adds value (needs measurement)
+- ✅ Delivers user's primary stated goal (proactive exploration)
+- ✅ Tests high-token workflow with real business value
+- ✅ Embeds telemetry and budget controls into real work (not detached infrastructure)
+- ✅ Produces reviewable daily output for preference learning
+- ⚠️  High-token cost per run (mitigated by daily limits and runner enforcement)
+- ⚠️  Requires approved external sources (mitigated by resource approval workflow)
 
-**Success criteria** (initial hypothesis): Single-agent completes 30%+ of self-evo-native tasks, cost <$1 per task (thresholds subject to revision after local measurement).
-
----
-
-### Route 2: Hierarchical Multi-Agent
-
-**Approach**: Manager agent assigns Issues to worker agents, hierarchical coordination.
-
-**Components**:
-- Route 1 baseline + SQLite lease coordination (1 week)
-- Worktree isolation (codify existing, 2 days)
-- GitHub Issue decomposition (1 week)
-- Three-layer termination defense (3 days)
-
-**Timeline**: 6 weeks to MVP
-
-**Tradeoffs**:
-- ✅ Parallel execution (2-3 Issues simultaneously)
-- ✅ Proven pattern in production multi-agent deployments
-- ⚠️  Coordination complexity (leases, heartbeats, deadlock detection)
-- ⚠️  Higher cost (multi-agent token usage; requires measurement)
-- ❌ Requires manager agent logic (task assignment, load balancing)
-
-**Success criteria** (initial hypothesis): 2x throughput vs single-agent, <30% coordination overhead (thresholds subject to revision after baseline measurement).
+**Success criteria** (measure after Scout operational):
+- Scout produces non-empty daily report within budget
+- Human review time <30 min per report
+- Relevance improves over 4 weeks (measured by human labels)
+- Zero runaway costs (runner termination works)
 
 ---
 
-### Route 3: Durable Execution Infrastructure
+## Secondary Routes (After Scout Proven)
 
-**Approach**: Adopt Temporal or Restate for automatic retry and fault tolerance.
+### Route B: Scout Evaluation + Holdout Set
 
-**Components**:
-- Route 2 baseline + Temporal workflow engine (2 weeks integration)
-- Event-sourced task tracking (1 week)
-- Workflow versioning (1 week)
+**Trigger**: After Scout vertical slice operational, before scaling
 
-**Timeline**: 10 weeks to MVP
+**Scope**:
+- Create holdout evaluation set (NOT from repo's solved Issues)
+- Define Scout quality metrics: novelty, relevance, evidence quality, actionable conversion, duplicate rate
+- Define Builder quality metrics separately (tests, acceptance)
+- Include human baseline (time, quality) for comparison
 
-**Tradeoffs**:
-- ✅ Production-grade reliability (automatic retry, timeout handling)
-- ✅ Scales to high task volume (1000+ tasks/day is hypothesis; requires validation)
-- ❌ Steep learning curve (event sourcing mindset shift)
-- ❌ External dependency (Temporal server)
-- ❌ Overkill for current scale (no evidence of bottleneck)
-
-**Success criteria** (initial hypothesis): Zero manual intervention for transient failures, 99.9% task completion (thresholds subject to revision after measurement).
-
-**Escalation trigger** (hypothesis): Task volume exceeds 1000/day OR coordination failures exceed 10/week (requires local measurement to validate thresholds).
+**Why deferred**: Can't evaluate Scout before Scout exists
 
 ---
 
-### Route 4: Fully Autonomous Swarm
+### Route C: Observed-Failure Reliability
 
-**Approach**: Agents autonomously claim Issues, no manager coordination.
+**Trigger**: After Scout shows specific failure modes (crashes, duplicates, budget overruns)
 
-**Components**:
-- Route 2 baseline + autonomous claiming logic (2 weeks)
-- Conflict resolution (optimistic locking, 1 week)
-- Proactive scouting (RSS/GitHub monitoring, 2 weeks)
+**Scope**:
+- Add resume from cursor (idempotent restart)
+- Improve deduplication (cross-source, semantic similarity)
+- Tune runner limits based on observed failures
 
-**Timeline**: 8 weeks to MVP
-
-**Tradeoffs**:
-- ✅ Fully autonomous (no human in loop except PR review)
-- ❌ Swarm-style coordination appeared less often than sequential or manager-worker patterns in this survey; no ecosystem-wide deployment percentage was established
-- ❌ High risk of runaway costs (no phase gates)
-- ❌ Conflict resolution complexity (race conditions, deadlocks)
-- ❌ Contradicts self-evo's human-review principle
-
-**Success criteria** (initial hypothesis): Agents complete Issues end-to-end without human intervention, cost per Issue <$5 (thresholds require validation).
-
-**Recommendation**: **Reject**. Contradicts validated architecture (human review gates) and reported high failure rates of fully autonomous pilots (quantification unavailable).
+**Why deferred**: Don't know which reliability features are needed until Scout runs
 
 ---
 
-### Route 5: Hybrid (File + Database Memory)
+### Route D: Memory Indexing (Conditional)
 
-**Approach**: Focus on memory scaling before multi-agent complexity.
+**Trigger**: ONLY if measured retrieval failures occur (slow queries, low precision)
 
-**Components**:
-- Route 1 baseline + SQLite FTS memory index (2 weeks)
-- Vector embeddings (2 weeks)
-- Advanced forgetting (access-frequency scoring, 1 week)
-- Memory retrieval API (1 week)
+**Scope**:
+- Add OKF timestamps (`created`, `modified`) to frontmatter
+- Track access/use in gitignored local index or append-only event log (NOT by mutating Markdown)
+- Experiment: SQLite FTS for keyword search
+- Compare user's active OpenViking adapter
+- Conditional: embeddings only if FTS insufficient
 
-**Timeline**: 8 weeks to MVP
-
-**Tradeoffs**:
-- ✅ Addresses proven bottleneck (memory retrieval scales to 1000+ items; hypothesis requires validation)
-- ✅ Aligns with OKF standard (file-first preserved)
-- ⚠️  No parallelism (still single-agent)
-- ⚠️  Deferred multi-agent coordination
-
-**Success criteria** (initial hypothesis): Memory retrieval <100ms for 500+ memories, retrieval precision >85% (thresholds subject to revision after measurement).
-
-**When to choose**: If memory is current bottleneck (>100 memories), this before multi-agent.
+**Why deferred**: No evidence of retrieval bottleneck yet. Markdown remains canonical.
 
 ---
 
-## One Recommended Route
+### Route E: Multi-Agent (Conditional)
 
-**Route 1: Minimal Viable Autonomy** (4-5 weeks to MVP)
+**Trigger**: ONLY if single-agent Scout shows throughput bottleneck (queue >5 sources, can't finish daily scan)
 
-**Rationale**:
+**Scope**:
+- Parallel source scanners (one per source)
+- Hierarchical aggregation (manager combines reports)
+- Worktree isolation for file conflicts
 
-1. **De-risks before scaling**: 30 archived frameworks (critic-focused sample) prove complexity kills. Start simple.
+**Why deferred**: No evidence single-agent insufficient. Multi-agent adds coordination complexity.
 
-2. **Validates autonomous value**: Self-evo-native baseline measures if autonomy beats human at any tasks. If single-agent fails, multi-agent won't save it.
+---
 
-3. **Cost controls prevent pilot failure mode**: Token budgets + termination defense + observability address primary reported failure causes (runaway costs, infinite loops).
+### Route F: External Observability / Durable Workflow (Conditional)
 
-4. **Aligns with self-evo principles**: File-first, human-reviewed, evidence-based. Incremental autonomy, not framework adoption.
+**Trigger**: ONLY if local debugging painful OR recovery overhead high
 
-5. **Fastest to value**: 4-5 weeks vs 6-10 weeks for multi-agent routes.
+**Scope**:
+- Evaluate Langfuse (self-hosted) vs local JSONL telemetry
+- Evaluate Temporal/Restate for checkpointing (if recovery pain measured)
 
-**Next milestone decision**: After MVP, measure:
-- **Throughput bottleneck?** → Route 2 (hierarchical multi-agent)
-- **Memory retrieval slow?** → Route 5 (hybrid memory)
-- **Task volume >1000/day?** (hypothesis) → Route 3 (durable execution)
-- **Single-agent failed <20% on self-evo tasks?** (hypothesis) → Pause, debug quality before scaling
+**Why deferred**: Local telemetry and simple retry may suffice. Add external deps only when justified.
+
+---
+
+## Recommended Implementation Order
+
+### Phase A: Autonomous Scout Vertical Slice (Week 1-4)
+
+**Issue A.1**: Scout source registry and manual trigger
+- Define approved sources in `rules/RESOURCE_APPROVALS.yaml`
+- Build Scout runner wrapper (launch, enforce limits, capture output)
+- Manual invocation: user runs `python scripts/scout_runner.py`
+
+**Issue A.2**: Cursor, ledger, and bounded scan
+- Track last-seen per source (gitignored cursor state)
+- Deduplication by URL/ID
+- Keep/reject ledger with evidence
+- Runner enforces: max runtime, max sources, max items scanned/kept, max retries
+
+**Issue A.3**: Daily decision report generation
+- Scout worker produces: reuse map, one experiment/skill/project candidate, evidence links
+- Commit summary and decisions (not raw ledger or cursor state)
+
+**Issue A.4**: Human review label workflow
+- User reviews report, adds labels (relevant/irrelevant/deep-dive/pause)
+- Labels stored in `data/exploration/review_labels/<date>.yaml`
+
+### Phase B: Scout Evaluation (Week 5-6, after Scout operational)
+
+**Issue B.1**: Holdout set and Scout quality metrics
+- Create independent holdout tasks (NOT from repo history to avoid answer leakage)
+- Define Scout metrics: novelty, relevance, evidence, actionable conversion, duplicate rate
+- Separate Builder metrics: test pass, acceptance
+- Human baseline for comparison
+
+**Issue B.2**: Measure Scout against holdout
+- Run Scout on holdout set
+- Compare to human baseline
+- Document success rate, cost, failure modes
+
+### Phase C: Conditional Improvements (triggered by observed failures)
+
+**Issue C.1**: Resume and idempotency (if crashes observed)
+**Issue C.2**: Improved deduplication (if duplicates observed)
+**Issue C.3**: Memory indexing (if retrieval slow/imprecise)
+**Issue C.4**: Multi-agent (if throughput bottleneck proven)
+**Issue C.5**: External observability (if debugging painful)
+**Issue C.6**: Durable workflow (if recovery overhead high)
 
 ---
 
 ## One Immediate Experiment
 
-**Experiment**: Evaluate self-evo autonomous agent on domain-native tasks (Issue triage, research synthesis, proposal generation)
+**Experiment**: Prototype Scout runner enforcement without full Scout implementation
 
-**Hypothesis**: Single-agent baseline achieves 25-35% success on self-evo-native tasks (research/planning/documentation workload).
+**Hypothesis**: Runner can enforce wall-clock, process count, and lifecycle limits before building full Scout
 
 **Method**:
-1. Define 20-30 representative self-evo tasks (Issue analysis, research synthesis, proposal drafting)
-2. Run Claude Code in autonomous mode (ResearchPlanAssignOps pattern)
-3. Measure: success rate, cost per task, failure modes
-4. Compare to manual human baseline (time, quality)
-5. **Optional**: Run subset on SWE-bench Verified (10-20 tasks) for coding worker capability assessment
+1. Write minimal Scout runner wrapper (launch Claude CLI, enforce timeout)
+2. Test with dummy task (e.g., "scan 5 HN items")
+3. Verify: timeout works, partial results written, clean exit
 
-**Timeline**: 2-3 days (setup 4 hours, execution 8-12 hours, analysis 4 hours)
+**Timeline**: 1 day
 
-**Cost**: ~$50-150 (initial estimate: 2k tokens/task avg; requires measurement)
+**Cost**: <$5
 
-**Success criteria** (initial hypothesis):
-- ✅ Success rate meets threshold → Proceed with Route 1
-- ⚠️  Moderate success → Investigate failure modes, consider Route 5 (memory) or hybrid approaches
-- ❌ Low success → Pause, single-agent not viable for autonomous work
+**Success criteria**:
+- Runner terminates on timeout
+- Partial results preserved
+- No zombie processes
 
-**Learning outcomes**:
-- Which task types succeed (research, planning, bug fix, feature add, refactor)?
-- Primary failure modes (context overflow, incorrect approach, test failures)?
-- Cost distribution (median, p95, outliers)?
-- Human intervention points (where did review catch errors)?
-
-**Decision gate**: If experiment fails (low success rate), pivot to supervised mode (agent as copilot, not autonomous worker). If succeeds (meets or exceeds threshold), proceed with Route 1 MVP.
+**Learning outcome**: Validates enforcement approach before investing in full Scout
 
 ---
 
 ## One Skill to Learn
 
-**Skill**: Durable execution mental model (event sourcing, deterministic replay, workflow as code)
+**Skill**: Designing idempotent exploratory agents with cursor-based resumption
 
-**Why**: Current self-evo uses stateful task tracking (JSON files, git commits). At higher scale, this may require migration:
-- Risk of race conditions (concurrent JSON writes)
-- Partial failures (task half-complete, no recovery)
-- Non-deterministic retries (external state changes between attempts)
+**Why**: Scout will be interrupted (budget, timeout, crashes). Must resume without re-scanning.
 
 **Learning path**:
-1. **Read**: Temporal "Durable Execution" blog series (3 hours)
-2. **Tutorial**: Build "money transfer workflow" (Temporal quickstart, 2 hours)
-3. **Compare**: Temporal vs Restate vs Inngest architecture (1 hour)
-4. **Design**: Sketch self-evo task workflow in Temporal DSL (2 hours)
+1. Study cursor patterns (Stripe API, GitHub pagination, database offset/limit)
+2. Design cursor schema for multi-source Scout (per-source last-seen timestamp/ID)
+3. Implement idempotency: same input + same cursor = same output
+4. Test: interrupt, resume, verify no duplicates
 
-**Timeline**: 8 hours (1 day)
+**Timeline**: 4 hours
 
-**Outcome**: Understand when to escalate from SQLite task queue to durable execution. Recognize event-sourcing patterns in existing systems (LangGraph checkpoints, OpenHands event loop).
-
-**Not needed for MVP**: SQLite sufficient for low task volumes (<100 tasks/day hypothesis; requires measurement). But skill prevents future architecture dead-end (rebuilding coordination from scratch when scale demands it).
+**Outcome**: Understand cursor-based resumption for Scout reliability
 
 ---
 
 ## Human Decisions Requested
 
-### Decision 1: Route Selection
+### Decision 1: Scout Vertical Slice Priority
 
-**Question**: Which route should self-evo pursue?
-
-**Options**:
-1. **Route 1 (Minimal Viable Autonomy)** — Recommended, 4 weeks, single-agent baseline
-2. Route 2 (Hierarchical Multi-Agent) — 6 weeks, parallel execution
-3. Route 3 (Durable Execution) — 10 weeks, production-grade reliability
-4. Route 5 (Hybrid Memory) — 8 weeks, memory scaling focus
-
-**Recommendation**: Route 1, measure bottleneck, then escalate to Route 2 or 5.
-
----
-
-### Decision 2: Self-Evo-Native Baseline Evaluation
-
-**Question**: Run self-evo-native task evaluation (20-30 tasks, ~$50-150, 2-3 days)?
+**Question**: Approve Scout as first implementation priority?
 
 **Options**:
-- **Yes** — Objective quality measurement, justifies autonomous approach
-- No, skip to Route 1 implementation — Faster to value, accept uncertainty
-- Yes, but smaller (10 tasks) — Lower cost, less statistical confidence
-- Yes, include SWE-bench subset (10-20 coding tasks) — Assess coding worker capability
+1. **Yes, Scout first** — Delivers user's stated goal, tests high-token workflow (Recommended)
+2. No, benchmark/telemetry infrastructure first — Measure before building
+3. No, memory indexing first — Address retrieval before exploration
 
-**Recommendation**: Yes (20-30 self-evo tasks, optional 10-20 SWE-bench). Cost is small, measurement is essential. Without baseline, multi-agent complexity is unjustified.
+**Recommendation**: Yes, Scout first. Embed telemetry/budget into Scout runner (not detached infrastructure).
 
 ---
 
-### Decision 3: Observability Platform
+### Decision 2: Scout Source Approval
 
-**Question**: Which observability platform for MVP?
+**Question**: Approve initial Scout sources (GitHub/HN/arXiv/Product Hunt public read)?
+
+**Risk**: Network egress, rate limits, potential IP blocking
+
+**Recommendation**: Approve for public read-only. No API keys required for basic access.
+
+---
+
+### Decision 3: Scout Budget
+
+**Question**: Approve daily Scout budget?
 
 **Options**:
-1. **Local JSONL + OpenTelemetry-compatible schema** — No external dependency, full control, portable (Recommended for MVP)
-2. Langfuse (self-hosted) — 29k★, YC-backed, cost tracking, session replay (approval-gated comparison after local telemetry working)
-3. Langfuse (cloud) — Same features, $50/month, faster setup
-4. OpenLLMetry — 7k★, vendor-neutral, OpenTelemetry standard
-5. AgentOps — 5k★, agent-specific, newer (2024 launch)
+- Option A: 2 hours wall-clock, 20 sources scanned, 50 items kept, 10 Claude invocations
+- Option B: 4 hours wall-clock, 40 sources scanned, 100 items kept, 20 Claude invocations
+- Option C: User-defined limits in `rules/EXPLORATION_POLICY.md`
 
-**Recommendation**: Start with local JSONL telemetry (OpenTelemetry-compatible schema). After MVP working, run approval-gated comparison with Langfuse self-hosted to evaluate whether hosted platform provides sufficient value over local logs.
+**Recommendation**: Option A for MVP (tighter limits, iterate based on observed needs)
 
 ---
 
-### Decision 4: Multi-Agent Timing
+### Decision 4: Deferred Work Gates
 
-**Question**: When to add multi-agent coordination?
+**Question**: Confirm conditional triggers for deferred work?
 
-**Trigger criteria** (initial hypotheses requiring local measurement):
-- [ ] Throughput bottleneck: Single-agent queues >5 Issues
-- [ ] Parallel value proven: Baseline evaluation shows specialization benefit (e.g., researcher + implementer)
-- [ ] Cost justified: Multi-agent coordination overhead <30% of total cost
+**Triggers** (measure after Scout operational):
+- [ ] Memory indexing: ONLY if retrieval failures measured
+- [ ] Multi-agent: ONLY if throughput bottleneck proven
+- [ ] External observability: ONLY if local debugging painful
+- [ ] Durable workflow: ONLY if recovery pain measured
 
-**Recommendation**: Defer until single-agent baseline measured. Hierarchical patterns (not swarm) are prevalent in production deployments. Start Route 1, escalate to Route 2 when bottleneck proven.
-
----
-
-### Decision 5: Cost Budget for MVP
-
-**Question**: What is acceptable cost for MVP development?
-
-**Cost breakdown** (initial estimates requiring local measurement):
-- Self-evo-native evaluation: $50-150 (one-time)
-- Optional SWE-bench subset: $20-40 (one-time)
-- MVP development (Route 1): $200-500 (4-5 weeks, agent self-dogfooding; estimate)
-- Observability infrastructure: $0 (local JSONL)
-
-**Total MVP cost estimate**: $270-690
-
-**Recommendation**: Approve $500 initial budget. If single-agent proves value (<$1 per Issue; hypothesis requiring measurement), ROI justifies scaling investment.
+**Recommendation**: Confirm gates. Do not build speculative infrastructure.
 
 ---
 
 ## Risks and Mitigations
 
-### Risk 1: Single-agent insufficient for complex tasks
+### Risk 1: High-token cost per Scout run
 
-**Evidence**: Public coding-agent benchmarks show substantial variance by task set, scaffold, model, and use of test feedback. This report does not treat a single published score as a durable capability baseline.
-
-**Mitigation**: ResearchPlanAssignOps pattern has human review gates. Agent proposes, human approves. Partial automation still provides value.
+**Mitigation**: Runner enforces daily limits (sources, items, runtime). Partial results on termination.
 
 ---
 
-### Risk 2: Cost overruns (reported pilot failure mode)
+### Risk 2: Scout produces low-quality reports
 
-**Evidence**: Widely reported anecdotal failures (runaway costs, infinite loops), but no quantified failure rate available. Zero public issues for "agent cost" despite thousands of users → suggests proprietary suppression or private channel reporting.
-
-**Mitigation**: Token budget enforcement (hard caps), three-layer termination defense, local JSONL telemetry with real-time monitoring. Human approval for >100k tokens (threshold hypothesis).
+**Mitigation**: Human review labels provide feedback. Iterate prompts and filtering logic.
 
 ---
 
-### Risk 3: Framework abandonment (30 archived 2024-2026 in critic sample)
+### Risk 3: Rate limits from external sources
 
-**Evidence**: Critic-focused search found 30 archived frameworks (median lifespan 8-14 months). Sample biased toward failure cases; insufficient differentiation from LangChain/LangGraph.
-
-**Mitigation**: Self-evo builds on primitives (SQLite, git, Markdown), not frameworks. OKF standard prevents lock-in. Observability platforms (Langfuse/Temporal) are infrastructure (long-lived), not agent frameworks.
+**Mitigation**: Cursor-based resumption. Respect rate limit headers. Exponential backoff.
 
 ---
 
-### Risk 4: Coordination complexity (multi-agent)
+### Risk 4: Runner enforcement insufficient
 
-**Evidence**: Zero public issues for "coordination deadlock" → limited production use or suppressed failures.
-
-**Mitigation**: Defer multi-agent until single-agent bottleneck proven. Use hierarchical (simpler) over swarm. Worktree isolation prevents file conflicts.
+**Mitigation**: Prototype runner with dummy task first (1 day). Validate enforcement before full Scout.
 
 ---
 
-### Risk 5: Memory retrieval doesn't scale
+## Success Metrics for Scout MVP
 
-**Evidence**: ENGRAM/Mem0 benchmarks show 77-91% accuracy with hybrid retrieval. Linear scan breaks >100 memories.
+**Quality** (measure after Scout operational):
+- [ ] Daily report produced (non-empty)
+- [ ] Human review time <30 min
+- [ ] Relevance improves over 4 weeks (via human labels)
 
-**Mitigation**: Route 1 includes OKF timestamps (enables forgetting). SQLite FTS in Route 5 scales to 1000+ memories. Incremental complexity.
+**Cost** (measure and enforce):
+- [ ] Zero budget overruns (runner termination works)
+- [ ] Cost per run: to be measured and optimized
 
----
-
-## Success Metrics for MVP
-
-**Quality** (initial hypotheses requiring local measurement):
-- ✅ Self-evo-native tasks: success rate to be measured (initial hypothesis: ≥25%)
-- [ ] Human review approval rate: agents produce reviewable work (hypothesis)
-- [ ] Regression rate: <5% (agents don't break existing functionality; hypothesis)
-
-**Cost** (initial estimates requiring local measurement):
-- [ ] Cost per Issue: <$5 (autonomous), <$1 (semi-autonomous with human phases; hypotheses)
-- [ ] Budget overruns: 0 (hard caps enforced)
-- [ ] Cost transparency: 100% (local JSONL tracks every token)
-
-**Reliability** (initial hypotheses requiring local measurement):
-- [ ] Task completion rate: to be measured (hypothesis: high completion excluding malformed Issues)
-- [ ] Infinite loop rate: 0 (termination defense catches all)
-- [ ] Context overflow: to be measured (compaction + memory indexing)
-
-**Velocity** (initial hypotheses requiring local measurement):
-- [ ] Time per Issue: <4 hours (median, excludes human review time; hypothesis)
-- [ ] Throughput: 5-10 Issues/week (single-agent baseline; hypothesis)
-- [ ] Human review time: <30 min per Issue (agents produce clear Draft PRs; hypothesis)
+**Reliability** (measure after Scout operational):
+- [ ] Completion rate: to be measured
+- [ ] Resume from interruption: to be implemented and tested
 
 ---
 
 ## What Self-Evo Will Do Differently (Survival Strategy)
 
-**Why 30 frameworks died**:
-1. Insufficient differentiation from LangChain/LangGraph
-2. No cost controls (runaway spending kills pilots)
-3. Fully autonomous (no human review → quality death spiral)
-4. Framework lock-in (vendor collapse = project death)
+**Why cautious approach matters**:
+1. Agent pilot failures widely reported (runaway costs, infinite loops)
+2. Fully autonomous agents with no review gates risk quality death spiral
+3. Framework lock-in creates dependency risk
 
-**Self-evo survival strategy**:
-1. **File-first, not framework-first**: Markdown/YAML (OKF), git-native, portable
-2. **Cost controls built-in**: Token budgets, termination defense, real-time monitoring
-3. **Human-review gates**: Incremental autonomy, not blind automation
+**Self-evo Scout strategy**:
+1. **Human-review gates**: Daily report reviewed before acting on recommendations
+2. **Cost controls built-in**: Runner enforces limits, no promise of unachievable per-internal-call caps
+3. **File-first**: Ledger, cursor, telemetry in gitignored state; only summaries committed
 4. **Primitive-based**: SQLite, git, standard tools. Not dependent on framework survival.
-5. **Evidence-driven**: self-evo-native baseline before multi-agent complexity
-6. **Transparent**: Observability, structured logs, human-readable artifacts
+5. **Evidence-driven**: Deliver Scout first, measure bottlenecks, add complexity only when justified
+6. **Incremental autonomy**: Manual trigger → scheduled invocation → preference learning
 
-**Core insight**: Self-evo is not an agent framework. It's a workflow for human-agent collaboration using git as coordination plane.
+**Core insight**: Scout is not a generic agent framework. It's a bounded exploration workflow with human review.
 
 ---
 
 ## Next Actions (Post-Decision)
 
-1. **Human reviews this report** → approves route, budget, experiment
-2. **Run self-evo-native baseline evaluation** → 2-3 days, establishes baseline
-3. **Implement Route 1 MVP** → 4-5 weeks
-4. **Measure bottleneck** → throughput, memory, or quality?
-5. **Escalate to Route 2 or 5** → based on measured constraint
+1. **Human reviews this report** → approves Scout priority, sources, budget
+2. **Prototype Scout runner** → 1 day, validates enforcement
+3. **Implement Scout vertical slice** → 3-4 weeks (Issues A.1-A.4)
+4. **Operate Scout for 4 weeks** → collect human labels, measure quality/cost
+5. **Evaluate Scout** → holdout set, metrics (Issue B.1-B.2)
+6. **Conditional improvements** → based on measured failures (Phase C)
 
 ---
 
-## Evidence Corrections After Human Review
+## Corrections from Business Review
 
-This section documents corrections made after human review identified unverified claims:
+This section documents changes made after business-logic review identified priority misalignment:
 
-1. **"95% of 2025 agent pilots failed"** — Removed. Anecdotal evidence exists (runaway costs, infinite loops widely reported) but no quantified failure rate available. Corrected to "agent pilot failures widely reported but unquantified."
+1. **Scout vertical slice moved to first priority** — Was deferred to item 15 / Phase 3. Now Phase A.
 
-2. **"30 archived frameworks"** — Clarified as critic-focused search sample, biased toward failure cases. Not representative of all agent frameworks.
+2. **Runner enforcement boundary clarified** — Cannot promise hard per-internal-LLM-call token cap (hooks don't see that). Runner enforces: wall-clock, process count, scan/keep limits, lifecycle.
 
-3. **SWE-bench as primary evaluation** — Replaced with self-evo-native task evaluation (Issue triage, research synthesis, proposal generation). SWE-bench retained as optional assessment for coding worker capability.
+3. **Benchmark answer leakage fixed** — Holdout set must be independent, not from repo's solved Issues.
 
-4. **Langfuse immediate adoption** — Replaced with local JSONL telemetry (OpenTelemetry-compatible schema) first. Langfuse comparison approval-gated after local telemetry working.
+4. **Memory access tracking corrected** — Do NOT mutate Markdown on read. Use gitignored index or append-only event log.
 
-5. **Cost/time/success thresholds** — Marked all numeric thresholds as initial hypotheses requiring local measurement (e.g., "$1 per task", "30% success rate", "<4 hours per Issue", "1000 tasks/day").
+5. **Telemetry embedded in Scout** — Not detached infrastructure. Scout runner captures what CLI exposes; unknown stays unknown.
+
+6. **state/budget.db not tracking state** — Growing runtime state (ledger, cursor, telemetry) stays gitignored. Only summaries/schemas committed.
+
+7. **Removed proactive scouting deferral language** — Scout IS the proactive scouting. It's now first priority, not deferred.
+
+8. **Removed fixed numeric thresholds** — No ">1000 tasks/day", "read updates accessed", etc. Measure locally, then set thresholds.
 
 **High-confidence recommendations preserved**:
-- Single-agent baseline before multi-agent coordination
-- Human review gates (ResearchPlanAssignOps pattern)
+- Scout vertical slice as primary business goal
+- Human review gates (daily report workflow)
 - Primitives over frameworks (SQLite, git, Markdown)
-- Token budgets and termination defense
-- Worktree isolation for parallel work
-- Markdown as canonical format (OKF standard)
+- Runner-enforced limits (wall-clock, process count, scan/keep)
+- Cursor-based idempotent resumption
+- Markdown canonical, database as index
 - Evidence-based escalation (measure bottleneck before adding complexity)
 
 ---

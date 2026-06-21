@@ -30,7 +30,6 @@ name: short-kebab-case-slug
 description: one-line summary
 created: 2026-06-21T10:30:00Z
 modified: 2026-06-21T15:45:00Z
-accessed: 2026-06-21T16:00:00Z
 metadata:
   type: user | feedback | project | reference
 ---
@@ -38,14 +37,16 @@ metadata:
 Memory content with [[linked-memory]] references.
 ```
 
-**Effort**: 1 day (add timestamp fields, update memory write functions)
+**Note**: Do NOT add `accessed` timestamp that mutates on read. If access tracking needed, use separate gitignored index or append-only event log.
+
+**Effort**: 1 day (add created/modified fields, update memory write functions)
 
 **Benefits**:
 - Standards-aligned (future-proof)
 - Git-native (no breaking changes)
-- Enables forgetting mechanisms (time-decay scoring)
+- Enables time-decay scoring for forgetting experiments (if needed)
 
-**Risks**: None (additive only)
+**Risks**: None (additive only, Markdown remains canonical)
 
 ---
 
@@ -53,36 +54,37 @@ Memory content with [[linked-memory]] references.
 
 **What**: File-based structured logging with OpenTelemetry-compatible schema for local analysis.
 
-**Integration**: Write events to `state/telemetry/<date>/<issue-id>.jsonl` with standard spans.
+**Integration**: Scout runner wrapper captures structured CLI output/usage where available and writes to gitignored `state/telemetry/<date>/<run-id>.jsonl` with standard spans.
 
 ```python
 import json
 from datetime import datetime
 
-def log_span(name, issue_id, metadata, start, end, tokens_used):
+def log_span(name, issue_id, metadata, start, end, tokens_used=None):
     event = {
         "timestamp": datetime.utcnow().isoformat(),
         "span_name": name,
         "issue_id": issue_id,
         "metadata": metadata,
         "duration_ms": int((end - start) * 1000),
-        "tokens_used": tokens_used,
+        "tokens_used": tokens_used if tokens_used is not None else "unknown",
         "trace_id": f"issue-{issue_id}"
     }
+    # Write to gitignored state/telemetry/, not tracked in repo
     with open(f"state/telemetry/{date.today()}/{issue_id}.jsonl", "a") as f:
         f.write(json.dumps(event) + "\n")
 ```
 
-**Effort**: 2 days (schema design, logging wrapper, basic analysis scripts)
+**Effort**: Embedded in Scout runner (Issue A.1), no separate infrastructure project
 
 **Benefits**:
 - Zero external dependencies
-- Git-trackable for debugging
+- Local-only (no external transmission without approval)
 - OpenTelemetry-compatible (future migration path)
-- Cost tracking per issue/agent/day
+- Cost tracking per issue/agent/day where CLI exposes it
 - Post-mortem analysis without cloud access
 
-**Risks**: No real-time dashboard (analyze after execution)
+**Risks**: Unknown token/cost when CLI doesn't expose per-internal-call metrics (logged as "unknown")
 
 ---
 
@@ -111,36 +113,37 @@ def log_span(name, issue_id, metadata, start, end, tokens_used):
 
 ---
 
-### 3. Self-Evo Native Task Benchmark
+### 3. Scout Holdout Evaluation Set
 
-**What**: Task suite derived from self-evo's actual Issue history and workflow patterns.
+**What**: Independent task suite for Scout quality evaluation, avoiding answer leakage.
 
-**Integration**: Create benchmark from completed Issues with known-good outcomes.
+**Integration**: Create holdout from new tasks, NOT from completed Issues with known-good outcomes in repo history.
 
 ```yaml
-# data/benchmarks/tasks/issue-7-research.yml
-task_id: issue-7-research
-description: "Research autonomous agent ecosystem patterns"
-input_files: [".github/ISSUE_TEMPLATE/", "data/memory/"]
+# data/benchmarks/scout_holdout/task-001-new-domain.yml
+task_id: scout-task-001
+description: "Explore emerging observability patterns in distributed systems"
+input_context: ["Current tech landscape, not in repo history"]
 expected_outputs:
+  - "data/exploration/daily_reports/*.md"
   - "data/exploration/reuse_maps/*.md"
-  - "data/proposals/project_candidates/*.md"
 success_criteria:
-  - all_files_created: true
+  - report_created: true
   - markdown_valid: true
   - frontmatter_present: true
-  - word_count: {min: 3000}
+  - evidence_links: {min: 5}
+  - no_answer_leakage: true  # Verify no solution in repo history
 ```
 
-**Effort**: 1 week (extract 10-15 tasks from Issue history, define success criteria, run baseline)
+**Effort**: 1 week (create independent holdout tasks, define Scout-specific metrics, run baseline)
 
 **Benefits**:
-- Measures actual self-evo workflows (not generic coding)
-- Validates memory retrieval, exploration patterns, proposal generation
-- Cheaper to run (<$10 per full eval)
-- Immediate feedback loop (runs on real repo structure)
+- Measures actual Scout workflow (not generic coding)
+- Validates novelty discovery, relevance filtering, evidence quality
+- Avoids answer leakage (holdout independent of repo history)
+- Separates Scout quality (exploration) from Builder quality (implementation)
 
-**Risks**: Small sample size initially (grows with Issue history)
+**Risks**: Holdout design quality affects evaluation validity
 
 ---
 
@@ -375,27 +378,27 @@ git worktree add .worktrees/issue-8 -b agent/worker-02/8
 
 ### 13. Defer: Temporal/Restate Durable Execution
 
-**Reason**: SQLite task queue sufficient for <1000 tasks/day. Durable execution overhead not justified until scale proven.
+**Reason**: SQLite task queue sufficient for current scale. Durable execution overhead not justified until bottleneck proven.
 
-**Escalation trigger**: Task volume exceeds SQLite (>10k tasks/day) OR cross-host coordination needed.
+**Escalation trigger**: Task volume or coordination complexity demonstrates SQLite bottleneck (measured locally, not pre-set threshold) OR cross-host coordination needed.
 
 ---
 
-### 14. Defer: Vector Databases
+### 13. Defer: Vector Databases
 
 **Systems**: Pinecone, Weaviate, Qdrant
 
-**Reason**: SQLite vector extension handles <10k memories. External vector DB adds deployment complexity.
+**Reason**: SQLite vector extension handles memory at current scale. External vector DB adds deployment complexity.
 
 **Escalation trigger**: Memory count growth + measured retrieval precision degradation demonstrate semantic search necessity.
 
 ---
 
-### 15. Defer: Proactive Scouting
+### 14. Defer: Proactive Scouting Infrastructure Beyond Scout Vertical Slice
 
-**Reason**: No mature agent-specific patterns. Human-filed Issues prove value first.
+**Reason**: Scout vertical slice (Phase A) delivers the core capability. Additional infrastructure (preference learner, multi-source orchestration, semantic deduplication) should be added only after Scout operational and measured needs identified.
 
-**Escalation trigger**: MVP successful AND clear demand for proactive task discovery.
+**Escalation trigger**: Scout operational AND specific bottlenecks measured (e.g., low relevance rate, high duplicate rate, throughput insufficient).
 
 ---
 
@@ -411,109 +414,119 @@ git worktree add .worktrees/issue-8 -b agent/worker-02/8
 
 ## Build New (No Mature Solution)
 
-### 17. Build: Token Budget Enforcement
+### 17. Build: Scout Runner with Bounded Execution
 
-**Gap**: No framework provides per-issue or per-day token budgets with automatic halting.
+**Gap**: No framework provides Scout-specific bounded execution (sources, items, wall-clock, process count).
 
 **Requirements**:
-- Per-issue cap (e.g., 100k tokens)
-- Daily cap (e.g., 1M tokens)
-- Human override protocol (approve additional budget)
-- Cost tracking per agent, per Issue, per day
+- Launch Claude CLI worker with Scout task
+- Enforce: max wall-clock time, max Claude process invocations, max sources scanned, max items scanned/kept
+- Capture: structured CLI output/usage where available, exit codes, duration
+- Log unknown token/cost as "unknown" (hooks don't expose per-internal-LLM-call metrics)
+- Terminate: signal handler for timeout, write partial results
+- Resume: load cursor, skip already-processed items
 
 **Implementation**:
 ```python
-class BudgetEnforcer:
-    def check_budget(self, issue_id, tokens_requested):
-        used = self.get_issue_usage(issue_id)
-        if used + tokens_requested > ISSUE_CAP:
-            raise BudgetExceededError(issue_id, used, ISSUE_CAP)
-        return True
+class ScoutRunner:
+    def run(self, issue_id, config):
+        # Launch Claude CLI subprocess
+        # Enforce wall-clock timeout
+        # Monitor process count
+        # Capture structured output
+        # Terminate on limits
+        # Write partial results
+        pass
 ```
 
-**Effort**: 1 week (budget tracking database, enforcement hooks, approval workflow)
+**Effort**: Embedded in Scout vertical slice (Issue A.1-A.2), ~1 week
 
-**Priority**: P0 (prevents runaway costs)
+**Priority**: P0 (enables Scout vertical slice)
 
 ---
 
-### 18. Build: GitHub Issue Decomposition Protocol
+### 18. Build: Scout Cursor and Ledger System
 
-**Gap**: ResearchPlanAssignOps pattern exists but not codified.
+**Gap**: No mature cursor/ledger pattern for multi-source exploration agents.
 
 **Requirements**:
-- Parent/child Issue linking
-- Phase labels (research/design/implement/review)
-- Transition protocol (agent signals phase complete, human approves next)
-- Progress tracking (% complete per Issue)
+- Per-source cursor tracking (last-seen timestamp or item ID)
+- Deduplication cache (by URL/ID, later semantic)
+- Keep/reject ledger with evidence (every item decision logged)
+- Idempotent resumption (load cursor, skip processed)
+- Gitignored state (cursor, cache, ledger JSONL)
 
 **Schema**:
-```yaml
-# .github/ISSUE_TEMPLATE/agent-task.yml
-labels: ["agent-task", "phase:research"]
-parent_issue: 7
-assigned_agent: scout-worker-01
-budget_tokens: 100000
+```json
+// state/scout_cursor.json (gitignored)
+{
+  "github": {"last_seen": "2026-06-21T12:00:00Z"},
+  "hackernews": {"last_id": 40123456},
+  "arxiv": {"last_date": "2026-06-20"}
+}
+
+// data/exploration/raw/2026-06-21-github-ledger.jsonl (gitignored)
+{"item_id": "repo/123", "url": "...", "decision": "keep", "reason": "Novel observability pattern", "timestamp": "..."}
+{"item_id": "repo/124", "url": "...", "decision": "reject", "reason": "Duplicate of existing source", "timestamp": "..."}
 ```
 
-**Effort**: 1 week (GitHub labels, phase transition automation, progress dashboard)
+**Effort**: Embedded in Scout vertical slice (Issue A.2), ~1 week
 
-**Priority**: P1 (enables multi-phase workflows)
+**Priority**: P0 (enables idempotent Scout)
 
 ---
 
-### 19. Build: Memory Retrieval API
+### 19. Build: Memory Access Tracking (Conditional)
 
-**Gap**: Self-evo has no programmatic memory retrieval (agents manually Read files).
+**Gap**: Self-evo needs access/use statistics for forgetting experiments without mutating canonical Markdown.
 
-**Requirements**:
-- Keyword search (SQLite FTS)
-- Semantic search (embeddings, deferred until measured threshold)
-- Recency bias (recent memories ranked higher)
-- Type filtering (user/feedback/project/reference)
+**Requirements** (only if retrieval bottleneck measured):
+- Track memory reads/uses without mutating Markdown files
+- Store access events in rebuildable gitignored index or append-only log
+- Enable time-decay + access-frequency scoring
+- Archive policy: manual only, reversible, requires cooldown proposal + human approval
 
-**API**:
+**Implementation**:
 ```python
-def recall(query: str, limit: int = 5, memory_type: str = None):
-    # Keyword + semantic hybrid search
-    # Return top-k memories with scores
-    return [Memory(name, description, content, score)]
+# state/memory_access.db (gitignored, rebuildable)
+CREATE TABLE access_log (
+  memory_name TEXT,
+  accessed_at INTEGER,
+  access_type TEXT  -- read, update, link
+);
+
+# OR append-only event log
+# state/memory_events.jsonl (gitignored)
+{"memory": "okf-validates-file-first", "event": "read", "timestamp": "2026-06-21T12:00:00Z"}
 ```
 
-**Effort**: 2 weeks (FTS integration, ranking function, API layer)
+**Effort**: 1 week (access tracking, forgetting score, archive/restore protocol)
 
-**Priority**: P1 (scales memory beyond manual lookup)
+**Priority**: P2 (conditional on measured retrieval bottleneck)
 
 ---
 
 ## Integration Order (Recommended Sequence)
 
-### Phase 0: Foundations (Week 1-2)
+### Phase A: Autonomous Scout Vertical Slice (Week 1-4)
 
-1. **Self-evo native task benchmark** (1 week) — Establish baseline performance on actual workflows
-2. **Local structured telemetry** (2 days) — JSONL event logging for cost/debugging
-3. **Token budget enforcement** (1 week) — Hard per-issue and per-day caps with override protocol
-4. **Three-layer termination defense** (3 days) — Tool depth limits, wall-clock timeouts, redundancy
+1. **Scout source registry and runner wrapper** (1 week) — Approved sources, bounded execution, local telemetry embedded
+2. **Cursor, deduplication, and keep/reject ledger** (1 week) — Idempotent resumption, evidence-backed filtering
+3. **Daily decision report generation** (1 week) — Reuse map, experiment/skill/project candidate, human-reviewable output
+4. **Human review label workflow** (3 days) — Feedback loop for preference learning
 
-### Phase 1: Core Capabilities (Week 3-5)
+### Phase B: Scout Evaluation (Week 5-6, after Scout operational)
 
-5. **OKF timestamps** (1 day) — Add created/modified/accessed to memory frontmatter
-6. **Memory retrieval API + SQLite FTS** (2 weeks) — Keyword search experiments, measure precision
-7. **ResearchPlanAssignOps protocol** (1 week) — Codify phased workflow with GitHub labels
+5. **Scout holdout set and quality metrics** (1 week) — Independent holdout (no answer leakage), Scout vs Builder vs human metrics
+6. **Run Scout against holdout and measure** (3 days) — Success rate, cost, failure modes, comparison to human baseline
 
-### Phase 2: Multi-Agent Readiness (Week 6-8, only after measured bottlenecks)
+### Phase C: Conditional Improvements (triggered by observed Scout failures)
 
-8. **External observability comparison** (3 days) — Evaluate Langfuse vs OpenLLMetry if local telemetry insufficient
-9. **SQLite lease coordination** (1 week) — Enable parallel agents if single-agent proven slow
-10. **Worktree isolation protocol** (1 day) — Codify parallel execution without file conflicts
-
-### Phase 3: Optimization (Future, triggered by measured need)
-
-11. **Forgetting mechanism** (1 week) — Archive low-scoring memories when retrieval precision degrades
-12. **Vector embeddings** (2 weeks) — Add semantic search if FTS precision insufficient at scale
-13. **SWE-bench optional comparison** (3 days) — Validate coding-worker capability vs standard benchmark
-14. **Durable execution engines** (escalate only if SQLite bottleneck proven at task volume >1000/day)
-15. **Proactive scouting** (when MVP proven successful and demand clear)
+7. **Scout reliability** (1 week) — Resume, semantic deduplication, rate limit handling (only if failures observed)
+8. **Memory indexing** (2 weeks) — OKF timestamps (created/modified only, no mutating reads), SQLite FTS, OpenViking comparison (only if retrieval bottleneck measured)
+9. **Multi-agent coordination** (2-3 weeks) — Parallel Scouts with worktree isolation (only if throughput bottleneck proven)
+10. **External observability comparison** (1 week) — Langfuse vs OpenLLMetry (only if local telemetry insufficient for debugging)
+11. **Durable workflow engine** (2-3 weeks) — Temporal/Restate checkpointing (only if recovery pain measured)
 
 ---
 

@@ -139,35 +139,35 @@ These are durable conclusions worth merging into hot memory (`data/memory/hot/`)
 **Type**: reference
 **Confidence**: High
 
-**Conclusion**: File-first memory (Markdown) scaling depends on retrieval performance (linear scan degrades with size). Production pattern: Markdown files as source of truth + SQLite FTS (keyword) + embeddings (semantic) as rebuildable index. ENGRAM reports 77.55% LoCoMo benchmark (source-specific), Mem0 reports 91.6% (source-specific). Self-evo should consider SQLite FTS as memory count grows, with specific threshold determined by observed retrieval performance rather than fixed count.
+**Conclusion**: File-first memory (Markdown) scaling depends on retrieval performance (linear scan degrades with size). Production pattern: Markdown files as source of truth + SQLite FTS (keyword) + embeddings (semantic) as rebuildable gitignored index. ENGRAM reports 77.55% LoCoMo benchmark (source-specific), Mem0 reports 91.6% (source-specific). Self-evo should consider SQLite FTS only if retrieval bottleneck measured, with specific threshold determined by observed performance rather than fixed count.
 
 **Provenance**:
 - Memory research: `data/exploration/raw/2026-06-21-memory-context.md`
 - ENGRAM paper (arXiv 2511.12960), Mem0 benchmarks (source-specific scores)
 - Cognee, Graphiti architecture patterns
 
-**Why durable**: The scaling threshold (file-only → file+index) is a stable architecture decision. The hybrid pattern (files authoritative, index rebuildable) is production-proven.
+**Why durable**: The scaling threshold (file-only → file+index) is a stable architecture decision. The hybrid pattern (files authoritative, index rebuildable and gitignored) is production-proven.
 
-**How to apply**: Keep Markdown canonical. Add SQLite FTS index (rebuildable from files) when retrieval performance degrades. Add embeddings if keyword search proves insufficient.
+**How to apply**: Keep Markdown canonical. Add SQLite FTS index (gitignored, rebuildable from files) only if retrieval bottleneck measured. Add embeddings if keyword search proves insufficient. Compare user's active OpenViking adapter.
 
 ---
 
-## Proposed Memory 8: Forgetting Improves Retrieval Accuracy
+## Proposed Memory 8: Forgetting Mechanism (Experimental, Conditional)
 
 **Slug**: `forgetting-improves-memory`
 **Type**: reference
 **Confidence**: Low
 
-**Conclusion**: Unbounded memory accumulation may degrade retrieval. Research identifies substantial accuracy gains from selective forgetting (time-decay + access-frequency + quality gating), with one source reporting 13% → 39% improvement (unverified; source-specific). Self-evo should evaluate reversible forgetting against a baseline and adopt it only if local retrieval quality improves.
+**Conclusion**: Unbounded memory accumulation may degrade retrieval. Research identifies potential accuracy gains from selective forgetting (time-decay + access-frequency + quality gating), with one source reporting 13% → 39% improvement (unverified; source-specific). Self-evo should evaluate reversible forgetting only if local retrieval quality problems measured, tracking access/use in gitignored index or append-only event log (NOT by mutating Markdown on read). Adopt forgetting only if local evidence shows improvement.
 
 **Provenance**:
 - Memory research: `data/exploration/raw/2026-06-21-memory-context.md`
 - Forgetting problem analysis (one source reports 13% → 39% accuracy improvement; unverified, source-specific)
 - Multiple systems implement forgetting (Mem0, Graphiti, CrewAI)
 
-**Why durable**: The forgetting principle (selective memory beats accumulation) is supported by cognitive science and multiple agent systems, but gains are source-specific and require local validation. The experiment design is stable.
+**Why durable**: The forgetting principle (selective memory may improve retrieval) is supported by cognitive science and multiple agent systems, but gains are source-specific and require local validation. The experiment design (track access without mutating files, reversible archival) is stable.
 
-**How to apply**: Design reversible experiment: Add `accessed` timestamp, access counter. Score memories (time-decay + access-frequency). Archive low-scoring (reversible). Measure retrieval precision/recall before and after. Adopt forgetting only if local evidence shows improvement.
+**How to apply**: Design reversible experiment only if retrieval problems measured: Add OKF timestamps (`created`, `modified` only, NOT `accessed`). Track access/use in gitignored local index (`state/memory_access.db`) or append-only event log. Score memories (time-decay + access-frequency). Archive low-scoring (reversible, manual approval required). Measure retrieval precision/recall before and after. Adopt forgetting only if local evidence shows improvement.
 
 ---
 
