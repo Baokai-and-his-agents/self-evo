@@ -25,12 +25,11 @@ status: proposed
 **预计工期**：1 周
 
 **范围**：
-- 在 `rules/RESOURCE_APPROVALS.yaml` 定义批准来源：GitHub Search/REST、HN API、arXiv API；Product Hunt 仅当资源批准且 API 可用时
+- 只读检查 `rules/RESOURCE_APPROVALS.yaml`，仅把其中已批准的公开来源交给 Runner
 - Agent 不得直接修改 `rules/RESOURCE_APPROVALS.yaml` 或 `rules/EXPLORATION_POLICY.md`
-- 若需新来源（如 Product Hunt），候选任务应：
-  - 读取现有 approved resources；仅已批准源进入 runner
+- 若 GitHub/HN/arXiv/Product Hunt 等目标来源尚未批准，候选任务应：
   - Agent 写 `data/proposals/rule_changes/<date>-<topic>-resource-approval.md` proposal 和 GitHub 审批请求
-  - 由 jlcbk 修改/批准 `rules/` 中规则文件后，worker 才认为正式批准
+  - 由 `jlcbk` 修改或批准 `rules/` 中的规则文件后，Runner 才允许该来源
 - 构建 Scout runner wrapper 脚本（`scripts/scout_runner.py`）
 - Runner 启动 Claude CLI worker 执行 Scout 任务
 - Runner 强制执行：最大墙上时钟时间（可配置，如 2 小时）、最大 Claude 进程调用数（如 10）、最大重试（如 3）
@@ -40,14 +39,15 @@ status: proposed
 - 手动调用：用户运行 `python scripts/scout_runner.py --issue <N>`
 
 **验收标准**：
-- [ ] `rules/RESOURCE_APPROVALS.yaml` 包含 Scout 源批准（GitHub/HN/arXiv；Product Hunt 门控在批准+API）
+- [ ] Runner 能读取现有资源审批结果，并拒绝任何未批准来源
+- [ ] 对尚未批准的目标来源，存在 `data/proposals/rule_changes/` proposal 和 GitHub 人工审批请求
+- [ ] 只有在 `jlcbk` 完成人工批准后，对应来源才可进入 Runner
 - [ ] Scout runner 脚本存在且启动 Claude CLI
 - [ ] Runner 强制执行墙上时钟超时（超出时终止进程）
 - [ ] Runner 强制执行最大调用数（N 个 Claude 进程后停止）
 - [ ] Runner 捕获 CLI 输出并将运行遥测写入 gitignored `state/telemetry/<date>/<run-id>.jsonl`
 - [ ] Runner 在终止时写入部分结果（信号处理器）
-- [ ] 手动调用记录在 `rules/EXPLORATION_POLICY.md`
-- [ ] 验证 runner 拒绝未批准源，且存在人类批准后的配置或 proposal
+- [ ] 手动调用先记录在 `data/` 下的使用文档或 proposal；如需进入 `rules/EXPLORATION_POLICY.md`，必须另走人工批准的规则变更
 
 **前置依赖**：None
 

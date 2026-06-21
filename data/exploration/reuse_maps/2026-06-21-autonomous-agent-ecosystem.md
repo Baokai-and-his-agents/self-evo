@@ -452,9 +452,11 @@ class ScoutRunner:
 **需求**：
 - 每来源 cursor 跟踪（上次查看的时间戳或项目 ID）
 - 去重缓存（按 URL/ID，后续语义）
-- 保留/拒绝账本带证据（每个项目决策已记录）
+- 完整运行 ledger 记录每个项目的保留/拒绝决策，作为本地调试证据
+- 精简 decisions ledger 提交到 Git，供 GitHub 上的人类审阅和重建决策
 - 幂等恢复（加载 cursor，跳过已处理）
-- Gitignored 状态（cursor、cache、ledger JSONL）
+- Gitignored 状态：原始 HTTP/API payload、下载缓存、cursor、dedupe cache、完整 ledger JSONL、telemetry
+- Tracked 决策证据：URL/ID、日期、标题或 metadata、keep/reject、理由、来源类型；不包含大段版权内容
 
 **Schema**：
 ```json
@@ -469,6 +471,18 @@ class ScoutRunner:
 {"item_id": "repo/123", "url": "...", "decision": "keep", "reason": "Novel observability pattern", "timestamp": "..."}
 {"item_id": "repo/124", "url": "...", "decision": "reject", "reason": "Duplicate of existing source", "timestamp": "..."}
 ```
+
+```markdown
+<!-- data/exploration/raw/2026-06-21-github-decisions.md (tracked) -->
+- id: repo/123
+  url: https://example.com/repo/123
+  date: 2026-06-21
+  source_type: github
+  decision: keep
+  reason: 提供可复用的可观测性模式
+```
+
+日报只链接 tracked decisions 条目，不链接远端审阅者无法访问的本地 ledger。
 
 **工作量**：嵌入 Scout 垂直切片（Issue A.2），约 1 周
 
