@@ -1,7 +1,7 @@
 # Autonomous Agent Loops and GitHub-Centered Coordination: 2025-2026 Research
 
-**Research Date:** 2026-06-21  
-**Researcher:** Scout Worker for self-evo Issue #7  
+**Research Date:** 2026-06-21
+**Researcher:** Scout Worker for self-evo Issue #7
 **Scope:** Long-running autonomous agents, durable execution, GitHub as coordination plane, coding agent workflows
 
 ---
@@ -14,7 +14,7 @@ This research identifies mature patterns for autonomous agent loops and GitHub-c
 2. **GitHub as Coordination Plane** is moving from concept to production via GitHub Agentic Workflows and Copilot agent assignment
 3. **Context Management** is the primary constraint for long-running coding agents, with compression triggering at ~83.5% capacity
 4. **Idempotency** requires orchestration-level contracts, not just tool-level implementation
-5. **Multi-Agent Orchestration** in production favors sequential and hierarchical patterns (70% of deployments) over swarm architectures
+5. **Multi-Agent Orchestration** in production favors sequential and hierarchical patterns over swarm architectures (source-specific: groovyweb.co industry analysis)
 
 ---
 
@@ -111,7 +111,7 @@ This research identifies mature patterns for autonomous agent loops and GitHub-c
 | 7 | [Tian Pan: Agent Idempotency](https://tianpan.co/blog/2026-04-19-idempotency-agentic-tool-calling-saga-deduplication) | Technical Blog | 2026-04 | **KEEP** | Detailed idempotency patterns, saga compensation |
 | 8 | [Tian Pan: Agent Termination](https://tianpan.co/blog/2026-05-07-tool-call-convergence-agents-stopping-criteria) | Technical Blog | 2026-05 | **KEEP** | Production termination patterns, convergence signals |
 | 9 | [ResearchPlanAssignOps Pattern](http://github.github.com/gh-aw/patterns/research-plan-assign-ops/) | Official Pattern | 2026 | **KEEP** | Four-phase GitHub coordination pattern |
-| 10 | [Multi-Agent Orchestration Patterns](https://www.groovyweb.co/blog/multi-agent-orchestration-patterns-supervisor-router-pipeline-swarm-2026) | Industry Analysis | 2026 | **KEEP** | Build costs, production usage statistics (70% sequential/hierarchical) |
+| 10 | [Multi-Agent Orchestration Patterns](https://www.groovyweb.co/blog/multi-agent-orchestration-patterns-supervisor-router-pipeline-swarm-2026) | Industry Analysis | 2026 | **KEEP** | Build costs, sequential/hierarchical prevalence in production |
 | 11 | [OpenTelemetry: AI Agent Observability](https://opentelemetry.io/blog/2025/ai-agent-observability/) | Standards Doc | 2025 | **KEEP** | Emerging observability standards |
 | 12 | [LangGraph Persistence Guide](https://markaicode.com/langgraph-persistence-checkpointing-workflows/) | Technical Guide | 2026 | **KEEP** | Production limitations of checkpointing |
 | 13 | [Inngest: Durable AI Agents](https://www.inngest.com/blog/ai-agents-inngest-durable-steps) | Vendor Blog | 2025-2026 | **KEEP** | Event-driven step functions approach |
@@ -544,7 +544,7 @@ This research identifies mature patterns for autonomous agent loops and GitHub-c
 - **Best For:** Theoretical flexibility
 - **Production Usage:** ~5% of deployments
 
-**Key Finding:** "Sequential and hierarchical dominate in 2026—together about 70% of production orchestrations because predictability trumps flexibility in real deployments."
+**Key Finding (source-specific: groovyweb.co):** "Sequential and hierarchical dominate in 2026—together about 70% of production orchestrations because predictability trumps flexibility in real deployments."
 
 **Source:** [Multi-Agent Orchestration Patterns 2026](https://www.groovyweb.co/blog/multi-agent-orchestration-patterns-supervisor-router-pipeline-swarm-2026)
 
@@ -1247,7 +1247,7 @@ def execute_tool(tool_name, params, idempotency_key):
     cached = check_cache(idempotency_key)
     if cached:
         return cached.result
-    
+
     result = actual_tool_execution(tool_name, params)
     store_cache(idempotency_key, result)
     return result
@@ -1340,7 +1340,7 @@ RateLimitCoordinator:
     quota_pool: shared across all agents
     current_usage: real-time tracking
     agent_priorities: critical vs. background
-    
+
     request_permission(agent_id, priority):
         if quota_available:
             allocate_and_track()
@@ -1675,7 +1675,7 @@ Autonomous coding agents and GitHub-centered coordination are transitioning from
 
 Long-running autonomous coding agents can now operate reliably for hours to days, but the "last mile" to production-quality code remains human-intensive. The winning pattern combines:
 - Large context windows for resilience
-- Aggressive tool use for efficiency  
+- Aggressive tool use for efficiency
 - Parallel decomposition for speed
 - Cross-session memory for expertise accumulation
 - **Continuous human oversight** for quality assurance
@@ -1686,7 +1686,7 @@ The architecture patterns exist. The coordination primitives are available. The 
 
 ---
 
-**End of Research Report**  
-**Total Word Count:** ~8,500 words  
-**Research Depth:** 35 searches, 15 deep fetches, 19 vetted sources  
+**End of Research Report**
+**Total Word Count:** ~8,500 words
+**Research Depth:** 35 searches, 15 deep fetches, 19 vetted sources
 **Date Completed:** 2026-06-21

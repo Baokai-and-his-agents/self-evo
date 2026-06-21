@@ -1,8 +1,8 @@
 # Scouting Report: Agent Observability, Safety & Evaluation Infrastructure
 
-**Report Date:** 2026-06-21  
-**Issue:** #7 — Autonomous Agent Ecosystem Research  
-**Scout Worker:** agent/scout-worker-01  
+**Report Date:** 2026-06-21
+**Issue:** #7 — Autonomous Agent Ecosystem Research
+**Scout Worker:** agent/scout-worker-01
 **Research Method:** Serial GitHub repository search via `gh search repos` (24 queries)
 
 ---
@@ -17,9 +17,8 @@ This report extracts findings from 24 real GitHub repository searches focused on
 
 ## Source & Query Ledger
 
-**Transcript:** `C:\Users\Cui\AppData\Local\Temp\scout7-serial-scouting-bash.jsonl` (53 JSONL entries)  
-**Session:** `d33210f5-3821-435e-ba5c-94e977f4b2bf`  
-**Model:** `claude-opus-4-8[1m]`  
+**Transcript:** Serial scouting session JSONL (53 entries recorded)
+**Model:** `claude-opus-4-8[1m]`
 **Permission Mode:** `auto`
 
 ### Search Queries Executed (24 total)
@@ -313,8 +312,8 @@ This report extracts findings from 24 real GitHub repository searches focused on
 | **Straitjacket** | | | ✓ | 0★, Claude Code plugin but unproven |
 | **agent-regression-testing (indigolain)** | | | ✓ | 0★, LLM-judge but no ecosystem |
 
-**Adopt criteria:** ≥1k★ OR (vendor-backed + active maintenance)  
-**Adapt criteria:** <1k★ but unique capability or pattern-worthy  
+**Adopt criteria:** ≥1k★ OR (vendor-backed + active maintenance)
+**Adapt criteria:** <1k★ but unique capability or pattern-worthy
 **Reject criteria:** <5★ AND no unique capability
 
 ---
@@ -325,17 +324,17 @@ This report extracts findings from 24 real GitHub repository searches focused on
 
 ### Stage 1: Instrumentation (Observability)
 
-**Goal:** Capture agent traces, tool calls, prompts, completions, cost  
-**Tool:** OpenLLMetry (7k★, OTel-native, no vendor lock-in)  
-**Alternative:** Langfuse SDK if self-hosted UI + evals desired  
+**Goal:** Capture agent traces, tool calls, prompts, completions, cost
+**Tool:** OpenLLMetry (7k★, OTel-native, no vendor lock-in)
+**Alternative:** Langfuse SDK if self-hosted UI + evals desired
 **Output:** JSONL trace spans with OpenTelemetry semantic conventions
 
 **Integration point:** Wrap scout `gh search repos` calls with OpenLLMetry decorators or manual span creation.
 
 ### Stage 2: Evaluation (Regression Detection)
 
-**Goal:** LLM-as-judge comparison of current vs. baseline scout outputs  
-**Tool:** DeepEval (16k★) or custom LLM judge with Langfuse datasets  
+**Goal:** LLM-as-judge comparison of current vs. baseline scout outputs
+**Tool:** DeepEval (16k★) or custom LLM judge with Langfuse datasets
 **Metrics:**
 - Factual consistency (do URLs still resolve?)
 - Coverage (did new scout find ≥90% of baseline repos?)
@@ -345,9 +344,9 @@ This report extracts findings from 24 real GitHub repository searches focused on
 
 ### Stage 3: Security Screening (Prompt Injection + Sandbox)
 
-**Goal:** Detect if scouted repo descriptions contain injection attempts; sandbox code execution if scout ever runs `npm install` or `pip install`  
-**Tool (defense):** BridgeWard provenance tagging (33★) or custom regex from tldrsec catalog  
-**Tool (sandbox):** E2B Desktop (1,414★) if scout must execute code from scouted repos  
+**Goal:** Detect if scouted repo descriptions contain injection attempts; sandbox code execution if scout ever runs `npm install` or `pip install`
+**Tool (defense):** BridgeWard provenance tagging (33★) or custom regex from tldrsec catalog
+**Tool (sandbox):** E2B Desktop (1,414★) if scout must execute code from scouted repos
 
 **Integration point:** Pre-filter GitHub API responses through injection detector before passing to LLM context.
 
@@ -395,12 +394,12 @@ This report extracts findings from 24 real GitHub repository searches focused on
 
 ## Literal End of Research Report
 
-**Total repositories surfaced:** 85 (across 24 queries; 15 empty results discarded)  
-**Primary sources selected for table:** 16  
-**Tier 1 platforms:** 5 (Langfuse, Arize Phoenix, OpenLLMetry, AgentOps, Weave)  
-**Security tools:** 12  
-**Regression testing tools:** 10 (all <5★)  
-**Sandbox:** 1 (E2B Desktop)  
+**Total repositories surfaced:** 85 (across 24 queries; 15 empty results discarded)
+**Primary sources selected for table:** 16
+**Tier 1 platforms:** 5 (Langfuse, Arize Phoenix, OpenLLMetry, AgentOps, Weave)
+**Security tools:** 12
+**Regression testing tools:** 10 (all <5★)
+**Sandbox:** 1 (E2B Desktop)
 **Cryptographic audit:** 1 (Tesserae)
 
 **Next scout actions (not executed):**

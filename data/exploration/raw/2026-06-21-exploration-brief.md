@@ -1,9 +1,9 @@
 # Autonomous Agent Ecosystem Exploration Brief
 
-**Run ID**: 2026-06-21-run-003  
-**Worker**: scout-worker-01  
-**Issue**: #7  
-**Date**: 2026-06-21  
+**Run ID**: 2026-06-21-run-003
+**Worker**: scout-worker-01
+**Issue**: #7
+**Date**: 2026-06-21
 
 ## Objective
 

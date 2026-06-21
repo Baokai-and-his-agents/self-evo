@@ -1,8 +1,8 @@
 # Agent Memory, Context Engineering, and Knowledge Stores
 ## Research Report for self-evo Issue #7
 
-**Date:** 2026-06-21  
-**Scope:** Mature 2025-2026 implementations of agent memory systems  
+**Date:** 2026-06-21
+**Scope:** Mature 2025-2026 implementations of agent memory systems
 **Focus:** File-first vs database-backed memory, episodic/semantic/procedural taxonomies, hot/cold patterns, retrieval strategies, and fit with self-evo's Markdown/YAML canonical memory
 
 ---
@@ -73,8 +73,8 @@ This report surveys **25+ memory and context systems** for AI agents, targeting 
 | 34 | Rewind AI | rewind.ai | ❌ 403 Forbidden |
 | 35 | File-based KM | github.com/topics/knowledge-management | ✅ Patterns, examples, tradeoffs |
 
-**Success rate:** 14/35 (40%) returned usable architectural detail  
-**Unresolved public references:** OpenViking, GBrain, and an AutoGen documentation migration  
+**Success rate:** 14/35 (40%) returned usable architectural detail
+**Unresolved public references:** OpenViking, GBrain, and an AutoGen documentation migration
 **Documentation gaps:** Many systems have high-level marketing but lack technical depth in public docs
 
 ---
@@ -281,7 +281,7 @@ Recent research (arXiv 2407.16833, 2024) challenges the "just use long context" 
   1. System prompt + tools (static, always cached)
   2. Retrieved memories (changes per query, breaks cache)
   3. Conversation messages (grows every turn, breaks cache)
-  
+
 **Problem for self-evo:** Loading all memories into context breaks caching on every retrieval change. Solution: RAG with selective retrieval keeps system prompt cached, only varies the small retrieved subset.
 
 **StreamingLLM findings (arXiv 2309.17453):**
@@ -427,9 +427,9 @@ At current scale (<100 memories, ~50K tokens total), full context loading is via
 
 ### Research Depth
 
-**Total deep fetches:** 27 successful content retrievals (14 architectural, 7 papers, 6 system docs)  
-**Systems surveyed:** 14 with architectural detail (ENGRAM, Mem0, Graphiti, Letta, Cognee, CrewAI, OKF, StreamingLLM, Selective Context, GraphRAG, claude-obsidian, arscontexta, self-evo current, LangChain patterns)  
-**Inaccessible or unresolved references:** 4 (OpenViking public identity, GBrain checked URL, AutoGen memory docs, Rewind AI)  
+**Total deep fetches:** 27 successful content retrievals (14 architectural, 7 papers, 6 system docs)
+**Systems surveyed:** 14 with architectural detail (ENGRAM, Mem0, Graphiti, Letta, Cognee, CrewAI, OKF, StreamingLLM, Selective Context, GraphRAG, claude-obsidian, arscontexta, self-evo current, LangChain patterns)
+**Inaccessible or unresolved references:** 4 (OpenViking public identity, GBrain checked URL, AutoGen memory docs, Rewind AI)
 **Search attempts:** 35 (40% success rate for usable detail)
 
 **End of Research Report**

@@ -20,8 +20,8 @@ Based on Issue #7 research, these child Issues represent concrete implementation
 
 ### Issue #7.1: Self-Evo-Native Benchmark + Local Telemetry
 
-**Type**: Infrastructure + Evaluation  
-**Goal**: Establish measurable performance baseline using project-native tasks with local-only observability  
+**Type**: Infrastructure + Evaluation
+**Goal**: Establish measurable performance baseline using project-native tasks with local-only observability
 **Estimated Effort**: 1-2 weeks
 
 **Scope**:
@@ -45,7 +45,7 @@ Based on Issue #7 research, these child Issues represent concrete implementation
 
 **Risk**: Low (read-only evaluation, no production changes)
 
-**Permissions Required**: 
+**Permissions Required**:
 - Read git history
 - Create `data/benchmarks/` directory
 - Write telemetry JSONL to `state/telemetry/`
@@ -58,8 +58,8 @@ Based on Issue #7 research, these child Issues represent concrete implementation
 
 ### Issue #7.2: Hard Budget and Termination Controls
 
-**Type**: Feature (Safety)  
-**Goal**: Prevent runaway costs and infinite loops with enforceable limits  
+**Type**: Feature (Safety)
+**Goal**: Prevent runaway costs and infinite loops with enforceable limits
 **Estimated Effort**: 1 week
 
 **Scope**:
@@ -82,7 +82,7 @@ Based on Issue #7 research, these child Issues represent concrete implementation
 
 **Risk**: Medium (may halt legitimate long tasks; requires human override availability)
 
-**Permissions Required**: 
+**Permissions Required**:
 - Create/write `state/budget.db`
 - Read GitHub Issue comments for override commands
 - Terminate agent process on budget exceeded
@@ -95,8 +95,8 @@ Based on Issue #7 research, these child Issues represent concrete implementation
 
 ### Issue #7.3: OKF Timestamps + SQLite FTS Experiments
 
-**Type**: Enhancement  
-**Goal**: Enable time-aware retrieval and investigate full-text search scaling  
+**Type**: Enhancement
+**Goal**: Enable time-aware retrieval and investigate full-text search scaling
 **Estimated Effort**: 1 week
 
 **Scope**:
@@ -120,7 +120,7 @@ Based on Issue #7 research, these child Issues represent concrete implementation
 
 **Risk**: Low (additive only, reversible archival, experimental results inform decisions)
 
-**Permissions Required**: 
+**Permissions Required**:
 - Read/write `data/memory/`
 - Create `state/memory_fts.db` for experiments
 - Create `data/memory/archive/` for manual archival
@@ -133,8 +133,8 @@ Based on Issue #7 research, these child Issues represent concrete implementation
 
 ### Issue #7.4: Approval-Gated External Observability Comparison
 
-**Type**: Infrastructure (Optional)  
-**Goal**: Compare external observability tools (Langfuse, Braintrust, LangSmith) with clear opt-in  
+**Type**: Infrastructure (Optional)
+**Goal**: Compare external observability tools (Langfuse, Braintrust, LangSmith) with clear opt-in
 **Estimated Effort**: 1 week
 
 **Scope**:
@@ -159,7 +159,7 @@ Based on Issue #7 research, these child Issues represent concrete implementation
 
 **Risk**: Medium (external data transmission requires approval, adds dependency)
 
-**Permissions Required**: 
+**Permissions Required**:
 - Network egress to external service (user approval required)
 - Install observability SDK dependencies
 - Write credentials to `.env` or config file (user-provided)
@@ -172,8 +172,8 @@ Based on Issue #7 research, these child Issues represent concrete implementation
 
 ### Issue #7.5: Multi-Agent Coordination (Gated by Bottleneck Evidence)
 
-**Type**: Feature (Advanced)  
-**Goal**: Enable parallel Issue execution only after single-agent throughput proven insufficient  
+**Type**: Feature (Advanced)
+**Goal**: Enable parallel Issue execution only after single-agent throughput proven insufficient
 **Estimated Effort**: 2-3 weeks
 
 **Scope**:
@@ -197,7 +197,7 @@ Based on Issue #7 research, these child Issues represent concrete implementation
 
 **Risk**: High (adds complexity, requires conflict resolution, may not improve throughput)
 
-**Permissions Required**: 
+**Permissions Required**:
 - Spawn multiple agent processes
 - Create git worktrees for isolation (if chosen)
 - Write agent status to shared state database
@@ -210,8 +210,8 @@ Based on Issue #7 research, these child Issues represent concrete implementation
 
 ### Issue #7.6: Durable Workflow Engine (Gated by Recovery Pain)
 
-**Type**: Infrastructure (Advanced)  
-**Goal**: Add task recovery and checkpointing only after demonstrated need  
+**Type**: Infrastructure (Advanced)
+**Goal**: Add task recovery and checkpointing only after demonstrated need
 **Estimated Effort**: 2-3 weeks
 
 **Scope**:
@@ -234,7 +234,7 @@ Based on Issue #7 research, these child Issues represent concrete implementation
 
 **Risk**: High (adds external dependency or significant custom code, may not justify overhead)
 
-**Permissions Required**: 
+**Permissions Required**:
 - Write checkpoint state to `state/checkpoints/`
 - Network access to workflow engine (if cloud option chosen)
 - Resume agent execution from saved state

@@ -19,16 +19,16 @@ Research into autonomous agent ecosystems reveals a maturing but hazardous lands
 
 ## Research Counts (With Overlap Caveat)
 
-**Search queries executed**: 113 total
-- Autonomous loops & GitHub: 35 searches, 19 sources
-- Multi-agent coordination: 26 searches, 24 sources  
-- Memory & context: 28 searches, 27 retrievals
-- Observability & safety: 24 searches, 15 sources
-- Critic research: 42 sources (30 archived frameworks, 8 papers, 4 coordination repos)
+**Search queries executed**: 113 total across all roles
+- Autonomous loops & GitHub: 35 searches, 15 deep fetches, 19 retained sources
+- Multi-agent coordination: 29 searches, 23 fetched documents
+- Memory & context: 27 successful deep fetches across 14 system categories
+- Observability & safety: 24 repository/API inspection calls, 85 repositories surfaced, 16 selected
+- Critic research: 47 repository/API inspection calls, 30 archived frameworks in sample, plus 8 papers and 4 coordination repos
 
 **Unique systems evaluated**: 48 retained after deduplication
 - 7 durable execution platforms
-- 12 active multi-agent frameworks (30 archived)
+- 12 active multi-agent frameworks (30 archived frameworks identified in critic sample)
 - 8 memory systems
 - 5 observability platforms
 - 6 evaluation benchmarks
@@ -51,7 +51,7 @@ Research into autonomous agent ecosystems reveals a maturing but hazardous lands
 
 **Components**:
 - OKF timestamps + forgetting mechanism (1 week)
-- Token budget enforcement (1 week)  
+- Token budget enforcement (1 week)
 - Local JSONL telemetry with OpenTelemetry-compatible schema (3 days)
 - ResearchPlanAssignOps workflow (1 week)
 - Self-evo-native task evaluation baseline (1 week; SWE-bench optional for coding workers)
@@ -83,7 +83,7 @@ Research into autonomous agent ecosystems reveals a maturing but hazardous lands
 
 **Tradeoffs**:
 - ✅ Parallel execution (2-3 Issues simultaneously)
-- ✅ Proven pattern (70% of production multi-agent)
+- ✅ Proven pattern in production multi-agent deployments
 - ⚠️  Coordination complexity (leases, heartbeats, deadlock detection)
 - ⚠️  Higher cost (multi-agent token usage; requires measurement)
 - ❌ Requires manager agent logic (task assignment, load balancing)
@@ -206,9 +206,9 @@ Research into autonomous agent ecosystems reveals a maturing but hazardous lands
 **Cost**: ~$50-150 (initial estimate: 2k tokens/task avg; requires measurement)
 
 **Success criteria** (initial hypothesis):
-- ✅ ≥25% success → Proceed with Route 1
-- ⚠️  15-24% success → Investigate failure modes, consider Route 5 (memory) or hybrid approaches
-- ❌ <15% success → Pause, single-agent not viable for autonomous work
+- ✅ Success rate meets threshold → Proceed with Route 1
+- ⚠️  Moderate success → Investigate failure modes, consider Route 5 (memory) or hybrid approaches
+- ❌ Low success → Pause, single-agent not viable for autonomous work
 
 **Learning outcomes**:
 - Which task types succeed (research, planning, bug fix, feature add, refactor)?
@@ -216,7 +216,7 @@ Research into autonomous agent ecosystems reveals a maturing but hazardous lands
 - Cost distribution (median, p95, outliers)?
 - Human intervention points (where did review catch errors)?
 
-**Decision gate**: If experiment fails (<15%), pivot to supervised mode (agent as copilot, not autonomous worker). If succeeds (≥25%), proceed with Route 1 MVP.
+**Decision gate**: If experiment fails (low success rate), pivot to supervised mode (agent as copilot, not autonomous worker). If succeeds (meets or exceeds threshold), proceed with Route 1 MVP.
 
 ---
 
@@ -224,8 +224,8 @@ Research into autonomous agent ecosystems reveals a maturing but hazardous lands
 
 **Skill**: Durable execution mental model (event sourcing, deterministic replay, workflow as code)
 
-**Why**: Current self-evo uses stateful task tracking (JSON files, git commits). At scale (>1000 tasks/day), this breaks:
-- Race conditions (concurrent JSON writes)
+**Why**: Current self-evo uses stateful task tracking (JSON files, git commits). At higher scale, this may require migration:
+- Risk of race conditions (concurrent JSON writes)
 - Partial failures (task half-complete, no recovery)
 - Non-deterministic retries (external state changes between attempts)
 
@@ -297,7 +297,7 @@ Research into autonomous agent ecosystems reveals a maturing but hazardous lands
 - [ ] Parallel value proven: Baseline evaluation shows specialization benefit (e.g., researcher + implementer)
 - [ ] Cost justified: Multi-agent coordination overhead <30% of total cost
 
-**Recommendation**: Defer until single-agent baseline measured. 70% of production deployments use hierarchical (not swarm). Start Route 1, escalate to Route 2 when bottleneck proven.
+**Recommendation**: Defer until single-agent baseline measured. Hierarchical patterns (not swarm) are prevalent in production deployments. Start Route 1, escalate to Route 2 when bottleneck proven.
 
 ---
 
@@ -362,8 +362,8 @@ Research into autonomous agent ecosystems reveals a maturing but hazardous lands
 ## Success Metrics for MVP
 
 **Quality** (initial hypotheses requiring local measurement):
-- [ ] Self-evo-native tasks: ≥25% success rate (hypothesis)
-- [ ] Human review approval rate: ≥80% (agents produce reviewable work; hypothesis)
+- ✅ Self-evo-native tasks: success rate to be measured (initial hypothesis: ≥25%)
+- [ ] Human review approval rate: agents produce reviewable work (hypothesis)
 - [ ] Regression rate: <5% (agents don't break existing functionality; hypothesis)
 
 **Cost** (initial estimates requiring local measurement):
@@ -372,9 +372,9 @@ Research into autonomous agent ecosystems reveals a maturing but hazardous lands
 - [ ] Cost transparency: 100% (local JSONL tracks every token)
 
 **Reliability** (initial hypotheses requiring local measurement):
-- [ ] Task completion rate: ≥90% (excluding malformed Issues; hypothesis)
+- [ ] Task completion rate: to be measured (hypothesis: high completion excluding malformed Issues)
 - [ ] Infinite loop rate: 0 (termination defense catches all)
-- [ ] Context overflow: <5% (compaction + memory indexing; hypothesis)
+- [ ] Context overflow: to be measured (compaction + memory indexing)
 
 **Velocity** (initial hypotheses requiring local measurement):
 - [ ] Time per Issue: <4 hours (median, excludes human review time; hypothesis)

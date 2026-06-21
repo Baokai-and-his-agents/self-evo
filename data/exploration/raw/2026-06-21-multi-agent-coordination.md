@@ -1,13 +1,13 @@
 # Multi-Agent Coordination Systems Research
-**Research Date:** 2026-06-21  
-**Scope:** Task claiming, leases, locks, heartbeats, handoffs, conflict prevention, multi-agent planning, delegation, message passing, shared state, durable workflow engines, failure containment, exactly-once/idempotent execution patterns  
+**Research Date:** 2026-06-21
+**Scope:** Task claiming, leases, locks, heartbeats, handoffs, conflict prevention, multi-agent planning, delegation, message passing, shared state, durable workflow engines, failure containment, exactly-once/idempotent execution patterns
 **Target Systems:** 2025-2026 mature agent frameworks and workflow orchestration platforms
 
 ---
 
 ## Executive Summary
 
-Multi-agent coordination in production environments requires distributed systems discipline. Research reveals that **95% of AI agent pilots stalled in 2025** due to stateless handoffs, race conditions, and infinite loop drift, with coordination costs scaling exponentially beyond three agents. Successful 2026 deployments combine:
+Multi-agent coordination in production environments requires distributed systems discipline. Agent pilot failures due to stateless handoffs, race conditions, and infinite loop drift are widely reported but unquantified in public sources, with coordination costs scaling exponentially beyond three agents. Successful 2026 deployments combine:
 
 1. **Lease-based locking** with TTL + heartbeat for resource claims
 2. **Durable execution engines** (Temporal, Restate, Inngest) for exactly-once guarantees
@@ -15,7 +15,7 @@ Multi-agent coordination in production environments requires distributed systems
 4. **Workflow orchestration** separating coordination from business logic
 5. **Isolation primitives** (worktrees, virtual objects, semantic locks) for parallel execution
 
-Key finding: **Agent coordination is a distributed systems problem, not an AI problem**. Documented production failure rates range from 41-86%, with coordination failures being major contributors.
+Key finding: **Agent coordination is a distributed systems problem, not an AI problem**. Coordination failures are major contributors to multi-agent system issues, though quantified failure rates are not available from public sources.
 
 ---
 
@@ -347,7 +347,7 @@ class State(TypedDict):
 
 ### 4. CrewAI Role-Based Orchestration
 
-**Sources:** 
+**Sources:**
 - [CrewAI Multi-Agent Orchestration](https://www.groovyweb.co/blog/multi-agent-orchestration-patterns-supervisor-router-pipeline-swarm-2026)
 - [CrewAI Production Patterns](https://markaicode.com/architecture/llm-architecture-with-crewai/)
 
@@ -506,7 +506,7 @@ Every meaningful step recorded to persistent log
 
 ### 5. AWS Step Functions
 
-**Sources:** 
+**Sources:**
 - [Lambda Durable Functions vs Step Functions](https://www.bitslovers.com/lambda-durable-functions-vs-step-functions/)
 - [AWS Documentation](https://docs.aws.amazon.com/us_en/lambda/latest/dg/durable-step-functions.html)
 
@@ -601,7 +601,7 @@ Agent C reads → modifies compliance → writes {compliance: "verified", ...}
 Final state: Only Agent C's changes survive (lost updates)
 ```
 
-**Production Failure Rates:** 41-86% documented failures in multi-agent systems, coordination being major contributor
+**Production Failure Rates:** Coordination failures are major contributors to multi-agent system issues, though quantified rates are not available from public sources
 
 ### 2. Prevention Mechanisms
 
@@ -850,13 +850,13 @@ class BookTripSaga:
         try:
             order = await create_order(req)
             compensations.append(lambda: cancel_order(order.id))
-            
+
             payment = await charge_card(order.id, req.amount)
             compensations.append(lambda: refund_payment(payment.id))
-            
+
             await reserve_seats(order.id, req.seats)
             compensations.append(lambda: release_seats(order.id))
-            
+
             return success(order.id)
         except ActivityError:
             for compensate in reversed(compensations):
@@ -961,9 +961,9 @@ with db.transaction():
 
 **Idempotent Execution via Canonical Action Representation (CAR):**
 ```
-Raw Proposal (I) 
-→ Structured Action (A) 
-→ Canonical Form (Â) 
+Raw Proposal (I)
+→ Structured Action (A)
+→ Canonical Form (Â)
 → Canonical Digest h = H(Â)
 ```
 
@@ -1044,7 +1044,7 @@ def execute_with_idempotency(key: str, operation: Callable):
     result = cache.get(key)
     if result is not None:
         return result  # Already executed
-    
+
     result = operation()
     cache.set(key, result, ttl=86400)
     return result
@@ -1206,12 +1206,12 @@ class TaskQueue:
         """Atomically claim next available task"""
         with db.transaction():
             task = db.execute("""
-                UPDATE tasks SET 
+                UPDATE tasks SET
                     status = 'claimed',
                     agent_id = ?,
                     lease_expires_at = datetime('now', '+' || ? || ' seconds')
                 WHERE id = (
-                    SELECT id FROM tasks 
+                    SELECT id FROM tasks
                     WHERE status = 'pending'
                     OR (status = 'claimed' AND lease_expires_at < datetime('now'))
                     ORDER BY priority DESC, created_at ASC
@@ -1220,7 +1220,7 @@ class TaskQueue:
                 RETURNING *
             """, (agent_id, lease_duration))
             return task
-    
+
     def heartbeat(self, task_id: str, agent_id: str) -> bool:
         """Extend lease before expiration"""
         result = db.execute("""
@@ -1237,14 +1237,14 @@ class WorktreeManager:
         """Create isolated worktree for task"""
         branch = f"task/{task_id}"
         worktree_path = Path(f".worktrees/task_{task_id}")
-        
+
         subprocess.run([
             "git", "worktree", "add",
             str(worktree_path), "-b", branch
         ], check=True)
-        
+
         return worktree_path
-    
+
     def cleanup(self, task_id: str):
         """Remove worktree after task completion"""
         worktree_path = Path(f".worktrees/task_{task_id}")
@@ -1258,11 +1258,11 @@ class StateStore:
     def update_with_version(self, key: str, expected_version: int, new_data: dict) -> bool:
         """Update only if version matches (optimistic lock)"""
         result = db.execute("""
-            UPDATE state 
+            UPDATE state
             SET data = ?, version = version + 1, updated_at = datetime('now')
             WHERE key = ? AND version = ?
         """, (json.dumps(new_data), key, expected_version))
-        
+
         if result.rowcount == 0:
             # Version mismatch - concurrent modification detected
             raise ConcurrentModificationError(f"State {key} modified by another agent")
@@ -1278,14 +1278,14 @@ class CircuitBreaker:
         self.state = "CLOSED"  # CLOSED, OPEN, HALF_OPEN
         self.failure_threshold = failure_threshold
         self.timeout = timeout
-    
+
     def call(self, func: Callable) -> Any:
         if self.state == "OPEN":
             if time.time() - self.last_failure_time > self.timeout:
                 self.state = "HALF_OPEN"
             else:
                 raise CircuitBreakerOpen("Circuit breaker open, failing fast")
-        
+
         try:
             result = func()
             if self.state == "HALF_OPEN":
@@ -1310,17 +1310,17 @@ class ActionRegistry:
             "SELECT result FROM action_log WHERE action_key = ?",
             (action_key,)
         ).fetchone()
-        
+
         if cached:
             return json.loads(cached['result'])
-        
+
         # Execute and record
         result = operation()
         db.execute("""
             INSERT INTO action_log (action_key, result, executed_at)
             VALUES (?, ?, datetime('now'))
         """, (action_key, json.dumps(result)))
-        
+
         return result
 ```
 
@@ -1336,7 +1336,7 @@ class ActionRegistry:
 **Alternative:** Durable execution with state persistence (LangGraph checkpointing, Temporal workflows)
 
 ### 2. Optimistic Parallelism Without Conflict Detection
-**Problem:** Silent overwrites, 41-86% failure rates in production
+**Problem:** Silent overwrites, coordination failures in production
 
 **Why Rejected:** Lost updates invisible until customer reports data corruption
 
@@ -1413,8 +1413,8 @@ class ActionRegistry:
 
 ## Source Summary
 
-**Total Research Queries:** 29 web searches  
-**Total Source Documents:** 23 web fetches  
+**Total Research Queries:** 29 web searches
+**Total Source Documents:** 23 web fetches
 **Primary Source Types:**
 - Academic papers: 2 (S-Bus, Faramesh)
 - Technical blogs: 15 (singhajit.com, markaicode.com, kindatechnical.com, etc.)
@@ -1445,7 +1445,7 @@ Multi-agent coordination is fundamentally a **distributed systems problem as wel
 
 **For self-evo system success:**
 
-1. **Start simple**: SQLite + leases + worktrees handles 80% of coordination needs
+1. **Start simple**: SQLite + leases + worktrees are sufficient for initial coordination needs
 2. **Build in idempotency**: Design every operation to be safely retried
 3. **Fail fast and explicitly**: Circuit breakers + timeouts prevent cascade failures
 4. **Isolate execution**: Worktrees (file conflicts) + bulkheads (resource exhaustion)

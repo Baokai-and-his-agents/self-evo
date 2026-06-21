@@ -10,10 +10,10 @@ status: complete
 
 ## Decision Framework
 
-**Adopt**: Use directly with minimal integration work  
-**Adapt**: Combine patterns or modify for self-evo's file-first approach  
-**Reject**: Not aligned with self-evo goals or architecture  
-**Build**: No mature solution exists, requires new implementation  
+**Adopt**: Use directly with minimal integration work
+**Adapt**: Combine patterns or modify for self-evo's file-first approach
+**Reject**: Not aligned with self-evo goals or architecture
+**Build**: No mature solution exists, requires new implementation
 
 ---
 
@@ -40,7 +40,7 @@ Memory content with [[linked-memory]] references.
 
 **Effort**: 1 day (add timestamp fields, update memory write functions)
 
-**Benefits**: 
+**Benefits**:
 - Standards-aligned (future-proof)
 - Git-native (no breaking changes)
 - Enables forgetting mechanisms (time-decay scoring)
@@ -269,7 +269,7 @@ state/memory_index.db      # SQLite FTS + vector extension
 **Effort**: 3-4 days (budget tracking, depth counter, timeout wrapper, human override protocol)
 
 **Benefits**:
-- Prevents majority of runaway failure modes (95% figure from production agent deployment reports)
+- Prevents runaway failure modes widely reported in agent deployments
 - Graceful degradation (partial results returned)
 - Justifies autonomous execution to stakeholders
 
@@ -288,16 +288,16 @@ state/memory_index.db      # SQLite FTS + vector extension
 def memory_score(created, modified, accessed, access_count):
     age_days = (now - created).days
     recency_days = (now - accessed).days
-    
+
     # Time decay: 30-day half-life
     time_factor = 0.5 ** (age_days / 30)
-    
+
     # Access reinforcement: log scale
     access_factor = log(1 + access_count)
-    
+
     # Recent access boost
     recency_boost = 1.5 if recency_days < 7 else 1.0
-    
+
     return time_factor * access_factor * recency_boost
 ```
 
@@ -367,7 +367,7 @@ git worktree add .worktrees/issue-8 -b agent/worker-02/8
 
 **Systems**: OpenAI Swarm, autonomous task claiming
 
-**Reason**: 70% of production multi-agent deployments use hierarchical patterns (source: autonomous-agents.io survey). Swarm adds complexity without proven benefit for self-evo's phased workflow.
+**Reason**: Hierarchical patterns are prevalent in production multi-agent deployments (source-specific: autonomous-agents.io survey). Swarm adds complexity without proven benefit for self-evo's phased workflow.
 
 **Decision**: Hierarchical assignment (manager assigns Issues to agents), not autonomous claiming.
 
@@ -552,7 +552,7 @@ def recall(query: str, limit: int = 5, memory_type: str = None):
 | Observability | Local JSONL → external (approval-gated) | File-first with optional cloud upgrade |
 | Workflow | ResearchPlanAssignOps | Human-review gates, phased execution |
 | Safety | Three-layer termination | Redundant limits, graceful degradation |
-| Multi-agent | Hierarchical (defer swarm) | Survey: 70% production deployments hierarchical |
+| Multi-agent | Hierarchical (defer swarm) | Hierarchical patterns prevalent in surveys |
 | Durable execution | Defer (SQLite sufficient) | Escalate only if bottleneck proven |
 | Evaluation | Self-evo native → SWE-bench optional | Measure actual workflows first |
 

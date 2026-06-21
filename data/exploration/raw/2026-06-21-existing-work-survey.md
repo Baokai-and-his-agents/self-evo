@@ -11,10 +11,10 @@ researcher: scout-worker-01
 
 ## Methodology
 
-**Sources**: GitHub repos, arXiv papers, official documentation, maintainer blogs  
-**Evidence Types**: Star counts, benchmark scores, production adoption claims, last update dates  
-**Screening**: 30+ archived frameworks identified by critic; 85+ active candidates from optimistic research  
-**Selection Criteria**: Active maintenance (updated 2025-2026), evidence of adoption, architectural clarity  
+**Sources**: GitHub repos, arXiv papers, official documentation, maintainer blogs
+**Evidence Types**: Star counts, benchmark scores, production adoption claims, last update dates
+**Screening**: 30+ archived frameworks identified by critic; 85+ active candidates from optimistic research
+**Selection Criteria**: Active maintenance (updated 2025-2026), evidence of adoption, architectural clarity
 
 **Overlap Caveat**: Search results contain duplicates (same repo found via different queries), cross-framework integrations, and forks. Counts represent unique candidates retained after deduplication.
 
@@ -271,7 +271,7 @@ researcher: scout-worker-01
 
 **Key Innovation**: Role-based coordination (manager/worker/researcher/critic) with process types (sequential/hierarchical/consensual).
 
-**Self-Evo Fit**: Hierarchical pattern aligns with ResearchPlanAssignOps. But 70% of production multi-agent uses sequential/hierarchical (not swarm).
+**Self-Evo Fit**: Hierarchical pattern aligns with ResearchPlanAssignOps. Sequential/hierarchical patterns are prevalent in production multi-agent deployments (not swarm).
 
 **Limitations**: Framework complexity high, unclear cost controls.
 
@@ -348,7 +348,7 @@ researcher: scout-worker-01
 
 **Systems**: OpenAI Swarm, autonomous task claiming patterns
 
-**Reason**: 70% of production multi-agent uses hierarchical patterns. Swarm adds coordination complexity without proven benefit. Defer until hierarchical insufficient.
+**Reason**: Hierarchical patterns are prevalent in production multi-agent deployments. Swarm adds coordination complexity without proven benefit. Defer until hierarchical insufficient.
 
 ---
 
@@ -388,10 +388,10 @@ researcher: scout-worker-01
 
 ## Research Depth and Overlap
 
-**Total candidates surveyed**: 85+ (deduplicated from 120+ search results)  
-**Retained after screening**: 48 systems across 7 categories  
-**Top-tier analysis**: 10 systems with architecture review  
-**Archived repositories identified**: 30 in the critic's failure-focused search sample; selection bias is substantial and this is not an ecosystem rate.  
+**Total candidates surveyed**: 85+ (deduplicated from 120+ search results)
+**Retained after screening**: 48 systems across 7 categories
+**Top-tier analysis**: 10 systems with architecture review
+**Archived repositories identified**: 30 in the critic's failure-focused search sample; selection bias is substantial and this is not an ecosystem rate.
 
 **Overlap note**: Same repo appears in multiple searches (e.g., Langfuse found via "observability" and "cost tracking"). GitHub search results include forks (e.g., 8 AgentOps-related repos, only 1 official). Counts represent unique systems after deduplication.
 

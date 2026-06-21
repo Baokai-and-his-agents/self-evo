@@ -20,13 +20,13 @@ These are durable conclusions worth merging into hot memory (`data/memory/hot/`)
 
 ## Proposed Memory 1: File-First Memory Is Validated by Standards
 
-**Slug**: `okf-validates-file-first-memory`  
-**Type**: reference  
+**Slug**: `okf-validates-file-first-memory`
+**Type**: reference
 **Confidence**: High
 
 **Conclusion**: Self-evo's Markdown+YAML memory format is validated by Google's Open Knowledge Format (OKF) v0.1 (June 2026), a vendor-neutral standard for LLM-readable memory. Self-evo should add `created`/`modified`/`accessed` timestamps for OKF compliance and to enable forgetting mechanisms.
 
-**Provenance**: 
+**Provenance**:
 - OKF v0.1 specification (June 2026)
 - Research file: `data/exploration/raw/2026-06-21-memory-context.md`
 - Cross-referenced with ENGRAM, Mem0 architectures
@@ -39,8 +39,8 @@ These are durable conclusions worth merging into hot memory (`data/memory/hot/`)
 
 ## Proposed Memory 2: Agent Framework Abandonment Is Endemic
 
-**Slug**: `agent-framework-abandonment-risk`  
-**Type**: reference  
+**Slug**: `agent-framework-abandonment-risk`
+**Type**: reference
 **Confidence**: High
 
 **Conclusion**: The critic-focused sample found multiple archived agent frameworks, including Microsoft TaskWeaver and ACE Framework. Because the sample was intentionally biased toward failures, it does not establish an ecosystem-wide abandonment rate or a single cause. Self-evo should still favor durable primitives (SQLite, git, Markdown) where they meet the need, reducing dependency and migration risk.
@@ -58,8 +58,8 @@ These are durable conclusions worth merging into hot memory (`data/memory/hot/`)
 
 ## Proposed Memory 3: Benchmark Scores Mislead — Measure Baseline First
 
-**Slug**: `benchmark-real-world-gap`  
-**Type**: reference  
+**Slug**: `benchmark-real-world-gap`
+**Type**: reference
 **Confidence**: High
 
 **Conclusion**: Agent benchmarks show substantial benchmark-reality gaps. AgentBench paper reports 37.5% average success (Claude Opus 3) but drops to 0% on post-training Kaggle tasks. τ-bench paper shows GPT-4o <50% success, pass^8 <25% on realistic retail tasks. SWE-bench results show best autonomous agent: 43% (with test feedback), median 25-35%. Self-evo must measure single-agent baseline before assuming multi-agent value.
@@ -78,8 +78,8 @@ These are durable conclusions worth merging into hot memory (`data/memory/hot/`)
 
 ## Proposed Memory 4: Cost Controls Are the Primary Failure Mode
 
-**Slug**: `cost-controls-prevent-pilot-failure`  
-**Type**: project  
+**Slug**: `cost-controls-prevent-pilot-failure`
+**Type**: project
 **Confidence**: Medium-High
 
 **Conclusion**: Runaway costs and infinite loops are primary causes of agent pilot failures. Critic found zero public GitHub issues for "agent framework cost" despite thousands of users (suggests proprietary suppression or widespread silent failures). Self-evo must build token budget enforcement, three-layer termination defense, and real-time cost monitoring BEFORE autonomous loops.
@@ -97,8 +97,8 @@ These are durable conclusions worth merging into hot memory (`data/memory/hot/`)
 
 ## Proposed Memory 5: Hierarchical Beats Swarm for Multi-Agent
 
-**Slug**: `hierarchical-multi-agent-preferred`  
-**Type**: reference  
+**Slug**: `hierarchical-multi-agent-preferred`
+**Type**: reference
 **Confidence**: Medium
 
 **Conclusion**: Production multi-agent deployments predominantly use hierarchical/sequential patterns (manager assigns tasks) over swarm (autonomous claiming). Swarm adds coordination complexity (race conditions, deadlocks) without proven benefit. Self-evo should defer multi-agent entirely until single-agent bottleneck proven, then use hierarchical, not swarm.
@@ -116,11 +116,11 @@ These are durable conclusions worth merging into hot memory (`data/memory/hot/`)
 
 ## Proposed Memory 6: Durable Execution Is Available But Defer Until Scale
 
-**Slug**: `durable-execution-defer-until-scale`  
-**Type**: reference  
+**Slug**: `durable-execution-defer-until-scale`
+**Type**: reference
 **Confidence**: High
 
-**Conclusion**: Durable execution platforms (Temporal 35k★, Restate 8k★, Inngest 5k★) provide automatic retry and fault tolerance via event sourcing. Critical distinction: checkpointing (LangGraph) requires manual recovery; durable execution is automatic. But these add significant complexity (event-sourcing mindset). Self-evo's SQLite task queue is sufficient until task volume exceeds ~1000/day.
+**Conclusion**: Durable execution platforms (Temporal 35k★, Restate 8k★, Inngest 5k★) provide automatic retry and fault tolerance via event sourcing. Critical distinction: checkpointing (LangGraph) requires manual recovery; durable execution is automatic. But these add significant complexity (event-sourcing mindset). Self-evo's SQLite task queue is sufficient for current scale; escalate only when measured bottlenecks justify it.
 
 **Provenance**:
 - Autonomous loops research: `data/exploration/raw/2026-06-21-autonomous-loops-github.md`
@@ -129,17 +129,17 @@ These are durable conclusions worth merging into hot memory (`data/memory/hot/`)
 
 **Why durable**: The escalation principle (SQLite → durable execution at scale) is a stable architecture decision. Platforms may evolve, but the threshold logic persists.
 
-**How to apply**: Use SQLite task queue for MVP. Learn durable execution mental model (event sourcing). Escalate to Temporal/Restate only when SQLite proves inadequate (>1000 tasks/day or cross-host coordination).
+**How to apply**: Use SQLite task queue for MVP. Learn durable execution mental model (event sourcing). Escalate to Temporal/Restate only when measured bottlenecks justify it (cross-host coordination required, recovery pain demonstrated, or throughput/reliability limits proven).
 
 ---
 
 ## Proposed Memory 7: Hybrid Memory Architecture Scales File-First
 
-**Slug**: `hybrid-memory-file-plus-index`  
-**Type**: reference  
+**Slug**: `hybrid-memory-file-plus-index`
+**Type**: reference
 **Confidence**: High
 
-**Conclusion**: File-first memory (Markdown) doesn't scale retrieval beyond ~100 memories (linear scan). Production pattern: Markdown files as source of truth + SQLite FTS (keyword) + embeddings (semantic) as rebuildable index. ENGRAM (77.55% LoCoMo benchmark), Mem0 (91.6% benchmark) prove hybrid retrieval. Self-evo should consider SQLite FTS as memory count grows, with specific threshold determined by observed retrieval performance.
+**Conclusion**: File-first memory (Markdown) scaling depends on retrieval performance (linear scan degrades with size). Production pattern: Markdown files as source of truth + SQLite FTS (keyword) + embeddings (semantic) as rebuildable index. ENGRAM reports 77.55% LoCoMo benchmark (source-specific), Mem0 reports 91.6% (source-specific). Self-evo should consider SQLite FTS as memory count grows, with specific threshold determined by observed retrieval performance rather than fixed count.
 
 **Provenance**:
 - Memory research: `data/exploration/raw/2026-06-21-memory-context.md`
@@ -154,15 +154,15 @@ These are durable conclusions worth merging into hot memory (`data/memory/hot/`)
 
 ## Proposed Memory 8: Forgetting Improves Retrieval Accuracy
 
-**Slug**: `forgetting-improves-memory`  
-**Type**: reference  
+**Slug**: `forgetting-improves-memory`
+**Type**: reference
 **Confidence**: Medium
 
-**Conclusion**: Unbounded memory accumulation degrades retrieval. Research shows substantial accuracy gains from selective forgetting (time-decay + access-frequency + quality gating). Self-evo should implement forgetting: archive low-scoring memories, retrieval scoring with recency bias.
+**Conclusion**: Unbounded memory accumulation degrades retrieval. Research identifies substantial accuracy gains from selective forgetting (time-decay + access-frequency + quality gating), with one source reporting 13% → 39% improvement (unverified; requires self-evo validation). Self-evo should implement forgetting: archive low-scoring memories, retrieval scoring with recency bias.
 
 **Provenance**:
 - Memory research: `data/exploration/raw/2026-06-21-memory-context.md`
-- Forgetting problem analysis (one source reports 13% → 39% accuracy improvement)
+- Forgetting problem analysis (one source reports 13% → 39% accuracy improvement; unverified)
 - Multiple systems implement forgetting (Mem0, Graphiti, CrewAI)
 
 **Why durable**: The forgetting principle (selective memory beats accumulation) is supported by cognitive science and multiple agent systems. The mechanism is stable.
@@ -173,8 +173,8 @@ These are durable conclusions worth merging into hot memory (`data/memory/hot/`)
 
 ## Proposed Memory 9: Observability Is Production-Ready, Build It Early
 
-**Slug**: `observability-build-early`  
-**Type**: feedback  
+**Slug**: `observability-build-early`
+**Type**: feedback
 **Confidence**: High
 
 **Conclusion**: Production observability platforms exist (Langfuse 29k★, Arize Phoenix 10k★, OpenLLMetry 7k★, AgentOps 5k★). OpenTelemetry LLM semantic conventions are standardized. Self-evo should implement local structured telemetry first (SQLite-based session/token tracking), then evaluate external platforms (Langfuse, OpenLLMetry) only after approval and comparison. Debugging non-deterministic failures and cost tracking pay back immediately.
@@ -192,8 +192,8 @@ These are durable conclusions worth merging into hot memory (`data/memory/hot/`)
 
 ## Proposed Memory 10: Self-Evo's Architecture Is Validated by Failures
 
-**Slug**: `self-evo-architecture-validated`  
-**Type**: project  
+**Slug**: `self-evo-architecture-validated`
+**Type**: project
 **Confidence**: Medium-High
 
 **Conclusion**: Self-evo's core design choices (file-first, human-reviewed, GitHub-coordinated, incremental autonomy) are validated by failures of alternatives. Fully autonomous swarms show high pilot failure rates, frameworks die frequently, and benchmark-reality gaps persist. Self-evo's survival strategy: primitive-based (not framework), cost-controlled, human-gated, evidence-driven.

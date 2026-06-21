@@ -204,7 +204,7 @@ status: complete
 - ❌ Cost overrun protection immature (no framework standard)
 - ❌ Regression testing for agents nascent
 
-**Recommendation**: 
+**Recommendation**:
 - **Cost controls**: Build token budget enforcement into MVP (per-issue cap, daily cap, human approval above threshold)
 - **Evaluation**: Establish self-evo-native benchmark for autonomous loop performance as primary metric; SWE-bench optional for coding task comparison
 - **Security**: Defer prompt injection defenses until after MVP (Claude has built-in safety)
