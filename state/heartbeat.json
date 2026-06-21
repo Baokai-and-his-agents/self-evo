@@ -13,9 +13,9 @@
       "run_id": "2026-06-21-run-003",
       "issue": 7,
       "branch": "agent/scout-worker-01/7-autonomous-agent-ecosystem",
-      "status": "running",
-      "last_seen": "2026-06-21T11:36:52+0800"
+      "status": "stopped",
+      "last_seen": "2026-06-21T11:41:16+0800"
     }
   ],
-  "updated_at": "2026-06-21T11:36:52+0800"
+  "updated_at": "2026-06-21T11:41:16+0800"
 }
