@@ -156,18 +156,18 @@ These are durable conclusions worth merging into hot memory (`data/memory/hot/`)
 
 **Slug**: `forgetting-improves-memory`
 **Type**: reference
-**Confidence**: Medium
+**Confidence**: Low
 
-**Conclusion**: Unbounded memory accumulation degrades retrieval. Research identifies substantial accuracy gains from selective forgetting (time-decay + access-frequency + quality gating), with one source reporting 13% → 39% improvement (unverified; requires self-evo validation). Self-evo should implement forgetting: archive low-scoring memories, retrieval scoring with recency bias.
+**Conclusion**: Unbounded memory accumulation may degrade retrieval. Research identifies substantial accuracy gains from selective forgetting (time-decay + access-frequency + quality gating), with one source reporting 13% → 39% improvement (unverified; source-specific). Self-evo should evaluate reversible forgetting against a baseline and adopt it only if local retrieval quality improves.
 
 **Provenance**:
 - Memory research: `data/exploration/raw/2026-06-21-memory-context.md`
-- Forgetting problem analysis (one source reports 13% → 39% accuracy improvement; unverified)
+- Forgetting problem analysis (one source reports 13% → 39% accuracy improvement; unverified, source-specific)
 - Multiple systems implement forgetting (Mem0, Graphiti, CrewAI)
 
-**Why durable**: The forgetting principle (selective memory beats accumulation) is supported by cognitive science and multiple agent systems. The mechanism is stable.
+**Why durable**: The forgetting principle (selective memory beats accumulation) is supported by cognitive science and multiple agent systems, but gains are source-specific and require local validation. The experiment design is stable.
 
-**How to apply**: Add `accessed` timestamp, access counter. Score memories (time-decay + access-frequency). Archive low-scoring (reversible). Retrieval with recency bias.
+**How to apply**: Design reversible experiment: Add `accessed` timestamp, access counter. Score memories (time-decay + access-frequency). Archive low-scoring (reversible). Measure retrieval precision/recall before and after. Adopt forgetting only if local evidence shows improvement.
 
 ---
 

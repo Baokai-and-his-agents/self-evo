@@ -963,8 +963,8 @@ with db.transaction():
 ```
 Raw Proposal (I)
 → Structured Action (A)
-→ Canonical Form (Â)
-→ Canonical Digest h = H(Â)
+→ Canonical Form (A_canonical)
+→ Canonical Digest h = H(A_canonical)
 ```
 
 **Canonicalization Enforces:**
