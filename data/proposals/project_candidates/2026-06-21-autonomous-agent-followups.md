@@ -6,9 +6,9 @@ type: project_candidates
 status: proposed
 ---
 
-# Project Candidates: Child Issues for Autonomous Agent Ecosystem
+# ÏîÄ¿ºòÑ¡£º×ÔÖ÷ Agent ÉúÌ¬ÏµÍ³µÄ×Ó Issues
 
-## Overview
+## ¸ÅÊö
 
 Based on Issue #7 research, these child Issues represent concrete implementation work. **Priority reordered after business review**: Autonomous Scout vertical slice is now first, with generic infrastructure deferred until triggered by measured needs.
 
@@ -16,16 +16,16 @@ Based on Issue #7 research, these child Issues represent concrete implementation
 
 ---
 
-## Phase A: Autonomous Scout Vertical Slice (Primary Business Goal)
+## ½×¶Î A£º×ÔÖ÷ Scout ´¹Ö±ÇÐÆ¬£¨Ö÷ÒªÒµÎñÄ¿±ê£©
 
-### Issue #A.1: Scout Source Registry and Runner Wrapper
+### Issue #A.1£ºScout Ô´×¢²á±íºÍ Runner Wrapper
 
-**Type**: Feature (Scout MVP)
-**Goal**: Enable bounded Scout execution with approved sources
-**Estimated Effort**: 1 week
+**ÀàÐÍ**£º Feature (Scout MVP)
+**Ä¿±ê**£º Enable bounded Scout execution with approved sources
+**¹À¼Æ¹¤×÷Á¿**£º 1 week
 
-**Scope**:
-- Define approved sources in `rules/RESOURCE_APPROVALS.yaml`: GitHub Search/REST, HN API, arXiv API, Product Hunt (public read)
+**·¶Î§**£º
+- Define approved sources in `rules/RESOURCE_APPROVALS.yaml`: GitHub Search/REST, HN API, arXiv API; Product Hunt only when resource approval and API access available
 - Build Scout runner wrapper script (`scripts/scout_runner.py`)
 - Runner launches Claude CLI worker with Scout task
 - Runner enforces: max wall-clock time (configurable, e.g., 2 hours), max Claude process invocations (e.g., 10), max retries (e.g., 3)
@@ -33,8 +33,8 @@ Based on Issue #7 research, these child Issues represent concrete implementation
 - Unknown token/cost logged as "unknown" with explanation (hooks don't expose per-internal-call metrics)
 - Manual invocation: user runs `python scripts/scout_runner.py --issue <N>`
 
-**Acceptance Criteria**:
-- [ ] `rules/RESOURCE_APPROVALS.yaml` contains Scout source approvals (GitHub/HN/arXiv/PH)
+**ÑéÊÕ±ê×¼**£º
+- [ ] `rules/RESOURCE_APPROVALS.yaml` contains Scout source approvals (GitHub/HN/arXiv; Product Hunt gated on approval+API)
 - [ ] Scout runner script exists and launches Claude CLI
 - [ ] Runner enforces wall-clock timeout (terminates process on exceed)
 - [ ] Runner enforces max invocations (stops after N Claude processes)
@@ -42,27 +42,27 @@ Based on Issue #7 research, these child Issues represent concrete implementation
 - [ ] Runner writes partial results on termination (signal handler)
 - [ ] Manual invocation documented in `rules/EXPLORATION_POLICY.md`
 
-**Technical Dependencies**: None
+**¼¼ÊõÒÀÀµ**£º None
 
-**Risk**: Low (manual trigger, approved sources only, bounded execution)
+**·çÏÕ**£º Low (manual trigger, approved sources only, bounded execution)
 
-**Permissions Required**:
+**ËùÐèÈ¨ÏÞ**£º
 - Network egress to approved sources (public read-only)
 - Launch Claude CLI subprocess
 - Write to `state/telemetry/` (gitignored)
 - Kill subprocess on timeout
 
-**Recommended Order**: A.1 (first)
+**ÍÆ¼öË³Ðò**£º A.1 (first)
 
 ---
 
-### Issue #A.2: Cursor, Deduplication, and Keep/Reject Ledger
+### Issue #A.2£ºCursor¡¢È¥ÖØºÍ±£Áô/¾Ü¾øÕË±¾
 
-**Type**: Feature (Scout MVP)
-**Goal**: Enable idempotent resumption and evidence-backed filtering
-**Estimated Effort**: 1 week
+**ÀàÐÍ**£º Feature (Scout MVP)
+**Ä¿±ê**£º Enable idempotent resumption and evidence-backed filtering
+**¹À¼Æ¹¤×÷Á¿**£º 1 week
 
-**Scope**:
+**·¶Î§**£º
 - Track last-seen cursor per source in gitignored `state/scout_cursor.json` (timestamp or item ID)
 - Deduplication: skip already-processed items by URL/ID (exact match, gitignored cache)
 - Keep/reject ledger: every item decision logged with reason in gitignored `data/exploration/raw/<date>-<source>-ledger.jsonl`
@@ -70,7 +70,7 @@ Based on Issue #7 research, these child Issues represent concrete implementation
 - Resume: on next run, load cursor and skip already-processed
 - Commit to repo: only aggregated summary and decisions (not raw ledger or cursor state)
 
-**Acceptance Criteria**:
+**ÑéÊÕ±ê×¼**£º
 - [ ] Cursor tracking: Scout stores last-seen per source in `state/scout_cursor.json` (gitignored)
 - [ ] Deduplication: repeated items skipped on resume (verified by test)
 - [ ] Ledger: every item logged with keep/reject decision and reason in gitignored JSONL
@@ -78,33 +78,33 @@ Based on Issue #7 research, these child Issues represent concrete implementation
 - [ ] Resume: Scout resumes from cursor without re-scanning (verified by test)
 - [ ] Only summary committed: gitignored state (cursor, ledger, cache) excluded from repo
 
-**Technical Dependencies**: Issue #A.1 (runner wrapper)
+**¼¼ÊõÒÀÀµ**£º Issue #A.1 (runner wrapper)
 
-**Risk**: Medium (cursor schema must handle diverse source formats, deduplication may miss semantic duplicates)
+**·çÏÕ**£º Medium (cursor schema must handle diverse source formats, deduplication may miss semantic duplicates)
 
-**Permissions Required**:
+**ËùÐèÈ¨ÏÞ**£º
 - Read/write `state/scout_cursor.json` (gitignored)
 - Write ledger to `data/exploration/raw/` (gitignored JSONL)
 - Commit summary to repo (tracked files only)
 
-**Recommended Order**: A.2 (second)
+**ÍÆ¼öË³Ðò**£º A.2 (second)
 
 ---
 
-### Issue #A.3: Daily Decision Report Generation
+### Issue #A.3£ºÃ¿ÈÕ¾ö²ß±¨¸æÉú³É
 
-**Type**: Feature (Scout MVP)
-**Goal**: Produce human-reviewable actionable output
-**Estimated Effort**: 1 week
+**ÀàÐÍ**£º Feature (Scout MVP)
+**Ä¿±ê**£º Produce human-reviewable actionable output
+**¹À¼Æ¹¤×÷Á¿**£º 1 week
 
-**Scope**:
+**·¶Î§**£º
 - Scout worker synthesizes scan results into daily decision report
 - Report structure: reuse map (existing work survey), one experiment/skill/project candidate, evidence links to ledger
 - Report stored in tracked `data/exploration/daily_reports/<date>-<topic>.md`
 - Report frontmatter: date, issue, status, researcher
 - Runner verifies report exists before completing run
 
-**Acceptance Criteria**:
+**ÑéÊÕ±ê×¼**£º
 - [ ] Daily report generated with required structure (reuse map, candidate, evidence)
 - [ ] Report frontmatter includes: date, issue, status, researcher
 - [ ] Report stored in tracked `data/exploration/daily_reports/`
@@ -112,65 +112,65 @@ Based on Issue #7 research, these child Issues represent concrete implementation
 - [ ] Runner verifies report file exists before marking run complete
 - [ ] Report is human-readable Markdown (no raw JSON dumps)
 
-**Technical Dependencies**: Issue #A.2 (ledger provides evidence)
+**¼¼ÊõÒÀÀµ**£º Issue #A.2 (ledger provides evidence)
 
-**Risk**: Low (report generation is synthesis task, Claude excels at this)
+**·çÏÕ**£º Low (report generation is synthesis task, Claude excels at this)
 
-**Permissions Required**:
+**ËùÐèÈ¨ÏÞ**£º
 - Write to `data/exploration/daily_reports/` (tracked)
 - Read ledger from `data/exploration/raw/` (gitignored)
 
-**Recommended Order**: A.3 (third)
+**ÍÆ¼öË³Ðò**£º A.3 (third)
 
 ---
 
-### Issue #A.4: Human Review Label Workflow
+### Issue #A.4£ºÈË¹¤Éó²é±êÇ©¹¤×÷Á÷
 
-**Type**: Feature (Scout MVP)
-**Goal**: Enable feedback loop for preference learning
-**Estimated Effort**: 3 days
+**ÀàÐÍ**£º Feature (Scout MVP)
+**Ä¿±ê**£º Enable feedback loop for preference learning
+**¹À¼Æ¹¤×÷Á¿**£º 3 days
 
-**Scope**:
+**·¶Î§**£º
 - User reviews daily report and adds labels: `relevant`, `irrelevant`, `deep-dive`, `pause`
 - Labels stored in tracked `data/exploration/review_labels/<date>.yaml`
 - Label schema: item_id, item_url, label, reason (optional)
 - Future: preference learner analyzes label history to improve filtering
 - For MVP: manual labeling only, no automated preference learning
 
-**Acceptance Criteria**:
+**ÑéÊÕ±ê×¼**£º
 - [ ] Label schema documented in `data/exploration/review_labels/README.md`
 - [ ] Example label file created
 - [ ] User workflow documented: review report â†’ add labels to YAML file â†’ commit
 - [ ] Labels stored in tracked `data/exploration/review_labels/`
 - [ ] No automated preference learning in MVP (future enhancement)
 
-**Technical Dependencies**: Issue #A.3 (report provides items to label)
+**¼¼ÊõÒÀÀµ**£º Issue #A.3 (report provides items to label)
 
-**Risk**: Low (manual workflow, no automation)
+**·çÏÕ**£º Low (manual workflow, no automation)
 
-**Permissions Required**:
+**ËùÐèÈ¨ÏÞ**£º
 - Read daily reports
 - Write to `data/exploration/review_labels/` (tracked)
 
-**Recommended Order**: A.4 (fourth)
+**ÍÆ¼öË³Ðò**£º A.4 (fourth)
 
 ---
 
-## Phase B: Scout Evaluation (After Scout Operational)
+## ½×¶Î B£ºScout ÆÀ¹À£¨Scout ÔËÐÐºó£©
 
-### Issue #B.1: Scout Holdout Set and Quality Metrics
+### Issue #B.1£ºScout Áô³ö¼¯ºÍÖÊÁ¿Ö¸±ê
 
-**Type**: Evaluation
-**Goal**: Measure Scout quality independently of training data
-**Estimated Effort**: 1 week
+**ÀàÐÍ**£º Evaluation
+**Ä¿±ê**£º Measure Scout quality independently of training data
+**¹À¼Æ¹¤×÷Á¿**£º 1 week
 
-**Scope**:
+**·¶Î§**£º
 - Create independent holdout set (NOT from repo's solved Issues to avoid answer leakage)
 - Define Scout quality metrics: novelty (% new findings), relevance (% human-approved), evidence quality (links valid, claims supported), actionable conversion (% leading to experiments/skills), duplicate rate (% redundant)
 - Define Builder quality metrics separately: test pass rate, acceptance criteria met
 - Include human baseline: human performs same Scout task, compare time and quality
 
-**Acceptance Criteria**:
+**ÑéÊÕ±ê×¼**£º
 - [ ] Holdout set created with 10-20 independent Scout tasks
 - [ ] Holdout tasks have no solutions in repo history (verified by git grep)
 - [ ] Scout metrics defined and documented
@@ -178,34 +178,34 @@ Based on Issue #7 research, these child Issues represent concrete implementation
 - [ ] Human baseline protocol documented
 - [ ] Holdout set stored in `data/benchmarks/scout_holdout/`
 
-**Technical Dependencies**: Scout vertical slice operational (Issues A.1-A.4)
+**¼¼ÊõÒÀÀµ**£º Scout vertical slice operational (Issues A.1-A.4)
 
-**Risk**: Medium (holdout set quality depends on task selection, metrics may need iteration)
+**·çÏÕ**£º Medium (holdout set quality depends on task selection, metrics may need iteration)
 
-**Permissions Required**:
+**ËùÐèÈ¨ÏÞ**£º
 - Read repo history (to verify no answer leakage)
 - Write to `data/benchmarks/scout_holdout/` (tracked)
 
-**Decision Trigger**: Complete after Scout operational, before scaling
+**¾ö²ß´¥·¢Æ÷**£º Complete after Scout operational, before scaling
 
-**Recommended Order**: B.1 (fifth)
+**ÍÆ¼öË³Ðò**£º B.1 (fifth)
 
 ---
 
-### Issue #B.2: Run Scout Against Holdout and Measure
+### Issue #B.2£ºÕë¶ÔÁô³ö¼¯ÔËÐÐ Scout ²¢²âÁ¿
 
-**Type**: Evaluation
-**Goal**: Quantify Scout success rate, cost, failure modes
-**Estimated Effort**: 3 days
+**ÀàÐÍ**£º Evaluation
+**Ä¿±ê**£º Quantify Scout success rate, cost, failure modes
+**¹À¼Æ¹¤×÷Á¿**£º 3 days
 
-**Scope**:
+**·¶Î§**£º
 - Run Scout on holdout set (10-20 tasks)
 - Measure: success rate (% tasks with valid output), novelty rate, relevance rate, actionable conversion, duplicate rate, cost per task, time per task
 - Compare to human baseline: quality delta, time delta
 - Document failure modes: rate limits, low-quality sources, irrelevant findings
 - Produce evaluation report in `data/benchmarks/scout_eval_<date>.md`
 
-**Acceptance Criteria**:
+**ÑéÊÕ±ê×¼**£º
 - [ ] Scout run on all holdout tasks
 - [ ] Metrics collected: success, novelty, relevance, actionable conversion, duplicates, cost, time
 - [ ] Human baseline comparison included
@@ -213,27 +213,27 @@ Based on Issue #7 research, these child Issues represent concrete implementation
 - [ ] Evaluation report documents findings and recommendations
 - [ ] Decision: proceed to scaling, iterate prompts, or pivot approach
 
-**Technical Dependencies**: Issue #B.1 (holdout set)
+**¼¼ÊõÒÀÀµ**£º Issue #B.1 (holdout set)
 
-**Risk**: Low (read-only evaluation, no production changes)
+**·çÏÕ**£º Low (read-only evaluation, no production changes)
 
-**Permissions Required**:
+**ËùÐèÈ¨ÏÞ**£º
 - Run Scout (consumes budget)
 - Write to `data/benchmarks/` (tracked)
 
-**Decision Trigger**: Complete after Scout operational, before scaling
+**¾ö²ß´¥·¢Æ÷**£º Complete after Scout operational, before scaling
 
-**Recommended Order**: B.2 (sixth)
+**ÍÆ¼öË³Ðò**£º B.2 (sixth)
 
 ---
 
-## Phase C: Conditional Improvements (Triggered by Observed Failures)
+## ½×¶Î C£ºÌõ¼þÐÔ¸Ä½ø£¨ÓÉ¹Û²ìµ½µÄÊ§°Ü´¥·¢£©
 
-### Issue #C.1: Scout Reliability (Resume, Deduplication)
+### Issue #C.1£ºScout ¿É¿¿ÐÔ£¨»Ö¸´¡¢È¥ÖØ£©
 
-**Type**: Enhancement
-**Goal**: Address observed failure modes from Scout operation
-**Estimated Effort**: 1 week
+**ÀàÐÍ**£º Enhancement
+**Ä¿±ê**£º Address observed failure modes from Scout operation
+**¹À¼Æ¹¤×÷Á¿**£º 1 week
 
 **Scope** (conditional on observed failures):
 - If crashes observed: improve resume robustness, verify cursor correctness
@@ -241,29 +241,29 @@ Based on Issue #7 research, these child Issues represent concrete implementation
 - If rate limits observed: add exponential backoff, respect rate limit headers
 - If no-progress observed: detect and terminate stuck scans
 
-**Acceptance Criteria**:
+**ÑéÊÕ±ê×¼**£º
 - [ ] Failure modes from Scout operation documented
 - [ ] Targeted fixes implemented (only for observed failures)
 - [ ] Regression tests added for fixed failure modes
 - [ ] Scout reliability metrics improve (measured on holdout or live runs)
 
-**Technical Dependencies**: Scout vertical slice operational, evaluation complete
+**¼¼ÊõÒÀÀµ**£º Scout vertical slice operational, evaluation complete
 
-**Risk**: Low (targeted fixes, driven by evidence)
+**·çÏÕ**£º Low (targeted fixes, driven by evidence)
 
-**Permissions Required**: Same as Scout vertical slice
+**ËùÐèÈ¨ÏÞ**£º Same as Scout vertical slice
 
-**Decision Trigger**: Complete ONLY if specific reliability failures observed in Scout operation or evaluation
+**¾ö²ß´¥·¢Æ÷**£º Complete ONLY if specific reliability failures observed in Scout operation or evaluation
 
-**Recommended Order**: C.1 (seventh, conditional)
+**ÍÆ¼öË³Ðò**£º C.1 (seventh, conditional)
 
 ---
 
-### Issue #C.2: Memory Indexing (Conditional)
+### Issue #C.2£º¼ÇÒäË÷Òý£¨Ìõ¼þÐÔ£©
 
-**Type**: Enhancement
-**Goal**: Address retrieval performance only if measured as bottleneck
-**Estimated Effort**: 2 weeks
+**ÀàÐÍ**£º Enhancement
+**Ä¿±ê**£º Address retrieval performance only if measured as bottleneck
+**¹À¼Æ¹¤×÷Á¿**£º 2 weeks
 
 **Scope** (conditional on measured retrieval failures):
 - Add OKF timestamps (`created`, `modified`) to memory frontmatter (do NOT add `accessed` or mutate on read)
@@ -273,7 +273,7 @@ Based on Issue #7 research, these child Issues represent concrete implementation
 - Conditional: add embeddings only if FTS precision insufficient
 - Archive/restore protocol: manual only, reversible, requires cooldown proposal + human approval
 
-**Acceptance Criteria**:
+**ÑéÊÕ±ê×¼**£º
 - [ ] Retrieval bottleneck measured and documented (slow queries, low precision)
 - [ ] OKF timestamps added to memories (created, modified only)
 - [ ] Access tracking in gitignored index (Markdown files not mutated)
@@ -282,26 +282,26 @@ Based on Issue #7 research, these child Issues represent concrete implementation
 - [ ] Recommendation: adopt FTS, adopt embeddings, or keep file-only
 - [ ] Archive/restore protocol documented (manual, reversible)
 
-**Technical Dependencies**: None (memory system independent)
+**¼¼ÊõÒÀÀµ**£º None (memory system independent)
 
-**Risk**: Low (additive only, Markdown remains canonical)
+**·çÏÕ**£º Low (additive only, Markdown remains canonical)
 
-**Permissions Required**:
+**ËùÐèÈ¨ÏÞ**£º
 - Read/write `data/memory/` (frontmatter only)
 - Create `state/memory_access.db` (gitignored)
 - Create `state/memory_fts.db` for experiments (gitignored)
 
-**Decision Trigger**: Complete ONLY if retrieval failures measured (slow, imprecise, or recall issues)
+**¾ö²ß´¥·¢Æ÷**£º Complete ONLY if retrieval failures measured (slow, imprecise, or recall issues)
 
-**Recommended Order**: C.2 (eighth, conditional)
+**ÍÆ¼öË³Ðò**£º C.2 (eighth, conditional)
 
 ---
 
-### Issue #C.3: Multi-Agent Coordination (Conditional)
+### Issue #C.3£º¶à Agent Ð­µ÷£¨Ìõ¼þÐÔ£©
 
-**Type**: Enhancement
-**Goal**: Enable parallel Scout execution only if throughput bottleneck proven
-**Estimated Effort**: 2-3 weeks
+**ÀàÐÍ**£º Enhancement
+**Ä¿±ê**£º Enable parallel Scout execution only if throughput bottleneck proven
+**¹À¼Æ¹¤×÷Á¿**£º 2-3 weeks
 
 **Scope** (conditional on measured throughput bottleneck):
 - Parallel source scanners: one Scout worker per source
@@ -310,7 +310,7 @@ Based on Issue #7 research, these child Issues represent concrete implementation
 - Coordination: SQLite lease-based claiming (state/coordination.db, gitignored)
 - Status aggregation: parent Issue tracks child Scout progress
 
-**Acceptance Criteria**:
+**ÑéÊÕ±ê×¼**£º
 - [ ] Throughput bottleneck documented: single Scout can't scan all sources in time budget
 - [ ] Parallel Scouts implemented with worktree isolation
 - [ ] Manager Scout aggregates per-source reports
@@ -318,26 +318,26 @@ Based on Issue #7 research, these child Issues represent concrete implementation
 - [ ] Integration test: 3 Scouts scan different sources in parallel, manager combines
 - [ ] Coordination overhead measured and acceptable (<30% of total time)
 
-**Technical Dependencies**: Scout vertical slice operational, evaluation complete
+**¼¼ÊõÒÀÀµ**£º Scout vertical slice operational, evaluation complete
 
-**Risk**: High (coordination complexity, worktree overhead, may not improve throughput)
+**·çÏÕ**£º High (coordination complexity, worktree overhead, may not improve throughput)
 
-**Permissions Required**:
+**ËùÐèÈ¨ÏÞ**£º
 - Create git worktrees
 - Write to `state/coordination.db` (gitignored)
 - Spawn multiple Scout processes
 
-**Decision Trigger**: Complete ONLY if Scout evaluation shows throughput bottleneck (can't scan all sources in budget)
+**¾ö²ß´¥·¢Æ÷**£º Complete ONLY if Scout evaluation shows throughput bottleneck (can't scan all sources in budget)
 
-**Recommended Order**: C.3 (ninth, conditional)
+**ÍÆ¼öË³Ðò**£º C.3 (ninth, conditional)
 
 ---
 
-### Issue #C.4: External Observability Comparison (Conditional)
+### Issue #C.4£ºÍâ²¿¿É¹Û²âÐÔ¶Ô±È£¨Ìõ¼þÐÔ£©
 
-**Type**: Infrastructure (Optional)
-**Goal**: Evaluate external platforms only if local telemetry insufficient
-**Estimated Effort**: 1 week
+**ÀàÐÍ**£º Infrastructure (Optional)
+**Ä¿±ê**£º Evaluate external platforms only if local telemetry insufficient
+**¹À¼Æ¹¤×÷Á¿**£º 1 week
 
 **Scope** (conditional on debugging pain):
 - Compare Langfuse (self-hosted), Arize Phoenix, OpenLLMetry
@@ -346,7 +346,7 @@ Based on Issue #7 research, these child Issues represent concrete implementation
 - Compare to local JSONL telemetry: features, overhead, debugging workflow
 - Require explicit user approval before external data transmission
 
-**Acceptance Criteria**:
+**ÑéÊÕ±ê×¼**£º
 - [ ] Local telemetry bottleneck documented (insufficient for debugging)
 - [ ] Comparison document covers 3+ tools with cost/feature matrix
 - [ ] One tool integrated and tested
@@ -355,26 +355,26 @@ Based on Issue #7 research, these child Issues represent concrete implementation
 - [ ] User opt-in gate prevents automatic external transmission
 - [ ] Self-hosted option validated (Docker Compose)
 
-**Technical Dependencies**: Scout vertical slice operational with local telemetry
+**¼¼ÊõÒÀÀµ**£º Scout vertical slice operational with local telemetry
 
-**Risk**: Medium (external dependency, data transmission requires approval)
+**·çÏÕ**£º Medium (external dependency, data transmission requires approval)
 
-**Permissions Required**:
+**ËùÐèÈ¨ÏÞ**£º
 - Network egress to external service (user approval required)
 - Install observability SDK
 - Write credentials to config (user-provided)
 
-**Decision Trigger**: Complete ONLY if local telemetry insufficient for debugging Scout failures
+**¾ö²ß´¥·¢Æ÷**£º Complete ONLY if local telemetry insufficient for debugging Scout failures
 
-**Recommended Order**: C.4 (tenth, conditional)
+**ÍÆ¼öË³Ðò**£º C.4 (tenth, conditional)
 
 ---
 
-### Issue #C.5: Durable Workflow Engine (Conditional)
+### Issue #C.5£º³Ö¾Ã¹¤×÷Á÷ÒýÇæ£¨Ìõ¼þÐÔ£©
 
-**Type**: Infrastructure (Advanced)
-**Goal**: Add checkpointing only if recovery pain measured
-**Estimated Effort**: 2-3 weeks
+**ÀàÐÍ**£º Infrastructure (Advanced)
+**Ä¿±ê**£º Add checkpointing only if recovery pain measured
+**¹À¼Æ¹¤×÷Á¿**£º 2-3 weeks
 
 **Scope** (conditional on recovery pain):
 - Evaluate Temporal, Restate, Inngest, or custom checkpointing
@@ -382,7 +382,7 @@ Based on Issue #7 research, these child Issues represent concrete implementation
 - Recovery protocol: resume from checkpoint on crash or timeout
 - Test: kill Scout mid-run, resume, verify no duplicate work
 
-**Acceptance Criteria**:
+**ÑéÊÕ±ê×¼**£º
 - [ ] Recovery pain documented: X% of Scout runs would benefit from checkpointing
 - [ ] Workflow engine evaluated and one selected (or custom designed)
 - [ ] Checkpointing implemented at phase boundaries
@@ -390,22 +390,22 @@ Based on Issue #7 research, these child Issues represent concrete implementation
 - [ ] Cost overhead measured and acceptable
 - [ ] Recommendation: when to use vs simple retry
 
-**Technical Dependencies**: Scout vertical slice operational, failure modes measured
+**¼¼ÊõÒÀÀµ**£º Scout vertical slice operational, failure modes measured
 
-**Risk**: High (external dependency or significant custom code)
+**·çÏÕ**£º High (external dependency or significant custom code)
 
-**Permissions Required**:
+**ËùÐèÈ¨ÏÞ**£º
 - Write checkpoint state to `state/checkpoints/` (gitignored)
 - Network access to workflow engine (if cloud)
 - Resume Scout execution from saved state
 
-**Decision Trigger**: Complete ONLY if Scout recovery pain measured as material (set threshold after observing failures, not in advance)
+**¾ö²ß´¥·¢Æ÷**£º Complete ONLY if Scout recovery pain measured as material (set threshold after observing failures, not in advance)
 
-**Recommended Order**: C.5 (eleventh, conditional)
+**ÍÆ¼öË³Ðò**£º C.5 (eleventh, conditional)
 
 ---
 
-## Implementation Order Summary
+## ÊµÏÖË³ÐòÕªÒª
 
 **Phase A: Autonomous Scout Vertical Slice (MVP)** â€” 3-4 weeks
 1. Issue #A.1: Scout source registry and runner wrapper
@@ -426,9 +426,9 @@ Based on Issue #7 research, these child Issues represent concrete implementation
 
 ---
 
-## Success Criteria for Phase A (Scout MVP)
+## ½×¶Î A£¨Scout MVP£©µÄ³É¹¦±ê×¼
 
-**After completing Issues #A.1-A.4**:
+**Íê³É Issues #A.1-A.4 ºó**£º
 - [ ] Scout produces daily decision report within budget
 - [ ] Human review time <30 min per report
 - [ ] Zero budget overruns (runner termination works)
@@ -437,33 +437,33 @@ Based on Issue #7 research, these child Issues represent concrete implementation
 
 ---
 
-## Risks and Mitigations
+## ·çÏÕºÍ»º½â
 
-### Risk: Scout produces low-quality reports
+### ·çÏÕ£ºScout Éú³ÉµÍÖÊÁ¿±¨¸æ
 
-**Mitigation**: Human review labels provide feedback. Iterate prompts and filtering logic. Measure quality with holdout (Phase B).
-
----
-
-### Risk: High-token cost per Scout run
-
-**Mitigation**: Runner enforces daily limits (sources, items, runtime). Partial results on termination. Tune limits based on observed costs.
+**»º½â**£º Human review labels provide feedback. Iterate prompts and filtering logic. Measure quality with holdout (Phase B).
 
 ---
 
-### Risk: Rate limits from external sources
+### ·çÏÕ£ºÃ¿´Î Scout ÔËÐÐµÄ¸ß token ³É±¾
 
-**Mitigation**: Cursor-based resumption. Respect rate limit headers. Exponential backoff. Future: cache and incremental refresh.
-
----
-
-### Risk: Runner enforcement insufficient
-
-**Mitigation**: Test runner with dummy task before full Scout. Validate timeout, process termination, partial results.
+**»º½â**£º Runner enforces daily limits (sources, items, runtime). Partial results on termination. Tune limits based on observed costs.
 
 ---
 
-## Corrections from Business Review
+### ·çÏÕ£ºÀ´×ÔÍâ²¿À´Ô´µÄËÙÂÊÏÞÖÆ
+
+**»º½â**£º Cursor-based resumption. Respect rate limit headers. Exponential backoff. Future: cache and incremental refresh.
+
+---
+
+### ·çÏÕ£ºRunner Ç¿ÖÆÖ´ÐÐ²»×ã
+
+**»º½â**£º Test runner with dummy task before full Scout. Validate timeout, process termination, partial results.
+
+---
+
+## ÒµÎñÉó²éµÄÐÞÕý
 
 This document was reordered after business-logic review identified priority misalignment:
 
@@ -485,7 +485,7 @@ This document was reordered after business-logic review identified priority misa
 
 9. **Evaluation tracks separated** â€” Scout quality (novelty, relevance, evidence, actionable conversion, duplicate rate) vs Builder quality (tests, acceptance) vs human baseline (Issue B.1-B.2).
 
-**High-confidence recommendations preserved**:
+**±£ÁôµÄ¸ßÖÃÐÅ¶ÈÍÆ¼ö**£º
 - Scout vertical slice as first priority (delivers user's stated goal)
 - Runner-enforced limits (wall-clock, process count, scan/keep)
 - Cursor-based idempotent resumption
@@ -496,6 +496,6 @@ This document was reordered after business-logic review identified priority misa
 
 ---
 
-**End of Project Candidates**
+**ÏîÄ¿ºòÑ¡½áÊø**
 
-**Next Action**: Human reviews proposed Issues, approves implementation order, creates GitHub Issues for Phase A.
+**ÏÂÒ»²½ÐÐ¶¯**£º Human reviews proposed Issues, approves implementation order, creates GitHub Issues for Phase A.

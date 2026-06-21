@@ -6,24 +6,24 @@ type: reuse_map
 status: complete
 ---
 
-# Reuse Map: What Self-Evo Should Adopt, Adapt, or Build
+# 复用图谱：Self-Evo 应直接采用、改造或新建的方案
 
-## Decision Framework
+## 决策框架
 
-**Adopt**: Use directly with minimal integration work
-**Adapt**: Combine patterns or modify for self-evo's file-first approach
-**Reject**: Not aligned with self-evo goals or architecture
-**Build**: No mature solution exists, requires new implementation
+**直接采用（Adopt）**：直接使用，只需少量集成工作
+**改造采用（Adapt）**：组合模式或为 self-evo 的 file-first 方法修改
+**拒绝（Reject）**：不符合 self-evo 目标或架构
+**新建（Build）**：不存在成熟方案，需要新实现
 
 ---
 
-## Directly Adopt
+## 直接采用
 
 ### 1. Google Open Knowledge Format (OKF) v0.1
 
-**What**: Markdown+YAML memory standard with timestamps and link conventions.
+**方案**：Markdown+YAML 记忆标准，带时间戳和链接约定。
 
-**Integration**:
+**集成方式**：
 ```yaml
 ---
 name: short-kebab-case-slug
@@ -37,24 +37,24 @@ metadata:
 Memory content with [[linked-memory]] references.
 ```
 
-**Note**: Do NOT add `accessed` timestamp that mutates on read. If access tracking needed, use separate gitignored index or append-only event log.
+**注意**：不要添加会在读取时修改的 `accessed` 时间戳。如需访问跟踪，使用独立的 gitignored 索引或仅追加的事件日志。
 
-**Effort**: 1 day (add created/modified fields, update memory write functions)
+**工作量**：1 天（添加 created/modified 字段，更新记忆写入函数）
 
-**Benefits**:
-- Standards-aligned (future-proof)
-- Git-native (no breaking changes)
-- Enables time-decay scoring for forgetting experiments (if needed)
+**优势**：
+- 符合标准（面向未来）
+- Git 原生（无破坏性变更）
+- 支持遗忘实验的时间衰减评分（如需要）
 
-**Risks**: None (additive only, Markdown remains canonical)
+**风险**：无（仅添加，Markdown 保持权威）
 
 ---
 
-### 2. Local Structured Telemetry (JSONL + OpenTelemetry)
+### 2. 本地结构化遥测（JSONL + OpenTelemetry）
 
-**What**: File-based structured logging with OpenTelemetry-compatible schema for local analysis.
+**方案**：基于文件的结构化日志，使用 OpenTelemetry 兼容 schema 进行本地分析。
 
-**Integration**: Scout runner wrapper captures structured CLI output/usage where available and writes to gitignored `state/telemetry/<date>/<run-id>.jsonl` with standard spans.
+**集成方式**：Scout runner wrapper 捕获可用的结构化 CLI 输出/使用数据，写入 gitignored `state/telemetry/<date>/<run-id>.jsonl`，使用标准 spans。
 
 ```python
 import json
@@ -75,49 +75,49 @@ def log_span(name, issue_id, metadata, start, end, tokens_used=None):
         f.write(json.dumps(event) + "\n")
 ```
 
-**Effort**: Embedded in Scout runner (Issue A.1), no separate infrastructure project
+**工作量**：嵌入 Scout runner（Issue A.1），无需独立基础设施项目
 
-**Benefits**:
-- Zero external dependencies
-- Local-only (no external transmission without approval)
-- OpenTelemetry-compatible (future migration path)
-- Cost tracking per issue/agent/day where CLI exposes it
-- Post-mortem analysis without cloud access
+**优势**：
+- 零外部依赖
+- 仅本地（未经批准不传输到外部）
+- OpenTelemetry 兼容（未来迁移路径）
+- 按 issue/agent/day 跟踪成本（CLI 可暴露时）
+- 无需云访问即可事后分析
 
-**Risks**: Unknown token/cost when CLI doesn't expose per-internal-call metrics (logged as "unknown")
-
----
-
-### 3. ResearchPlanAssignOps Pattern
-
-**What**: Hierarchical Issue decomposition with phase gates and human review.
-
-**Pattern**:
-1. Parent Issue filed by human
-2. Scout agent researches, produces plan
-3. Human reviews plan, approves phases
-4. Execution agent works on approved phase
-5. Draft PR created, human reviews
-6. Repeat for next phase
-
-**Integration**: Codify as `rules/ISSUE_WORKFLOW.md` with phase labels in GitHub.
-
-**Effort**: 1 week (workflow documentation, phase transition logic, GitHub label automation)
-
-**Benefits**:
-- Aligns with self-evo's human-review principle
-- Production-proven pattern (used in research automation)
-- Natural checkpoint for cost control
-
-**Risks**: None (codifies existing intent)
+**风险**：CLI 不暴露内部调用级指标时 token/成本为未知（记录为 "unknown"）
 
 ---
 
-### 3. Scout Holdout Evaluation Set
+### 3. ResearchPlanAssignOps 模式
 
-**What**: Independent task suite for Scout quality evaluation, avoiding answer leakage.
+**方案**：带阶段门和人工审查的层级 Issue 分解。
 
-**Integration**: Create holdout from new tasks, NOT from completed Issues with known-good outcomes in repo history.
+**模式**：
+1. 人工提交父 Issue
+2. Scout agent 研究，生成计划
+3. 人工审查计划，批准阶段
+4. 执行 agent 处理已批准阶段
+5. 创建 Draft PR，人工审查
+6. 重复下一阶段
+
+**集成方式**：编入 `rules/ISSUE_WORKFLOW.md`，在 GitHub 中使用阶段标签。
+
+**工作量**：1 周（工作流文档、阶段转换逻辑、GitHub 标签自动化）
+
+**优势**：
+- 符合 self-evo 的人工审查原则
+- 生产验证模式（用于研究自动化）
+- 成本控制的自然检查点
+
+**风险**：无（编入现有意图）
+
+---
+
+### 3. Scout 留出评估集
+
+**方案**：Scout 质量评估的独立任务套件，避免答案泄漏。
+
+**集成方式**：从新任务创建留出集，不要从已知良好结果在 repo 历史中的已完成 Issues 创建。
 
 ```yaml
 # data/benchmarks/scout_holdout/task-001-new-domain.yml
@@ -135,42 +135,42 @@ success_criteria:
   - no_answer_leakage: true  # Verify no solution in repo history
 ```
 
-**Effort**: 1 week (create independent holdout tasks, define Scout-specific metrics, run baseline)
+**工作量**：1 周（创建独立留出任务、定义 Scout 特定指标、运行基线）
 
-**Benefits**:
-- Measures actual Scout workflow (not generic coding)
-- Validates novelty discovery, relevance filtering, evidence quality
-- Avoids answer leakage (holdout independent of repo history)
-- Separates Scout quality (exploration) from Builder quality (implementation)
+**优势**：
+- 衡量实际 Scout 工作流（非通用编码）
+- 验证新颖性发现、相关性过滤、证据质量
+- 避免答案泄漏（留出集独立于 repo 历史）
+- 分离 Scout 质量（探索）和 Builder 质量（实现）
 
-**Risks**: Holdout design quality affects evaluation validity
-
----
-
-### 4. SWE-bench Optional Comparison
-
-**What**: Standard coding agent benchmark (500 verified tasks) for optional comparison.
-
-**Integration**: Run after self-evo native benchmark establishes baseline.
-
-**Effort**: 3-4 days (setup evaluation harness, run Claude Code on Verified subset, collect metrics)
-
-**Benefits**:
-- Compare self-evo coding-worker capability to industry standard
-- Identify coding-specific gaps vs research/exploration patterns
-- External validity (peer comparison)
-
-**Risks**: Compute cost (~$50-100 for full Verified run)
-
-**Priority**: P2 (optional validation, not primary measure)
+**风险**：留出集设计质量影响评估有效性
 
 ---
 
-### 5. SQLite Lease-Based Coordination
+### 4. SWE-bench 可选对比
 
-**What**: Task claiming with TTL + heartbeat for multi-agent coordination.
+**方案**：标准编码 agent 基准测试（500 个已验证任务）用于可选对比。
 
-**Schema**:
+**集成方式**：在 self-evo 原生基准测试建立基线后运行。
+
+**工作量**：3-4 天（设置评估工具、在 Verified 子集上运行 Claude Code、收集指标）
+
+**优势**：
+- 将 self-evo 编码 worker 能力与行业标准对比
+- 识别编码特定差距与研究/探索模式
+- 外部有效性（同行对比）
+
+**风险**：计算成本（完整 Verified 运行约 $50-100）
+
+**优先级**：P2（可选验证，非主要衡量）
+
+---
+
+### 5. SQLite 基于租约的协调
+
+**方案**：带 TTL + 心跳的任务认领，用于多 agent 协调。
+
+**Schema**：
 ```sql
 CREATE TABLE task_claims (
   task_id TEXT PRIMARY KEY,
@@ -185,55 +185,55 @@ INSERT OR IGNORE INTO task_claims (task_id, agent_id, claimed_at, expires_at, he
 VALUES (?, ?, ?, ?, ?);
 ```
 
-**Integration**: `state/coordination.db` with lease library (Python implementation ~200 lines).
+**集成方式**：`state/coordination.db` 配合租约库（Python 实现约 200 行）。
 
-**Effort**: 1 week (schema, claim/release/heartbeat functions, expiry cleanup)
+**工作量**：1 周（schema、认领/释放/心跳函数、过期清理）
 
-**Benefits**:
-- No external dependencies (SQLite built-in)
-- Proven pattern (AutoGPT, agent-coordinator)
-- Handles agent crashes automatically
+**优势**：
+- 无外部依赖（SQLite 内置）
+- 验证模式（AutoGPT、agent-coordinator）
+- 自动处理 agent 崩溃
 
-**Risks**: Single-host only (sufficient for MVP)
-
----
-
-## Adapt and Combine
-
-### 5. External Observability Comparison (Approval-Gated)
-
-**What**: Compare Langfuse vs OpenLLMetry for production observability after local telemetry proven.
-
-**Integration**: Only after local JSONL telemetry establishes baseline needs.
-
-**Langfuse**:
-- Pros: Rich UI, session replay, prompt versioning
-- Cons: External dependency, requires self-hosting or cloud account
-- Cost: ~$0-49/month (cloud) or hosting overhead
-
-**OpenLLMetry**:
-- Pros: Vendor-neutral, OpenTelemetry standard, export flexibility
-- Cons: Requires separate backend (Jaeger/Zipkin/Grafana)
-- Cost: Self-hosted infrastructure
-
-**Decision criteria**:
-1. Local telemetry insufficient for debugging? (Try for 2-3 Issues first)
-2. Need real-time monitoring vs post-mortem? (Async analysis may suffice)
-3. Multi-user access required? (Single-user MVP may not need dashboards)
-
-**Effort**: 2-3 days per option (SDK integration, span instrumentation, dashboard setup)
-
-**Priority**: P2 (only after local telemetry bottleneck measured)
+**风险**：仅单主机（MVP 足够）
 
 ---
 
-### 6. Hybrid Memory Architecture (File + Index)
+## 改造组合
 
-**Pattern**: Markdown files as source of truth, SQLite FTS + embeddings for retrieval.
+### 5. 外部可观测性对比（需批准门控）
 
-**Adapted from**: Cognee (multi-store), Mem0 (extraction), ENGRAM (typed retrieval)
+**方案**：在本地遥测验证后，对比 Langfuse vs OpenLLMetry 用于生产可观测性。
 
-**Architecture**:
+**集成方式**：仅在本地 JSONL 遥测建立基线需求后。
+
+**Langfuse**：
+- 优势：丰富 UI、会话重放、prompt 版本控制
+- 劣势：外部依赖、需要自托管或云账户
+- 成本：约 $0-49/月（云）或托管开销
+
+**OpenLLMetry**：
+- 优势：供应商中立、OpenTelemetry 标准、导出灵活性
+- 劣势：需要独立后端（Jaeger/Zipkin/Grafana）
+- 成本：自托管基础设施
+
+**决策标准**：
+1. 本地遥测不足以调试？（先尝试 2-3 个 Issues）
+2. 需要实时监控 vs 事后分析？（异步分析可能足够）
+3. 需要多用户访问？（单用户 MVP 可能不需要仪表板）
+
+**工作量**：每个选项 2-3 天（SDK 集成、span 插桩、仪表板设置）
+
+**优先级**：P2（仅在本地遥测瓶颈测量后）
+
+---
+
+### 6. 混合记忆架构（File + Index）
+
+**模式**：Markdown 文件作为真实来源，SQLite FTS + embeddings 用于检索。
+
+**改造自**：Cognee（多存储）、Mem0（提取）、ENGRAM（类型化检索）
+
+**架构**：
 ```
 data/memory/hot/           # Canonical Markdown+YAML
 state/memory_index.db      # SQLite FTS + vector extension
@@ -242,51 +242,51 @@ state/memory_index.db      # SQLite FTS + vector extension
   - embeddings (vector similarity)
 ```
 
-**Integration**:
-- **Phase 1**: SQLite FTS only (keyword search, 1 week)
-- **Phase 2**: Add embeddings when memory count exceeds measured threshold (2 weeks) — trigger TBD by actual retrieval precision metrics
-- **Phase 3**: Forgetting mechanism (time-decay + access-frequency, 1 week)
+**集成方式**：
+- **阶段 1**：仅 SQLite FTS（关键词搜索，1 周）
+- **阶段 2**：当记忆数超过测量阈值时添加 embeddings（2 周）—— 由实际检索精度指标触发，待定
+- **阶段 3**：遗忘机制（时间衰减 + 访问频率，1 周）
 
-**Benefits**:
-- Scales to 1000+ memories
-- Preserves git-native workflow
-- Database is rebuildable from files (not authoritative)
+**优势**：
+- 扩展到 1000+ 条记忆
+- 保持 git 原生工作流
+- 数据库可从文件重建（非权威）
 
-**Risks**: Index staleness (rebuild on memory changes)
-
----
-
-### 7. Three-Layer Termination Defense
-
-**Pattern**: Multiple independent safety limits to prevent runaway execution.
-
-**Adapted from**: Autonomous-agents.io recommendations, production agent deployments
-
-**Layers**:
-1. **Per-issue token budget** (e.g., 100k tokens): Hard stop when exceeded
-2. **Tool call depth limit** (e.g., 50 calls): Prevent infinite loops
-3. **Wall-clock timeout** (e.g., 4 hours): Catch hung processes
-
-**Integration**: `rules/SAFETY_LIMITS.md` enforced by task execution harness.
-
-**Effort**: 3-4 days (budget tracking, depth counter, timeout wrapper, human override protocol)
-
-**Benefits**:
-- Prevents runaway failure modes widely reported in agent deployments
-- Graceful degradation (partial results returned)
-- Justifies autonomous execution to stakeholders
-
-**Risks**: False positives (legitimate long-running tasks)
+**风险**：索引过时（记忆变更时重建）
 
 ---
 
-### 8. Forgetting Mechanism
+### 7. 三层终止防御
 
-**Pattern**: Time-decay + access-frequency scoring with archive flag.
+**模式**：多个独立安全限制防止失控执行。
 
-**Adapted from**: Forgetting problem research (source study reported 3x accuracy gain 13%→39% on their test set)
+**改造自**：Autonomous-agents.io 建议、生产 agent 部署
 
-**Scoring**:
+**层级**：
+1. **每 issue token 预算**（如 100k tokens）：超过时硬停止
+2. **工具调用深度限制**（如 50 次调用）：防止无限循环
+3. **墙上时钟超时**（如 4 小时）：捕获挂起进程
+
+**集成方式**：`rules/SAFETY_LIMITS.md` 由任务执行工具强制执行。
+
+**工作量**：3-4 天（预算跟踪、深度计数器、超时包装器、人工覆盖协议）
+
+**优势**：
+- 防止 agent 部署中广泛报告的失控失败模式
+- 优雅降级（返回部分结果）
+- 向利益相关者证明自主执行合理性
+
+**风险**：误报（合法的长时间运行任务）
+
+---
+
+### 8. 遗忘机制
+
+**模式**：时间衰减 + 访问频率评分，带归档标志。
+
+**改造自**：遗忘问题研究（来源研究报告其测试集上准确率从 13% 提升到 39%，增益 3 倍）
+
+**评分**：
 ```python
 def memory_score(created, modified, accessed, access_count):
     age_days = (now - created).days
@@ -304,26 +304,26 @@ def memory_score(created, modified, accessed, access_count):
     return time_factor * access_factor * recency_boost
 ```
 
-**Archive policy**: Score <0.1 → move to `data/memory/archive/`, exclude from retrieval.
+**归档策略**：分数 <0.1 → 移至 `data/memory/archive/`，从检索中排除。
 
-**Effort**: 1 week (scoring function, archive workflow, restore protocol)
+**工作量**：1 周（评分函数、归档工作流、恢复协议）
 
-**Benefits**:
-- Prevents unbounded accumulation
-- Improves retrieval precision (signal-to-noise)
-- Reversible (human can restore archived memories)
+**优势**：
+- 防止无限制累积
+- 改进检索精度（信噪比）
+- 可逆（人工可恢复已归档记忆）
 
-**Risks**: Premature archival of important memories
+**风险**：重要记忆的过早归档
 
 ---
 
-### 9. Worktree Isolation for Parallel Agents
+### 9. Worktree 隔离用于并行 Agents
 
-**Pattern**: Git worktrees for file conflict prevention.
+**模式**：Git worktrees 防止文件冲突。
 
-**Adapted from**: Claude Code native worktree support
+**改造自**：Claude Code 原生 worktree 支持
 
-**Integration**: Agents working on different Issues use separate worktrees.
+**集成方式**：处理不同 Issues 的 Agents 使用独立 worktrees。
 
 ```bash
 # Agent 1 claims Issue #7
@@ -333,100 +333,100 @@ git worktree add .worktrees/issue-7 -b agent/worker-01/7
 git worktree add .worktrees/issue-8 -b agent/worker-02/8
 ```
 
-**Effort**: Already available (Claude Code built-in), just codify protocol.
+**工作量**：已可用（Claude Code 内置），仅需编入协议。
 
-**Benefits**:
-- Zero file conflicts
-- Parallel execution without coordination overhead
-- Failed agents leave cleanable worktrees
+**优势**：
+- 零文件冲突
+- 并行执行无协调开销
+- 失败的 agents 留下可清理的 worktrees
 
-**Risks**: Disk space (worktrees are full checkouts)
-
----
-
-## Reject and Defer
-
-### 10. Reject: Graph Databases for Memory
-
-**Systems**: Neo4j, Graphiti
-
-**Reason**: Expensive indexing (5s for 100 facts per Graphiti benchmarks), marginal gains for single-agent. Hybrid retrieval (vector + keyword) reported by source studies to achieve comparable benefit at lower cost.
-
-**Decision**: Use SQLite relations for explicit links (`[[name]]` syntax), not graph traversal.
+**风险**：磁盘空间（worktrees 是完整检出）
 
 ---
 
-### 11. Reject: Agent-Controlled Memory Editing
+## 拒绝和延后
 
-**Systems**: Letta's tool-based memory editing
+### 10. 拒绝：图数据库用于记忆
 
-**Reason**: Self-evo intentionally requires human review. Automated editing introduces hallucination accumulation.
+**系统**：Neo4j、Graphiti
 
-**Decision**: Agents propose memory changes (via Draft PRs), humans approve.
+**原因**：昂贵的索引（根据 Graphiti 基准测试，100 个事实需要 5 秒）、单 agent 增益边际。来源研究报告混合检索（向量 + 关键词）以更低成本实现可比收益。
 
----
-
-### 12. Reject: Swarm Coordination for MVP
-
-**Systems**: OpenAI Swarm, autonomous task claiming
-
-**Reason**: Hierarchical patterns are prevalent in production multi-agent deployments (source-specific: autonomous-agents.io survey). Swarm adds complexity without proven benefit for self-evo's phased workflow.
-
-**Decision**: Hierarchical assignment (manager assigns Issues to agents), not autonomous claiming.
+**决策**：使用 SQLite 关系处理显式链接（`[[name]]` 语法），而非图遍历。
 
 ---
 
-### 13. Defer: Temporal/Restate Durable Execution
+### 11. 拒绝：Agent 控制的记忆编辑
 
-**Reason**: SQLite task queue sufficient for current scale. Durable execution overhead not justified until bottleneck proven.
+**系统**：Letta 的基于工具的记忆编辑
 
-**Escalation trigger**: Task volume or coordination complexity demonstrates SQLite bottleneck (measured locally, not pre-set threshold) OR cross-host coordination needed.
+**原因**：Self-evo 故意需要人工审查。自动编辑引入幻觉累积。
 
----
-
-### 13. Defer: Vector Databases
-
-**Systems**: Pinecone, Weaviate, Qdrant
-
-**Reason**: SQLite vector extension handles memory at current scale. External vector DB adds deployment complexity.
-
-**Escalation trigger**: Memory count growth + measured retrieval precision degradation demonstrate semantic search necessity.
+**决策**：Agents 提议记忆变更（通过 Draft PRs），人工批准。
 
 ---
 
-### 14. Defer: Proactive Scouting Infrastructure Beyond Scout Vertical Slice
+### 12. 拒绝：Swarm 协调用于 MVP
 
-**Reason**: Scout vertical slice (Phase A) delivers the core capability. Additional infrastructure (preference learner, multi-source orchestration, semantic deduplication) should be added only after Scout operational and measured needs identified.
+**系统**：OpenAI Swarm、自主任务认领
 
-**Escalation trigger**: Scout operational AND specific bottlenecks measured (e.g., low relevance rate, high duplicate rate, throughput insufficient).
+**原因**：层级模式在生产多 agent 部署中普遍（来源特定：autonomous-agents.io 调查）。Swarm 增加复杂性，对 self-evo 的阶段工作流无验证收益。
 
----
-
-### 16. Defer: Prompt Injection Defense
-
-**Systems**: tldrsec defenses, prompt-guard
-
-**Reason**: Claude has built-in safety. Self-evo's human-review gates catch malicious instructions.
-
-**Escalation trigger**: Adversarial inputs become common OR multi-agent scenarios increase attack surface.
+**决策**：层级分配（manager 分配 Issues 给 agents），而非自主认领。
 
 ---
 
-## Build New (No Mature Solution)
+### 13. 延后：Temporal/Restate 持久执行
 
-### 17. Build: Scout Runner with Bounded Execution
+**原因**：SQLite 任务队列足以应对当前规模。持久执行开销在证明瓶颈前不合理。
 
-**Gap**: No framework provides Scout-specific bounded execution (sources, items, wall-clock, process count).
+**升级触发**：任务量或协调复杂性证明 SQLite 瓶颈（本地测量，非预设阈值）或需要跨主机协调。
 
-**Requirements**:
-- Launch Claude CLI worker with Scout task
-- Enforce: max wall-clock time, max Claude process invocations, max sources scanned, max items scanned/kept
-- Capture: structured CLI output/usage where available, exit codes, duration
-- Log unknown token/cost as "unknown" (hooks don't expose per-internal-LLM-call metrics)
-- Terminate: signal handler for timeout, write partial results
-- Resume: load cursor, skip already-processed items
+---
 
-**Implementation**:
+### 13. 延后：向量数据库
+
+**系统**：Pinecone、Weaviate、Qdrant
+
+**原因**：SQLite vector extension 在当前规模处理记忆。外部向量 DB 增加部署复杂性。
+
+**升级触发**：记忆数增长 + 测量的检索精度降级证明语义搜索必要性。
+
+---
+
+### 14. 延后：Scout 垂直切片之外的主动侦查基础设施
+
+**原因**：Scout 垂直切片（阶段 A）提供核心能力。额外基础设施（偏好学习器、多源编排、语义去重）应仅在 Scout 运行且识别出测量需求后添加。
+
+**升级触发**：Scout 运行且特定瓶颈测量（如低相关率、高重复率、吞吐量不足）。
+
+---
+
+### 16. 延后：Prompt 注入防御
+
+**系统**：tldrsec 防御、prompt-guard
+
+**原因**：Claude 有内置安全性。Self-evo 的人工审查门捕获恶意指令。
+
+**升级触发**：对抗输入变得常见或多 agent 场景增加攻击面。
+
+---
+
+## 新建（无成熟方案）
+
+### 17. 新建：带边界执行的 Scout Runner
+
+**缺口**：无框架提供 Scout 特定的边界执行（来源、项目、墙上时钟、进程数）。
+
+**需求**：
+- 启动 Claude CLI worker 执行 Scout 任务
+- 强制执行：最大墙上时钟时间、最大 Claude 进程调用数、最大扫描来源数、最大扫描/保留项目数
+- 捕获：可用的结构化 CLI 输出/使用、退出码、持续时间
+- 将未知 token/成本记录为 "unknown"（hooks 不暴露内部 LLM 调用级指标）
+- 终止：超时信号处理器，写入部分结果
+- 恢复：加载 cursor，跳过已处理项目
+
+**实现**：
 ```python
 class ScoutRunner:
     def run(self, issue_id, config):
@@ -439,24 +439,24 @@ class ScoutRunner:
         pass
 ```
 
-**Effort**: Embedded in Scout vertical slice (Issue A.1-A.2), ~1 week
+**工作量**：嵌入 Scout 垂直切片（Issue A.1-A.2），约 1 周
 
-**Priority**: P0 (enables Scout vertical slice)
+**优先级**：P0（使能 Scout 垂直切片）
 
 ---
 
-### 18. Build: Scout Cursor and Ledger System
+### 18. 新建：Scout Cursor 和账本系统
 
-**Gap**: No mature cursor/ledger pattern for multi-source exploration agents.
+**缺口**：无成熟 cursor/ledger 模式用于多来源探索 agents。
 
-**Requirements**:
-- Per-source cursor tracking (last-seen timestamp or item ID)
-- Deduplication cache (by URL/ID, later semantic)
-- Keep/reject ledger with evidence (every item decision logged)
-- Idempotent resumption (load cursor, skip processed)
-- Gitignored state (cursor, cache, ledger JSONL)
+**需求**：
+- 每来源 cursor 跟踪（上次查看的时间戳或项目 ID）
+- 去重缓存（按 URL/ID，后续语义）
+- 保留/拒绝账本带证据（每个项目决策已记录）
+- 幂等恢复（加载 cursor，跳过已处理）
+- Gitignored 状态（cursor、cache、ledger JSONL）
 
-**Schema**:
+**Schema**：
 ```json
 // state/scout_cursor.json (gitignored)
 {
@@ -470,23 +470,23 @@ class ScoutRunner:
 {"item_id": "repo/124", "url": "...", "decision": "reject", "reason": "Duplicate of existing source", "timestamp": "..."}
 ```
 
-**Effort**: Embedded in Scout vertical slice (Issue A.2), ~1 week
+**工作量**：嵌入 Scout 垂直切片（Issue A.2），约 1 周
 
-**Priority**: P0 (enables idempotent Scout)
+**优先级**：P0（使能幂等 Scout）
 
 ---
 
-### 19. Build: Memory Access Tracking (Conditional)
+### 19. 新建：记忆访问跟踪（条件性）
 
-**Gap**: Self-evo needs access/use statistics for forgetting experiments without mutating canonical Markdown.
+**缺口**：Self-evo 需要访问/使用统计用于遗忘实验，而不修改权威 Markdown。
 
-**Requirements** (only if retrieval bottleneck measured):
-- Track memory reads/uses without mutating Markdown files
-- Store access events in rebuildable gitignored index or append-only log
-- Enable time-decay + access-frequency scoring
-- Archive policy: manual only, reversible, requires cooldown proposal + human approval
+**需求**（仅当测量到检索瓶颈时）：
+- 跟踪记忆读取/使用而不修改 Markdown 文件
+- 在可重建的 gitignored 索引或仅追加日志中存储访问事件
+- 支持时间衰减 + 访问频率评分
+- 归档策略：仅手动、可逆、需要冷却期提案 + 人工批准
 
-**Implementation**:
+**实现**：
 ```python
 # state/memory_access.db (gitignored, rebuildable)
 CREATE TABLE access_log (
@@ -500,75 +500,75 @@ CREATE TABLE access_log (
 {"memory": "okf-validates-file-first", "event": "read", "timestamp": "2026-06-21T12:00:00Z"}
 ```
 
-**Effort**: 1 week (access tracking, forgetting score, archive/restore protocol)
+**工作量**：1 周（访问跟踪、遗忘评分、归档/恢复协议）
 
-**Priority**: P2 (conditional on measured retrieval bottleneck)
-
----
-
-## Integration Order (Recommended Sequence)
-
-### Phase A: Autonomous Scout Vertical Slice (Week 1-4)
-
-1. **Scout source registry and runner wrapper** (1 week) — Approved sources, bounded execution, local telemetry embedded
-2. **Cursor, deduplication, and keep/reject ledger** (1 week) — Idempotent resumption, evidence-backed filtering
-3. **Daily decision report generation** (1 week) — Reuse map, experiment/skill/project candidate, human-reviewable output
-4. **Human review label workflow** (3 days) — Feedback loop for preference learning
-
-### Phase B: Scout Evaluation (Week 5-6, after Scout operational)
-
-5. **Scout holdout set and quality metrics** (1 week) — Independent holdout (no answer leakage), Scout vs Builder vs human metrics
-6. **Run Scout against holdout and measure** (3 days) — Success rate, cost, failure modes, comparison to human baseline
-
-### Phase C: Conditional Improvements (triggered by observed Scout failures)
-
-7. **Scout reliability** (1 week) — Resume, semantic deduplication, rate limit handling (only if failures observed)
-8. **Memory indexing** (2 weeks) — OKF timestamps (created/modified only, no mutating reads), SQLite FTS, OpenViking comparison (only if retrieval bottleneck measured)
-9. **Multi-agent coordination** (2-3 weeks) — Parallel Scouts with worktree isolation (only if throughput bottleneck proven)
-10. **External observability comparison** (1 week) — Langfuse vs OpenLLMetry (only if local telemetry insufficient for debugging)
-11. **Durable workflow engine** (2-3 weeks) — Temporal/Restate checkpointing (only if recovery pain measured)
+**优先级**：P2（条件性，取决于测量的检索瓶颈）
 
 ---
 
-## Missing Pieces Summary
+## 集成顺序（推荐序列）
 
-**Critical (build now)**:
-- Token budget enforcement
-- Memory retrieval API
+### 阶段 A：自主 Scout 垂直切片（第 1-4 周）
 
-**Important (build in MVP)**:
-- GitHub Issue decomposition protocol
-- Forgetting mechanism
+1. **Scout 源注册和 runner wrapper**（1 周）—— 已批准来源、边界执行、嵌入本地遥测
+2. **Cursor、去重和保留/拒绝账本**（1 周）—— 幂等恢复、证据支持的过滤
+3. **每日决策报告生成**（1 周）—— 复用图谱、实验/技能/项目候选、人工可审查输出
+4. **人工审查标签工作流**（3 天）—— 偏好学习的反馈循环
 
-**Nice-to-have (defer)**:
-- Proactive scouting
-- Advanced semantic search
-- Cross-host coordination
+### 阶段 B：Scout 评估（第 5-6 周，Scout 运行后）
 
-**Already available (adopt)**:
-- Local structured telemetry (JSONL + OpenTelemetry schema)
-- Self-evo native task benchmark
-- OKF memory standard
-- SQLite lease coordination
-- Worktree isolation
-- ResearchPlanAssignOps pattern
+5. **Scout 留出集和质量指标**（1 周）—— 独立留出（无答案泄漏）、Scout vs Builder vs 人工指标
+6. **针对留出集运行 Scout 并测量**（3 天）—— 成功率、成本、失败模式、与人工基线对比
+
+### 阶段 C：条件性改进（由观察到的 Scout 失败触发）
+
+7. **Scout 可靠性**（1 周）—— 恢复、语义去重、速率限制处理（仅当观察到失败时）
+8. **记忆索引**（2 周）—— OKF 时间戳（仅 created/modified，不修改读取）、SQLite FTS、OpenViking 对比（仅当测量到检索瓶颈时）
+9. **多 agent 协调**（2-3 周）—— 带 worktree 隔离的并行 Scouts（仅当证明吞吐量瓶颈时）
+10. **外部可观测性对比**（1 周）—— Langfuse vs OpenLLMetry（仅当本地遥测不足以调试时）
+11. **持久工作流引擎**（2-3 周）—— Temporal/Restate 检查点（仅当测量到恢复痛点时）
 
 ---
 
-## Architecture Decision Summary
+## 缺失部分摘要
 
-| Decision | Choice | Rationale |
+**关键（现在构建）**：
+- Token 预算强制执行
+- 记忆检索 API
+
+**重要（在 MVP 中构建）**：
+- GitHub Issue 分解协议
+- 遗忘机制
+
+**锦上添花（延后）**：
+- 主动侦查
+- 高级语义搜索
+- 跨主机协调
+
+**已可用（采用）**：
+- 本地结构化遥测（JSONL + OpenTelemetry schema）
+- Self-evo 原生任务基准测试
+- OKF 记忆标准
+- SQLite 租约协调
+- Worktree 隔离
+- ResearchPlanAssignOps 模式
+
+---
+
+## 架构决策摘要
+
+| 决策 | 选择 | 理由 |
 |----------|--------|-----------|
-| Memory format | Markdown+YAML (OKF) | Git-native, transparent, standards-aligned |
-| Memory retrieval | SQLite FTS → embeddings | Scales to 1000+ memories, incremental complexity |
-| Coordination | Lease-based (SQLite) | No external dependencies, proven pattern |
-| Observability | Local JSONL → external (approval-gated) | File-first with optional cloud upgrade |
-| Workflow | ResearchPlanAssignOps | Human-review gates, phased execution |
-| Safety | Three-layer termination | Redundant limits, graceful degradation |
-| Multi-agent | Hierarchical (defer swarm) | Hierarchical patterns prevalent in surveys |
-| Durable execution | Defer (SQLite sufficient) | Escalate only if bottleneck proven |
-| Evaluation | Self-evo native → SWE-bench optional | Measure actual workflows first |
+| 记忆格式 | Markdown+YAML (OKF) | Git 原生、透明、符合标准 |
+| 记忆检索 | SQLite FTS → embeddings | 扩展到 1000+ 条记忆，渐进复杂性 |
+| 协调 | 基于租约（SQLite） | 无外部依赖，验证模式 |
+| 可观测性 | 本地 JSONL → 外部（需批准门控） | File-first 带可选云升级 |
+| 工作流 | ResearchPlanAssignOps | 人工审查门、阶段执行 |
+| 安全性 | 三层终止 | 冗余限制、优雅降级 |
+| 多 agent | 层级（延后 swarm） | 层级模式在调查中普遍 |
+| 持久执行 | 延后（SQLite 足够） | 仅当证明瓶颈时升级 |
+| 评估 | Self-evo 原生 → SWE-bench 可选 | 先测量实际工作流 |
 
 ---
 
-**End of Reuse Map**
+**复用图谱结束**
