@@ -1,5 +1,5 @@
 ---
-title: "Reuse Map: Autonomous Agent Ecosystem"
+title: "复用图谱：自主 Agent 生态系统"
 date: 2026-06-21
 issue: 7
 type: reuse_map

@@ -1,5 +1,5 @@
 ---
-title: "Daily Report: Autonomous Agent Ecosystem Research"
+title: "日报：自主 Agent 生态系统研究"
 date: 2026-06-21
 issue: 7
 type: decision_report
@@ -11,9 +11,9 @@ status: complete
 
 ## 执行摘要
 
-Research into autonomous agent ecosystems reveals a maturing but hazardous landscape. Production patterns exist: durable execution platforms (Temporal 35k★), observability infrastructure (Langfuse 29k★), and GitHub-native workflows. Yet agent pilot failures are widely reported (runaway costs, infinite loops), and benchmark scores can mislead on real-world tasks.
+对自主 agent 生态系统的调研揭示了一个日趋成熟但充满风险的格局。生产级模式已存在：持久执行平台（Temporal 35k★）、可观测性基础设施（Langfuse 29k★）、GitHub 原生工作流。但 agent 试点失败被广泛报道（成本失控、无限循环），基准测试分数在实际任务中可能误导。
 
-**Core Finding**: Self-evo's file-first, human-reviewed approach aligns with cautious production patterns. The path forward is **Autonomous Scout vertical slice first**, with cost controls and bounded execution.
+**核心发现**：Self-evo 的 file-first、人工审查方法与谨慎的生产模式一致。前进路径是**优先自主 Scout 垂直切片**，配合成本控制和边界执行。
 
 ---
 
@@ -45,69 +45,71 @@ Research into autonomous agent ecosystems reveals a maturing but hazardous lands
 
 ## 一级主要路线：优先 Scout 垂直切片
 
-**原则**：Deliver the project's stated primary goal first — a proactive scouting system that explores, filters, and produces daily decision-oriented reports.
+**原则**：优先交付项目声明的首要目标——一个能主动探索、过滤并生成面向决策的日报的侦查系统。
 
 **Scout 垂直切片范围**：
 
-1. **Approved source registry** (`rules/RESOURCE_APPROVALS.yaml`)
+1. **批准资源注册表** (`rules/RESOURCE_APPROVALS.yaml`)
    - GitHub Search / REST API
    - Hacker News API
    - arXiv API
-   - Product Hunt API (only when resource approval and API access available)
+   - Product Hunt API（仅当资源批准且 API 可用时）
 
-2. **Manual trigger with scheduler placeholder**
-   - User runs Scout worker locally
-   - `rules/EXPLORATION_POLICY.md` defines approved sources, daily limits
-   - Later: add scheduled invocation
+2. **手动触发，预留调度占位**
+   - 用户在本地运行 Scout worker
+   - `rules/EXPLORATION_POLICY.md` 定义批准来源、每日限额
+   - 后续：添加计划调用
 
-3. **Incremental cursor and deduplication**
-   - Track last-seen timestamps per source
-   - Skip already-processed items (by URL/ID)
-   - Store cursor in local gitignored `state/scout_cursor.json`
+3. **增量 cursor 和去重**
+   - 每来源跟踪 last-seen 时间戳
+   - 跳过已处理项目（按 URL/ID）
+   - Cursor 存储在本地 gitignored `state/scout_cursor.json`
 
-4. **Keep/reject ledger with evidence**
-   - Every item: kept (with reason) or rejected (with reason)
-   - Store decisions in `data/exploration/raw/<date>-<source>-ledger.jsonl`
-   - Human-reviewable provenance
+4. **保留/拒绝 ledger 带证据**
+   - 每项：保留（带理由）或拒绝（带理由）
+   - 决策存储在 gitignored `data/exploration/raw/<date>-<source>-ledger.jsonl`
+   - 精简 ledger（tracked）存储在 `data/exploration/raw/<date>-<source>-decisions.md`：URL/ID、日期、标题、keep/reject、理由、来源类型
+   - 人类可审阅溯源，daily report 链接到 tracked decisions 文件
 
-5. **Bounded high-token research**
-   - Scout runner enforces: max wall-clock time, max sources scanned, max items kept, max Claude invocations
-   - No promise of per-internal-LLM-call hard token cap (hooks can't see that)
-   - Unknown token/cost goes to telemetry as "unknown" with explanation
+5. **边界高 token 研究**
+   - Scout runner 强制执行：最大墙上时钟时间、最大扫描来源数、最大保留项目数、最大 Claude 调用次数
+   - 不承诺内部 LLM 调用级硬 token 上限（hooks 看不到）
+   - 未知 token/成本进入 telemetry 标记为 "unknown" 带解释
 
-6. **Daily decision report**
-   - One reuse map (existing work survey)
-   - One experiment/skill/project candidate
-   - Evidence links to ledger
+6. **每日决策报告**
+   - 一份复用图谱（现有工作调研）
+   - 一项实验/技能/项目候选
+   - 证据链接到 tracked ledger
 
-7. **Human review labels**
-   - User reviews daily report, marks items: `relevant`, `irrelevant`, `deep-dive`, `pause`
-   - Labels stored in `data/exploration/review_labels/<date>.yaml`
-   - Future: preference learner summarizes patterns
+7. **人工审查标签**
+   - 用户通过 GitHub Issue/PR comment 或 review labels 给出反馈：`relevant`、`irrelevant`、`deep-dive`、`pause`
+   - Agent 将 GitHub 反馈同步为 tracked `data/exploration/review_labels/<date>.yaml` 记录
+   - Agent 读取评论/标签需要明确 repo read 权限；写 GitHub 由 clawbie 身份且在批准 scope 内
+   - 未来：preference learner 汇总模式
 
-**Scout Runner/Wrapper** (execution boundary):
-- Local script that launches Claude CLI worker with Scout task
-- Captures structured CLI output/usage where available
-- Enforces: max runtime (wall clock), max Claude process invocations, max retries, scan/keep limits
-- Detects: tool call repetition, no-progress, lifecycle violations
-- Writes: partial results on termination, cursor/ledger to gitignored state
-- Commits to repo: only summary, decisions, schemas (not growing runtime state)
+**Scout Runner/Wrapper**（执行边界）：
+- 本地脚本，启动 Claude CLI worker 执行 Scout 任务
+- 捕获可用的结构化 CLI 输出/用量
+- 强制执行：最大运行时（墙上时钟）、最大 Claude 进程调用数、最大重试、扫描/保留限制
+- 检测：工具调用重复、无进展、生命周期违规
+- 写入：终止时部分结果、cursor/完整 ledger 到 gitignored state、精简 decisions 到 tracked
+- 提交到 repo：仅摘要、tracked decisions、schemas（不含增长的运行时状态）
 
-**时间线**：3-4 weeks to working Scout vertical slice
+**时间线**：3-4 周到工作的 Scout 垂直切片
 
 **权衡**：
-- ✅ Delivers user's primary stated goal (proactive exploration)
-- ✅ Tests high-token workflow with real business value
-- ✅ Embeds telemetry and budget controls into real work (not detached infrastructure)
-- ✅ Produces reviewable daily output for preference learning
-- ⚠️  High-token cost per run (mitigated by daily limits and runner enforcement)
-- ⚠️  Requires approved external sources (mitigated by resource approval workflow)
+- ✅ 交付用户首要声明目标（主动探索）
+- ✅ 用真实业务价值测试高 token 工作流
+- ✅ 将遥测和预算控制嵌入实际工作（非分离基础设施）
+- ✅ 生成可审查的每日输出用于偏好学习
+- ⚠️  每次运行高 token 成本（通过每日限制和 runner 强制执行缓解）
+- ⚠️  需要批准外部来源（通过资源批准工作流缓解）
 
-**成功标准** (measure after Scout operational):
-- Scout produces non-empty daily report within budget
-- Human review time <30 min per report
-- Relevance improves over 4 weeks (measured by human labels)
-- Zero runaway costs (runner termination works)
+**成功标准**（Scout 运行后衡量）：
+- Scout 在预算内生成非空日报
+- 人工审查时间 <30 分钟每报告
+- 相关性在 4 周内改进（通过人工标签衡量）
+- 零失控成本（runner 终止有效）
 
 ---
 
@@ -115,68 +117,68 @@ Research into autonomous agent ecosystems reveals a maturing but hazardous lands
 
 ### 路线 B：Scout 评估 + 留出集
 
-**时机**：After Scout vertical slice operational, before scaling
+**时机**：Scout 垂直切片运行后、扩展前
 
 **范围**：
-- Create holdout evaluation set (NOT from repo's solved Issues)
-- Define Scout quality metrics: novelty, relevance, evidence quality, actionable conversion, duplicate rate
-- Define Builder quality metrics separately (tests, acceptance)
-- Include human baseline (time, quality) for comparison
+- 创建留出评估集（非从 repo 已解决 Issues）
+- 定义 Scout 质量指标：新颖性、相关性、证据质量、可操作转换、重复率
+- 单独定义 Builder 质量指标（测试、验收）
+- 包括人工基线（时间、质量）用于对比
 
-**为何之后**：Can't evaluate Scout before Scout exists
+**为何之后**：Scout 存在前无法评估 Scout
 
 ---
 
 ### 路线 C：观察到的失败可靠性
 
-**时机**：After Scout shows specific failure modes (crashes, duplicates, budget overruns)
+**时机**：Scout 显示特定失败模式后（崩溃、重复、预算超支）
 
 **范围**：
-- Add resume from cursor (idempotent restart)
-- Improve deduplication (cross-source, semantic similarity)
-- Tune runner limits based on observed failures
+- 添加从 cursor 恢复（幂等重启）
+- 改进去重（跨来源、语义相似度）
+- 基于观察到的失败调优 runner 限制
 
-**为何之后**：Don't know which reliability features are needed until Scout runs
+**为何之后**：Scout 运行前不知道需要哪些可靠性特性
 
 ---
 
 ### 路线 D：内存索引（条件性）
 
-**时机**：ONLY if measured retrieval failures occur (slow queries, low precision)
+**时机**：仅当衡量到检索失败（查询慢、精度低）
 
 **范围**：
-- Add OKF timestamps (`created`, `modified`) to frontmatter
-- Track access/use in gitignored local index or append-only event log (NOT by mutating Markdown)
-- Experiment: SQLite FTS for keyword search
-- Compare user's active OpenViking adapter
-- Conditional: embeddings only if FTS insufficient
+- 添加 OKF 时间戳（`created`、`modified`）到 frontmatter
+- 在 gitignored 本地索引或仅追加事件日志中跟踪访问/使用（非通过修改 Markdown）
+- 实验：SQLite FTS 用于关键词搜索
+- 对比用户活跃的 OpenViking adapter
+- 条件性：embeddings 仅当 FTS 不足时
 
-**为何之后**：No evidence of retrieval bottleneck yet. Markdown remains canonical.
+**为何之后**：尚无检索瓶颈证据。Markdown 保持权威。
 
 ---
 
 ### 路线 E：多 Agent（条件性）
 
-**时机**：ONLY if single-agent Scout shows throughput bottleneck (queue >5 sources, can't finish daily scan)
+**时机**：仅当单 agent Scout 显示吞吐量瓶颈（队列 >5 来源，无法完成每日扫描）
 
 **范围**：
-- Parallel source scanners (one per source)
-- Hierarchical aggregation (manager combines reports)
-- Worktree isolation for file conflicts
+- 并行来源扫描器（每来源一个）
+- 层级聚合（manager 组合报告）
+- Worktree 隔离处理文件冲突
 
-**为何之后**：No evidence single-agent insufficient. Multi-agent adds coordination complexity.
+**为何之后**：无证据表明单 agent 不足。多 agent 增加协调复杂性。
 
 ---
 
 ### 路线 F：外部可观测性 / 持久工作流（条件性）
 
-**时机**：ONLY if local debugging painful OR recovery overhead high
+**时机**：仅当本地调试痛苦或恢复开销高
 
 **范围**：
-- Evaluate Langfuse (self-hosted) vs local JSONL telemetry
-- Evaluate Temporal/Restate for checkpointing (if recovery pain measured)
+- 评估 Langfuse（自托管）vs 本地 JSONL 遥测
+- 评估 Temporal/Restate 用于检查点（如衡量到恢复痛点）
 
-**为何之后**：Local telemetry and simple retry may suffice. Add external deps only when justified.
+**为何之后**：本地遥测和简单重试可能足够。仅当合理时添加外部依赖。
 
 ---
 
@@ -184,88 +186,101 @@ Research into autonomous agent ecosystems reveals a maturing but hazardous lands
 
 ### 阶段 A：自主 Scout 垂直切片（第 1-4 周）
 
-**Issue A.1**：Scout source registry and manual trigger
-- Define approved sources in `rules/RESOURCE_APPROVALS.yaml`
-- Build Scout runner wrapper (launch, enforce limits, capture output)
-- Manual invocation: user runs `python scripts/scout_runner.py`
+**Issue A.1**：Scout 源注册和手动触发
+- 在 `rules/RESOURCE_APPROVALS.yaml` 定义批准来源（GitHub/HN/arXiv；Product Hunt 门控在批准+API 可用）
+- Agent 不得直接修改 `rules/RESOURCE_APPROVALS.yaml` 或 `rules/EXPLORATION_POLICY.md`
+- 若需新来源（如 Product Hunt），Agent 写 `data/proposals/rule_changes/` proposal 和 GitHub 审批请求，由 jlcbk 修改/批准 rules
+- 构建 Scout runner wrapper（启动、强制执行限制、捕获输出）
+- 手动调用：用户运行 `python scripts/scout_runner.py`
 
-**Issue A.2**：Cursor, ledger, and bounded scan
-- Track last-seen per source (gitignored cursor state)
-- Deduplication by URL/ID
-- Keep/reject ledger with evidence
-- Runner enforces: max runtime, max sources, max items scanned/kept, max retries
+**Issue A.2**：Cursor、ledger 和边界扫描
+- 每来源跟踪 last-seen（gitignored cursor 状态）
+- 按 URL/ID 去重
+- 完整保留/拒绝 ledger 带证据（gitignored JSONL）
+- 精简 decisions 文件（tracked Markdown）：URL/ID、日期、标题、keep/reject、理由、来源类型
+- Runner 强制执行：最大运行时、最大来源、最大扫描/保留项目、最大重试
+- Runner 使用 data/config 或现有 rules 的只读结果，不绕过规则
 
-**Issue A.3**：Daily decision report generation
-- Scout worker produces: reuse map, one experiment/skill/project candidate, evidence links
-- Commit summary and decisions (not raw ledger or cursor state)
+**Issue A.3**：每日决策报告生成
+- Scout worker 生成：复用图谱、一项实验/技能/项目候选、证据链接
+- 证据链接到 tracked decisions 文件（非 gitignored ledger）
+- 提交摘要和 decisions（非原始 ledger 或 cursor 状态）
 
-**Issue A.4**：Human review label workflow
-- User reviews report, adds labels (relevant/irrelevant/deep-dive/pause)
-- Labels stored in `data/exploration/review_labels/<date>.yaml`
+**Issue A.4**：人工审查标签工作流
+- 人类主要通过 GitHub Issue/PR comment 或 review labels 给出反馈：`relevant`、`irrelevant`、`deep-dive`、`pause`
+- Agent 将这些反馈同步为 tracked `data/exploration/review_labels/<date>.yaml` 记录
+- Agent 读取评论/标签需要明确 repo read 权限；任何写 GitHub 操作仍由 clawbie 身份且在批准 scope 内
+- 未来：preference learner 分析标签模式
+
+**Issue A.4**：人工审查标签工作流
+- 人类主要通过 GitHub Issue/PR comment 或 review labels 给出反馈：`relevant`、`irrelevant`、`deep-dive`、`pause`
+- Agent 将这些反馈同步为 tracked `data/exploration/review_labels/<date>.yaml` 记录
+- Agent 读取评论/标签需要明确 repo read 权限；任何写 GitHub 操作仍由 clawbie 身份且在批准 scope 内
+- 未来：preference learner 分析标签模式
 
 ### 阶段 B：Scout 留出评估（第 5-6 周，Scout 运行后）
 
-**Issue B.1**：Holdout set and Scout quality metrics
-- Create independent holdout tasks (NOT from repo history to avoid answer leakage)
-- Define Scout metrics: novelty, relevance, evidence, actionable conversion, duplicate rate
-- Separate Builder metrics: test pass, acceptance
-- Human baseline for comparison
+**Issue B.1**：留出集和 Scout 质量指标
+- 创建独立留出任务（非从 repo 历史以避免答案泄漏）
+- 定义 Scout 指标：新颖性、相关性、证据、可操作转换、重复率
+- 单独的 Builder 指标：测试通过、验收
+- 人工基线用于对比
 
-**Issue B.2**：Measure Scout against holdout
-- Run Scout on holdout set
-- Compare to human baseline
-- Document success rate, cost, failure modes
+**Issue B.2**：针对留出集衡量 Scout
+- 在留出集上运行 Scout
+- 对比人工基线
+- 记录成功率、成本、失败模式
 
 ### 阶段 C：可靠性改进（观察到的失败触发）
 
-**Issue C.1**：Resume and idempotency (if crashes observed)
-**Issue C.2**：Improved deduplication (if duplicates observed)
-**Issue C.3**：Memory indexing (if retrieval slow/imprecise)
-**Issue C.4**：Multi-agent (if throughput bottleneck proven)
-**Issue C.5**：External observability (if debugging painful)
-**Issue C.6**：Durable workflow (if recovery overhead high)
+**Issue C.1**：恢复和幂等性（如观察到崩溃）
+**Issue C.2**：改进去重（如观察到重复）
+**Issue C.3**：内存索引（如检索慢/不精确）
+**Issue C.4**：多 agent（如吞吐量瓶颈已证明）
+**Issue C.5**：外部可观测性（如调试痛苦）
+**Issue C.6**：持久工作流（如恢复开销高）
 
 ---
 
 ## 一个即时实验
 
-**Experiment**: Prototype Scout runner enforcement without full Scout implementation
+**实验**：在完整 Scout 实现前原型 Scout runner 强制执行
 
-**假设**：Runner can enforce wall-clock, process count, and lifecycle limits before building full Scout
+**假设**：Runner 可以在构建完整 Scout 前强制执行墙上时钟、进程数和生命周期限制
 
 **步骤**：
-1. Write minimal Scout runner wrapper (launch Claude CLI, enforce timeout)
-2. Test with dummy task (e.g., "scan 5 HN items")
-3. Verify: timeout works, partial results written, clean exit
+1. 编写最小 Scout runner wrapper（启动 Claude CLI、强制执行超时）
+2. 用虚拟任务测试（如"扫描 5 个 HN 项目"）
+3. 验证：超时有效、部分结果写入、干净退出
 
-**时间线**：1 day
+**时间线**：1 天
 
-**成本**: <$5
+**成本**：<$5
 
-**成功标准**:
-- Runner terminates on timeout
-- Partial results preserved
-- No zombie processes
+**成功标准**：
+- Runner 在超时时终止
+- 部分结果保留
+- 无僵尸进程
 
-**学习价值**：Validates enforcement approach before investing in full Scout
+**学习价值**：在投资完整 Scout 前验证强制执行方法
 
 ---
 
 ## 一个要学习的技能
 
-**Skill**: Designing idempotent exploratory agents with cursor-based resumption
+**技能**：设计带基于 cursor 恢复的幂等探索 agents
 
-**为什么**：Scout will be interrupted (budget, timeout, crashes). Must resume without re-scanning.
+**为什么**：Scout 将被中断（预算、超时、崩溃）。必须无需重新扫描即可恢复。
 
 **学习路径**：
-1. Study cursor patterns (Stripe API, GitHub pagination, database offset/limit)
-2. Design cursor schema for multi-source Scout (per-source last-seen timestamp/ID)
-3. Implement idempotency: same input + same cursor = same output
-4. Test: interrupt, resume, verify no duplicates
+1. 研究 cursor 模式（Stripe API、GitHub 分页、数据库 offset/limit）
+2. 为多来源 Scout 设计 cursor schema（每来源 last-seen 时间戳/ID）
+3. 实现幂等性：相同输入 + 相同 cursor = 相同输出
+4. 测试：中断、恢复、验证无重复
 
-**时间线**：4 hours
+**时间线**：4 小时
 
-**产出**：Understand cursor-based resumption for Scout reliability
+**产出**：理解基于 cursor 的恢复用于 Scout 可靠性
 
 ---
 
@@ -273,51 +288,51 @@ Research into autonomous agent ecosystems reveals a maturing but hazardous lands
 
 ### 决策 1：Scout 垂直切片优先级
 
-**问题**：Approve Scout as first implementation priority?
+**问题**：批准 Scout 作为首要实现优先级？
 
 **选项**：
-1. **Yes, Scout first** — Delivers user's stated goal, tests high-token workflow (Recommended)
-2. No, benchmark/telemetry infrastructure first — Measure before building
-3. No, memory indexing first — Address retrieval before exploration
+1. **是，Scout 优先** — 交付用户声明目标，测试高 token 工作流（推荐）
+2. 否，基准测试/遥测基础设施优先 — 在构建前衡量
+3. 否，内存索引优先 — 在探索前处理检索
 
-**推荐**：Yes, Scout first. Embed telemetry/budget into Scout runner (not detached infrastructure).
+**推荐**：是，Scout 优先。将遥测/预算嵌入 Scout runner（非分离基础设施）。
 
 ---
 
 ### 决策 2：Scout 源批准
 
-**问题**：Approve initial Scout sources (GitHub/HN/arXiv public read, Product Hunt when approved)?
+**问题**：批准初始 Scout 来源（GitHub/HN/arXiv 公开只读，Product Hunt 当批准时）？
 
-**风险**：Network egress, rate limits, potential IP blocking
+**风险**：网络出口、速率限制、潜在 IP 封禁
 
-**推荐**：Approve for public read-only. No API keys required for GitHub/HN/arXiv basic access. Product Hunt when resource approval granted.
+**推荐**：批准用于公开只读。GitHub/HN/arXiv 基础访问无需 API 密钥。Product Hunt 当资源批准授予时。
 
 ---
 
 ### 决策 3：Scout 预算
 
-**问题**：Approve daily Scout budget?
+**问题**：批准每日 Scout 预算？
 
 **选项**：
-- Option A: 2 hours wall-clock, 20 sources scanned, 50 items kept, 10 Claude invocations
-- Option B: 4 hours wall-clock, 40 sources scanned, 100 items kept, 20 Claude invocations
-- Option C: User-defined limits in `rules/EXPLORATION_POLICY.md`
+- 选项 A：2 小时墙上时钟、20 来源扫描、50 项目保留、10 Claude 调用
+- 选项 B：4 小时墙上时钟、40 来源扫描、100 项目保留、20 Claude 调用
+- 选项 C：用户定义限制在 `rules/EXPLORATION_POLICY.md`
 
-**推荐**：Option A for MVP (tighter limits, iterate based on observed needs)
+**推荐**：选项 A 用于 MVP（更紧限制，基于观察需求迭代）
 
 ---
 
 ### 决策 4：之后触发
 
-**问题**：Confirm conditional triggers for deferred work?
+**问题**：确认延后工作的条件触发？
 
-**条件门** (measure after Scout operational):
-- [ ] Memory indexing: ONLY if retrieval failures measured
-- [ ] Multi-agent: ONLY if throughput bottleneck proven
-- [ ] External observability: ONLY if local debugging painful
-- [ ] Durable workflow: ONLY if recovery pain measured
+**条件门**（Scout 运行后衡量）：
+- [ ] 内存索引：仅当衡量到检索失败
+- [ ] 多 agent：仅当吞吐量瓶颈已证明
+- [ ] 外部可观测性：仅当本地调试痛苦
+- [ ] 持久工作流：仅当衡量到恢复痛点
 
-**推荐**：Confirm gates. Do not build speculative infrastructure.
+**推荐**：确认门。不构建投机基础设施。
 
 ---
 
@@ -325,103 +340,110 @@ Research into autonomous agent ecosystems reveals a maturing but hazardous lands
 
 ### 风险 1：每日 Scout 运行的高 token 成本
 
-**缓解**：Runner enforces daily limits (sources, items, runtime). Partial results on termination.
+**缓解**：Runner 强制执行每日限制（来源、项目、运行时）。终止时部分结果。
 
 ---
 
 ### 风险 2：Scout 产生的不相关发现
 
-**缓解**：Human review labels provide feedback. Iterate prompts and filtering logic.
+**缓解**：人工审查标签提供反馈。迭代提示和过滤逻辑。
 
 ---
 
 ### 风险 3：依赖外部资源的可用性问题
 
-**缓解**：Cursor-based resumption. Respect rate limit headers. Exponential backoff.
+**缓解**：基于 cursor 的恢复。尊重速率限制头。指数退避。
 
 ---
 
 ### 风险 4：Runner 强制执行不足
 
-**缓解**：Prototype runner with dummy task first (1 day). Validate enforcement before full Scout.
+**缓解**：用虚拟任务原型 runner 优先（1 天）。在完整 Scout 前验证强制执行。
 
 ---
 
 ## Scout MVP 的成功指标
 
-**质量** (measure after Scout operational):
-- [ ] Daily report produced (non-empty)
-- [ ] Human review time <30 min
-- [ ] Relevance improves over 4 weeks (via human labels)
+**质量**（Scout 运行后衡量）：
+- [ ] 每日报告已生成（非空）
+- [ ] 人工审查时间 <30 分钟
+- [ ] 相关性在 4 周内改进（通过人工标签）
 
-**成本** (measure and enforce):
-- [ ] Zero budget overruns (runner termination works)
-- [ ] Cost per run: to be measured and optimized
+**成本**（衡量和强制执行）：
+- [ ] 零预算超支（runner 终止有效）
+- [ ] 每次运行成本：待衡量和优化
 
-**可靠性** (measure after Scout operational):
-- [ ] Completion rate: to be measured
-- [ ] Resume from interruption: to be implemented and tested
+**可靠性**（Scout 运行后衡量）：
+- [ ] 完成率：待衡量
+- [ ] 从中断恢复：待实现和测试
 
 ---
 
 ## Self-Evo 差异化（不同于死亡框架）
 
-**为何进化更生存必要**：
-1. Agent pilot failures widely reported (runaway costs, infinite loops)
-2. Fully autonomous agents with no review gates risk quality death spiral
-3. Framework lock-in creates dependency risk
+**为何进化生存必要**：
+1. Agent 试点失败被广泛报道（成本失控、无限循环）
+2. 无审查门的完全自主 agents 有质量死亡螺旋风险
+3. 框架锁定造成依赖风险
 
 **Self-evo Scout 策略**：
-1. **Human-review gates**: Daily report reviewed before acting on recommendations
-2. **Cost controls built-in**: Runner enforces limits, no promise of unachievable per-internal-call caps
-3. **File-first**: Ledger, cursor, telemetry in gitignored state; only summaries committed
-4. **Primitive-based**: SQLite, git, standard tools. Not dependent on framework survival.
-5. **Evidence-driven**: Deliver Scout first, measure bottlenecks, add complexity only when justified
-6. **Incremental autonomy**: Manual trigger → scheduled invocation → preference learning
+1. **人工审查门**：每日报告在依据推荐行动前审查
+2. **内置成本控制**：Runner 强制执行限制，不承诺无法实现的内部调用级上限
+3. **File-first**：Ledger、cursor、telemetry 在 gitignored state；仅摘要提交
+4. **基于原语**：SQLite、git、标准工具。不依赖框架生存。
+5. **证据驱动**：先交付 Scout，衡量瓶颈，仅当合理时添加复杂性
+6. **增量自主**：手动触发 → 计划调用 → 偏好学习
 
-**关键对比**：Scout is not a generic agent framework. It's a bounded exploration workflow with human review.
+**关键对比**：Scout 不是通用 agent 框架。它是带人工审查的边界探索工作流。
 
 ---
 
 ## 下一步行动（审查后）
 
-1. **Human reviews this report** → approves Scout priority, sources, budget
-2. **Prototype Scout runner** → 1 day, validates enforcement
-3. **Implement Scout vertical slice** → 3-4 weeks (Issues A.1-A.4)
-4. **Operate Scout for 4 weeks** → collect human labels, measure quality/cost
-5. **Evaluate Scout** → holdout set, metrics (Issue B.1-B.2)
-6. **Conditional improvements** → based on measured failures (Phase C)
+1. **人类审查此报告** → 批准 Scout 优先级、来源、预算
+2. **原型 Scout runner** → 1 天，验证强制执行
+3. **实现 Scout 垂直切片** → 3-4 周（Issues A.1-A.4）
+4. **运行 Scout 4 周** → 收集人工标签，衡量质量/成本
+5. **评估 Scout** → 留出集、指标（Issue B.1-B.2）
+6. **条件性改进** → 基于衡量的失败（阶段 C）
 
 ---
 
 ## 业务逻辑修订
 
-This section documents changes made after business-logic review identified priority misalignment:
+本节记录业务逻辑审查识别优先级错位后的变更：
 
-1. **Scout vertical slice moved to first priority** — Was deferred to item 15 / Phase 3. Now Phase A.
+1. **Scout 垂直切片移至首要优先级** — 曾延后到第 15 项 / 阶段 3。现在阶段 A。
 
-2. **Runner enforcement boundary clarified** — Cannot promise hard per-internal-LLM-call token cap (hooks don't see that). Runner enforces: wall-clock, process count, scan/keep limits, lifecycle.
+2. **Runner 强制执行边界澄清** — 无法承诺内部 LLM 调用级硬 token 上限（hooks 看不到）。Runner 强制执行：墙上时钟、进程数、扫描/保留限制、生命周期。
 
-3. **Benchmark answer leakage fixed** — Holdout set must be independent, not from repo's solved Issues.
+3. **基准测试答案泄漏修复** — 留出集必须独立，非从 repo 已解决 Issues。
 
-4. **Memory access tracking corrected** — Do NOT mutate Markdown on read. Use gitignored index or append-only event log.
+4. **内存访问跟踪修正** — 不在读取时修改 Markdown。使用 gitignored 索引或仅追加事件日志。
 
-5. **Telemetry embedded in Scout** — Not detached infrastructure. Scout runner captures what CLI exposes; unknown stays unknown.
+5. **遥测嵌入 Scout** — 非分离基础设施。Scout runner 捕获 CLI 暴露的；未知保持未知。
 
-6. **state/budget.db not tracking state** — Growing runtime state (ledger, cursor, telemetry) stays gitignored. Only summaries/schemas committed.
+6. **state/budget.db 不跟踪状态** — 增长的运行时状态（ledger、cursor、telemetry）保持 gitignored。仅提交摘要/schemas。
 
-7. **Removed proactive scouting deferral language** — Scout IS the proactive scouting. It's now first priority, not deferred.
+7. **移除主动侦查延后语言** — Scout 就是主动侦查。现在首要优先级，非延后。
 
-8. **Removed fixed numeric thresholds** — No ">1000 tasks/day", "read updates accessed", etc. Measure locally, then set thresholds.
+8. **移除固定数字阈值** — 无">1000 tasks/day"、"read updates accessed"等。本地衡量后设置阈值。
+
+9. **Ledger 可审阅性** — 原始 HTTP/API payload、下载缓存、cursor、dedupe cache、telemetry 保持 gitignored。精简 source/query/decision ledger（URL/ID、日期、标题/metadata、keep/reject、理由、来源类型）tracked 在 `data/exploration/raw/`。Daily report 链接到 tracked ledger。
+
+10. **治理边界** — Agent/worker 不得直接修改 `rules/RESOURCE_APPROVALS.yaml` 或 `rules/EXPLORATION_POLICY.md`。若需新来源，Agent 写 `data/proposals/rule_changes/` proposal 和 GitHub 审批请求，由 jlcbk 修改/批准 rules。Runner 使用只读规则。
+
+11. **人工反馈入口** — 人类主要通过 GitHub Issue/PR comment 或 review labels 给出反馈。Agent 将这些同步为 tracked `data/exploration/review_labels/` 记录。Agent 读评论/标签需明确 repo read 权限；写 GitHub 由 clawbie 身份且在批准 scope。
 
 **业务的核心架构推荐**：
-- Scout vertical slice as primary business goal
-- Human review gates (daily report workflow)
-- Primitives over frameworks (SQLite, git, Markdown)
-- Runner-enforced limits (wall-clock, process count, scan/keep)
-- Cursor-based idempotent resumption
-- Markdown canonical, database as index
-- Evidence-based escalation (measure bottleneck before adding complexity)
+- Scout 垂直切片作为首要业务目标
+- 人工审查门（每日报告工作流）
+- 原语优于框架（SQLite、git、Markdown）
+- Runner 强制执行限制（墙上时钟、进程数、扫描/保留）
+- 基于 cursor 的幂等恢复
+- Markdown 权威，数据库作为索引
+- 证据驱动的升级（衡量瓶颈后添加复杂性）
+- Tracked ledger 用于人工审阅，gitignored 原始数据
 
 ---
 
