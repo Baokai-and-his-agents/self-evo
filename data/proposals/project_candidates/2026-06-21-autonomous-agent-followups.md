@@ -26,7 +26,7 @@ status: proposed
 
 **范围**：
 - 在 `rules/RESOURCE_APPROVALS.yaml` 定义批准来源：GitHub Search/REST、HN API、arXiv API；Product Hunt 仅当资源批准且 API 可用时
-- Agent/worker 不得直接修改 `rules/RESOURCE_APPROVALS.yaml` 或 `rules/EXPLORATION_POLICY.md`
+- Agent 不得直接修改 `rules/RESOURCE_APPROVALS.yaml` 或 `rules/EXPLORATION_POLICY.md`
 - 若需新来源（如 Product Hunt），候选任务应：
   - 读取现有 approved resources；仅已批准源进入 runner
   - Agent 写 `data/proposals/rule_changes/<date>-<topic>-resource-approval.md` proposal 和 GitHub 审批请求
