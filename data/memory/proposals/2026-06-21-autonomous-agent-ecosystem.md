@@ -56,162 +56,162 @@ note: "è¿™äº›æ˜¯åˆå¹¶åˆ°çƒ­è®°å¿†çš„å€™é€‰è®°å¿†ã€‚æ¯ä¸ªåŒ…æ‹¬å‡ºå¤„å’Œç½®ä¿¡å
 
 ---
 
-## Ìá°¸¼ÇÒä 3: Benchmark Scores Mislead â€” Measure Baseline First
+## ææ¡ˆè®°å¿† 3ï¼šBenchmark Scores Mislead â€” Measure Baseline First
 
-**Slug**£º `benchmark-real-world-gap`
-**ÀàĞÍ**£º reference
-**ÖÃĞÅ¶È**£º High
+**Slug**ï¼š`benchmark-real-world-gap`
+**ç±»å‹**ï¼šreference
+**ç½®ä¿¡åº¦**ï¼šHigh
 
-**½áÂÛ**£º Agent benchmarks show substantial benchmark-reality gaps. AgentBench paper reports 37.5% average success (Claude Opus 3) but drops to 0% on post-training Kaggle tasks. Ï„-bench paper shows GPT-4o <50% success, pass^8 <25% on realistic retail tasks. SWE-bench results show best autonomous agent: 43% (with test feedback), median 25-35%. Self-evo must measure single-agent baseline before assuming multi-agent value.
+**ç»“è®º**ï¼šAgent benchmarks show substantial benchmark-reality gaps. AgentBench paper reports 37.5% average success (Claude Opus 3) but drops to 0% on post-training Kaggle tasks. Ï„-bench paper shows GPT-4o <50% success, pass^8 <25% on realistic retail tasks. SWE-bench results show best autonomous agent: 43% (with test feedback), median 25-35%. Self-evo must measure single-agent baseline before assuming multi-agent value.
 
-**³ö´¦**£º
+**å‡ºå¤„**ï¼š
 - AgentBench paper (arXiv 2308.03688)
 - Ï„-bench paper (arXiv 2406.12045)
 - SWE-bench results (source-specific, various papers/leaderboards)
 - Critic research: `data/exploration/raw/2026-06-21-critic-failure-landscape.md`
 
-**ÎªºÎ³Ö¾Ã**£º Benchmark-reality gap is fundamental to agent evaluation. The lesson (measure baseline before scaling) applies to all future agent work.
+**ä¸ºä½•æŒä¹…**ï¼šBenchmark-reality gap is fundamental to agent evaluation. The lesson (measure baseline before scaling) applies to all future agent work.
 
-**ÈçºÎÓ¦ÓÃ**£º Create self-evo-native benchmark for Issue resolution workflow (primary). Optionally use SWE-bench Verified as coding benchmark (secondary). Measure single-agent baseline before multi-agent complexity.
+**å¦‚ä½•åº”ç”¨**ï¼šCreate self-evo-native benchmark for Issue resolution workflow (primary). Optionally use SWE-bench Verified as coding benchmark (secondary). Measure single-agent baseline before multi-agent complexity.
 
 ---
 
-## Ìá°¸¼ÇÒä 4: Cost Controls Are the Primary Failure Mode
+## ææ¡ˆè®°å¿† 4ï¼šCost Controls Are the Primary Failure Mode
 
-**Slug**£º `cost-controls-prevent-pilot-failure`
-**ÀàĞÍ**£º project
-**ÖÃĞÅ¶È**£º Medium-High
+**Slug**ï¼š`cost-controls-prevent-pilot-failure`
+**ç±»å‹**ï¼šproject
+**ç½®ä¿¡åº¦**ï¼šMedium-High
 
-**½áÂÛ**£º Runaway costs and infinite loops are primary causes of agent pilot failures. Critic found zero public GitHub issues for "agent framework cost" despite thousands of users (suggests proprietary suppression or widespread silent failures). Self-evo must build token budget enforcement, three-layer termination defense, and real-time cost monitoring BEFORE autonomous loops.
+**ç»“è®º**ï¼šRunaway costs and infinite loops are primary causes of agent pilot failures. Critic found zero public GitHub issues for "agent framework cost" despite thousands of users (suggests proprietary suppression or widespread silent failures). Self-evo must build token budget enforcement, three-layer termination defense, and real-time cost monitoring BEFORE autonomous loops.
 
-**³ö´¦**£º
+**å‡ºå¤„**ï¼š
 - Multi-agent coordination research: `data/exploration/raw/2026-06-21-multi-agent-coordination.md`
 - Critic research: zero public cost issues (absence evidence)
 - Cost control patterns from multiple frameworks
 
-**ÎªºÎ³Ö¾Ã**£º Cost discipline is a permanent constraint for LLM agents. Token budgets and termination limits apply to all autonomous work.
+**ä¸ºä½•æŒä¹…**ï¼šCost discipline is a permanent constraint for LLM agents. Token budgets and termination limits apply to all autonomous work.
 
-**ÈçºÎÓ¦ÓÃ**£º Implement budget enforcement (per-Issue, per-day caps), three-layer termination (depth + timeout + budget), structured local telemetry for cost tracking. Human approval above threshold.
+**å¦‚ä½•åº”ç”¨**ï¼šImplement budget enforcement (per-Issue, per-day caps), three-layer termination (depth + timeout + budget), structured local telemetry for cost tracking. Human approval above threshold.
 
 ---
 
-## Ìá°¸¼ÇÒä 5: Hierarchical Beats Swarm for Multi-Agent
+## ææ¡ˆè®°å¿† 5ï¼šHierarchical Beats Swarm for Multi-Agent
 
-**Slug**£º `hierarchical-multi-agent-preferred`
-**ÀàĞÍ**£º reference
-**ÖÃĞÅ¶È**£º Medium
+**Slug**ï¼š`hierarchical-multi-agent-preferred`
+**ç±»å‹**ï¼šreference
+**ç½®ä¿¡åº¦**ï¼šMedium
 
-**½áÂÛ**£º Production multi-agent deployments predominantly use hierarchical/sequential patterns (manager assigns tasks) over swarm (autonomous claiming). Swarm adds coordination complexity (race conditions, deadlocks) without proven benefit. Self-evo should defer multi-agent entirely until single-agent bottleneck proven, then use hierarchical, not swarm.
+**ç»“è®º**ï¼šProduction multi-agent deployments predominantly use hierarchical/sequential patterns (manager assigns tasks) over swarm (autonomous claiming). Swarm adds coordination complexity (race conditions, deadlocks) without proven benefit. Self-evo should defer multi-agent entirely until single-agent bottleneck proven, then use hierarchical, not swarm.
 
-**³ö´¦**£º
+**å‡ºå¤„**ï¼š
 - Multi-agent coordination research: `data/exploration/raw/2026-06-21-multi-agent-coordination.md`
 - Autonomous loops research: `data/exploration/raw/2026-06-21-autonomous-loops-github.md`
 - Qualitative pattern analysis across frameworks
 
-**ÎªºÎ³Ö¾Ã**£º Coordination pattern tradeoffs are architectural constants. Hierarchical simplicity vs swarm flexibility is a stable tradeoff.
+**ä¸ºä½•æŒä¹…**ï¼šCoordination pattern tradeoffs are architectural constants. Hierarchical simplicity vs swarm flexibility is a stable tradeoff.
 
-**ÈçºÎÓ¦ÓÃ**£º Defer multi-agent until bottleneck. When needed, use hierarchical (manager-worker). Reject swarm for MVP.
+**å¦‚ä½•åº”ç”¨**ï¼šDefer multi-agent until bottleneck. When needed, use hierarchical (manager-worker). Reject swarm for MVP.
 
 ---
 
-## Ìá°¸¼ÇÒä 6: Durable Execution Is Available But Defer Until Scale
+## ææ¡ˆè®°å¿† 6ï¼šDurable Execution Is Available But Defer Until Scale
 
-**Slug**£º `durable-execution-defer-until-scale`
-**ÀàĞÍ**£º reference
-**ÖÃĞÅ¶È**£º High
+**Slug**ï¼š`durable-execution-defer-until-scale`
+**ç±»å‹**ï¼šreference
+**ç½®ä¿¡åº¦**ï¼šHigh
 
-**½áÂÛ**£º Durable execution platforms (Temporal 35kâ˜…, Restate 8kâ˜…, Inngest 5kâ˜…) provide automatic retry and fault tolerance via event sourcing. Critical distinction: checkpointing (LangGraph) requires manual recovery; durable execution is automatic. But these add significant complexity (event-sourcing mindset). Self-evo's SQLite task queue is sufficient for current scale; escalate only when measured bottlenecks justify it.
+**ç»“è®º**ï¼šDurable execution platforms (Temporal 35kâ˜…, Restate 8kâ˜…, Inngest 5kâ˜…) provide automatic retry and fault tolerance via event sourcing. Critical distinction: checkpointing (LangGraph) requires manual recovery; durable execution is automatic. But these add significant complexity (event-sourcing mindset). Self-evo's SQLite task queue is sufficient for current scale; escalate only when measured bottlenecks justify it.
 
-**³ö´¦**£º
+**å‡ºå¤„**ï¼š
 - Autonomous loops research: `data/exploration/raw/2026-06-21-autonomous-loops-github.md`
 - Multi-agent coordination research: workflow engine comparison
 - Temporal/Restate architecture docs
 
-**ÎªºÎ³Ö¾Ã**£º The escalation principle (SQLite â†’ durable execution at scale) is a stable architecture decision. Platforms may evolve, but the threshold logic persists.
+**ä¸ºä½•æŒä¹…**ï¼šThe escalation principle (SQLite â†’ durable execution at scale) is a stable architecture decision. Platforms may evolve, but the threshold logic persists.
 
-**ÈçºÎÓ¦ÓÃ**£º Use SQLite task queue for MVP. Learn durable execution mental model (event sourcing). Escalate to Temporal/Restate only when measured bottlenecks justify it (cross-host coordination required, recovery pain demonstrated, or throughput/reliability limits proven).
+**å¦‚ä½•åº”ç”¨**ï¼šUse SQLite task queue for MVP. Learn durable execution mental model (event sourcing). Escalate to Temporal/Restate only when measured bottlenecks justify it (cross-host coordination required, recovery pain demonstrated, or throughput/reliability limits proven).
 
 ---
 
-## Ìá°¸¼ÇÒä 7: Hybrid Memory Architecture Scales File-First
+## ææ¡ˆè®°å¿† 7ï¼šHybrid Memory Architecture Scales File-First
 
-**Slug**£º `hybrid-memory-file-plus-index`
-**ÀàĞÍ**£º reference
-**ÖÃĞÅ¶È**£º High
+**Slug**ï¼š`hybrid-memory-file-plus-index`
+**ç±»å‹**ï¼šreference
+**ç½®ä¿¡åº¦**ï¼šHigh
 
-**½áÂÛ**£º File-first memory (Markdown) scaling depends on retrieval performance (linear scan degrades with size). Production pattern: Markdown files as source of truth + SQLite FTS (keyword) + embeddings (semantic) as rebuildable gitignored index. ENGRAM reports 77.55% LoCoMo benchmark (source-specific), Mem0 reports 91.6% (source-specific). Self-evo should consider SQLite FTS only if retrieval bottleneck measured, with specific threshold determined by observed performance rather than fixed count.
+**ç»“è®º**ï¼šFile-first memory (Markdown) scaling depends on retrieval performance (linear scan degrades with size). Production pattern: Markdown files as source of truth + SQLite FTS (keyword) + embeddings (semantic) as rebuildable gitignored index. ENGRAM reports 77.55% LoCoMo benchmark (source-specific), Mem0 reports 91.6% (source-specific). Self-evo should consider SQLite FTS only if retrieval bottleneck measured, with specific threshold determined by observed performance rather than fixed count.
 
-**³ö´¦**£º
+**å‡ºå¤„**ï¼š
 - Memory research: `data/exploration/raw/2026-06-21-memory-context.md`
 - ENGRAM paper (arXiv 2511.12960), Mem0 benchmarks (source-specific scores)
 - Cognee, Graphiti architecture patterns
 
-**ÎªºÎ³Ö¾Ã**£º The scaling threshold (file-only â†’ file+index) is a stable architecture decision. The hybrid pattern (files authoritative, index rebuildable and gitignored) is production-proven.
+**ä¸ºä½•æŒä¹…**ï¼šThe scaling threshold (file-only â†’ file+index) is a stable architecture decision. The hybrid pattern (files authoritative, index rebuildable and gitignored) is production-proven.
 
-**ÈçºÎÓ¦ÓÃ**£º Keep Markdown canonical. Add SQLite FTS index (gitignored, rebuildable from files) only if retrieval bottleneck measured. Add embeddings if keyword search proves insufficient. Compare user's active OpenViking adapter.
+**å¦‚ä½•åº”ç”¨**ï¼šKeep Markdown canonical. Add SQLite FTS index (gitignored, rebuildable from files) only if retrieval bottleneck measured. Add embeddings if keyword search proves insufficient. Compare user's active OpenViking adapter.
 
 ---
 
-## Ìá°¸¼ÇÒä 8: Forgetting Mechanism (Experimental, Conditional)
+## ææ¡ˆè®°å¿† 8ï¼šForgetting Mechanism (Experimental, Conditional)
 
-**Slug**£º `forgetting-improves-memory`
-**ÀàĞÍ**£º reference
-**ÖÃĞÅ¶È**£º Low
+**Slug**ï¼š`forgetting-improves-memory`
+**ç±»å‹**ï¼šreference
+**ç½®ä¿¡åº¦**ï¼šLow
 
-**½áÂÛ**£º Unbounded memory accumulation may degrade retrieval. Research identifies potential accuracy gains from selective forgetting (time-decay + access-frequency + quality gating), with one source reporting 13% â†’ 39% improvement (unverified; source-specific). Self-evo should evaluate reversible forgetting only if local retrieval quality problems measured, tracking access/use in gitignored index or append-only event log (NOT by mutating Markdown on read). Adopt forgetting only if local evidence shows improvement.
+**ç»“è®º**ï¼šUnbounded memory accumulation may degrade retrieval. Research identifies potential accuracy gains from selective forgetting (time-decay + access-frequency + quality gating), with one source reporting 13% â†’ 39% improvement (unverified; source-specific). Self-evo should evaluate reversible forgetting only if local retrieval quality problems measured, tracking access/use in gitignored index or append-only event log (NOT by mutating Markdown on read). Adopt forgetting only if local evidence shows improvement.
 
-**³ö´¦**£º
+**å‡ºå¤„**ï¼š
 - Memory research: `data/exploration/raw/2026-06-21-memory-context.md`
 - Forgetting problem analysis (one source reports 13% â†’ 39% accuracy improvement; unverified, source-specific)
 - Multiple systems implement forgetting (Mem0, Graphiti, CrewAI)
 
-**ÎªºÎ³Ö¾Ã**£º The forgetting principle (selective memory may improve retrieval) is supported by cognitive science and multiple agent systems, but gains are source-specific and require local validation. The experiment design (track access without mutating files, reversible archival) is stable.
+**ä¸ºä½•æŒä¹…**ï¼šThe forgetting principle (selective memory may improve retrieval) is supported by cognitive science and multiple agent systems, but gains are source-specific and require local validation. The experiment design (track access without mutating files, reversible archival) is stable.
 
-**ÈçºÎÓ¦ÓÃ**£º Design reversible experiment only if retrieval problems measured: Add OKF timestamps (`created`, `modified` only, NOT `accessed`). Track access/use in gitignored local index (`state/memory_access.db`) or append-only event log. Score memories (time-decay + access-frequency). Archive low-scoring (reversible, manual approval required). Measure retrieval precision/recall before and after. Adopt forgetting only if local evidence shows improvement.
+**å¦‚ä½•åº”ç”¨**ï¼šDesign reversible experiment only if retrieval problems measured: Add OKF timestamps (`created`, `modified` only, NOT `accessed`). Track access/use in gitignored local index (`state/memory_access.db`) or append-only event log. Score memories (time-decay + access-frequency). Archive low-scoring (reversible, manual approval required). Measure retrieval precision/recall before and after. Adopt forgetting only if local evidence shows improvement.
 
 ---
 
-## Ìá°¸¼ÇÒä 9: Observability Is Production-Ready, Build It Early
+## ææ¡ˆè®°å¿† 9ï¼šObservability Is Production-Ready, Build It Early
 
-**Slug**£º `observability-build-early`
-**ÀàĞÍ**£º feedback
-**ÖÃĞÅ¶È**£º High
+**Slug**ï¼š`observability-build-early`
+**ç±»å‹**ï¼šfeedback
+**ç½®ä¿¡åº¦**ï¼šHigh
 
-**½áÂÛ**£º Production observability platforms exist (Langfuse 29kâ˜…, Arize Phoenix 10kâ˜…, OpenLLMetry 7kâ˜…, AgentOps 5kâ˜…). OpenTelemetry LLM semantic conventions are standardized. Self-evo should implement local structured telemetry first (SQLite-based session/token tracking), then evaluate external platforms (Langfuse, OpenLLMetry) only after approval and comparison. Debugging non-deterministic failures and cost tracking pay back immediately.
+**ç»“è®º**ï¼šProduction observability platforms exist (Langfuse 29kâ˜…, Arize Phoenix 10kâ˜…, OpenLLMetry 7kâ˜…, AgentOps 5kâ˜…). OpenTelemetry LLM semantic conventions are standardized. Self-evo should implement local structured telemetry first (SQLite-based session/token tracking), then evaluate external platforms (Langfuse, OpenLLMetry) only after approval and comparison. Debugging non-deterministic failures and cost tracking pay back immediately.
 
-**³ö´¦**£º
+**å‡ºå¤„**ï¼š
 - Observability research: `data/exploration/raw/2026-06-21-scouting-observability-safety.md`
 - Langfuse, Arize Phoenix, OpenLLMetry repos (star counts verified)
 - OpenTelemetry LLM conventions
 
-**ÎªºÎ³Ö¾Ã**£º Observability platforms are infrastructure (long-lived, not agent frameworks). The principle (build observability early, local-first) is a stable engineering practice.
+**ä¸ºä½•æŒä¹…**ï¼šObservability platforms are infrastructure (long-lived, not agent frameworks). The principle (build observability early, local-first) is a stable engineering practice.
 
-**ÈçºÎÓ¦ÓÃ**£º Build local structured telemetry first (SQLite session logs, token/cost tracking). Evaluate external platforms (Langfuse for cost tracking/replay, OpenLLMetry for vendor-neutrality) only after human approval and platform comparison. Don't build custom dashboards before evaluating existing tools.
+**å¦‚ä½•åº”ç”¨**ï¼šBuild local structured telemetry first (SQLite session logs, token/cost tracking). Evaluate external platforms (Langfuse for cost tracking/replay, OpenLLMetry for vendor-neutrality) only after human approval and platform comparison. Don't build custom dashboards before evaluating existing tools.
 
 ---
 
-## Ìá°¸¼ÇÒä 10: Self-Evo's Architecture Is Validated by Failures
+## ææ¡ˆè®°å¿† 10ï¼šSelf-Evo's Architecture Is Validated by Failures
 
-**Slug**£º `self-evo-architecture-validated`
-**ÀàĞÍ**£º project
-**ÖÃĞÅ¶È**£º Medium-High
+**Slug**ï¼š`self-evo-architecture-validated`
+**ç±»å‹**ï¼šproject
+**ç½®ä¿¡åº¦**ï¼šMedium-High
 
-**½áÂÛ**£º Self-evo's core design choices (file-first, human-reviewed, GitHub-coordinated, incremental autonomy) are validated by failures of alternatives. Fully autonomous swarms show high pilot failure rates, frameworks die frequently, and benchmark-reality gaps persist. Self-evo's survival strategy: primitive-based (not framework), cost-controlled, human-gated, evidence-driven.
+**ç»“è®º**ï¼šSelf-evo's core design choices (file-first, human-reviewed, GitHub-coordinated, incremental autonomy) are validated by failures of alternatives. Fully autonomous swarms show high pilot failure rates, frameworks die frequently, and benchmark-reality gaps persist. Self-evo's survival strategy: primitive-based (not framework), cost-controlled, human-gated, evidence-driven.
 
-**³ö´¦**£º
+**å‡ºå¤„**ï¼š
 - Synthesis across all five research files
 - Critic research (failures) + optimistic research (patterns)
 - User preferences (executable artifacts, simple workflow, reuse mature work)
 
-**ÎªºÎ³Ö¾Ã**£º The architectural validation is foundational. Self-evo's differentiators (file-first, human-review) are the reasons it can survive where others died.
+**ä¸ºä½•æŒä¹…**ï¼šThe architectural validation is foundational. Self-evo's differentiators (file-first, human-review) are the reasons it can survive where others died.
 
-**ÈçºÎÓ¦ÓÃ**£º Resist pressure to add framework complexity. Maintain human-review gates. Build cost controls before autonomy. Measure before scaling.
+**å¦‚ä½•åº”ç”¨**ï¼šResist pressure to add framework complexity. Maintain human-review gates. Build cost controls before autonomy. Measure before scaling.
 
-**ÖÃĞÅ¶È¾¯¸æ**£º This is a synthesis conclusion, not a single benchmarked claim. The component evidence is strong; the integration is reasoned inference. Treat as Medium-High.
+**ç½®ä¿¡åº¦è­¦å‘Š**ï¼šThis is a synthesis conclusion, not a single benchmarked claim. The component evidence is strong; the integration is reasoned inference. Treat as Medium-High.
 
 ---
 
-## ÖÃĞÅ¶È·Ö²¼ÕªÒª
+## ç½®ä¿¡åº¦åˆ†å¸ƒæ‘˜è¦
 
 | Memory | Type | Confidence |
 |--------|------|------------|
@@ -228,7 +228,7 @@ note: "è¿™äº›æ˜¯åˆå¹¶åˆ°çƒ­è®°å¿†çš„å€™é€‰è®°å¿†ã€‚æ¯ä¸ªåŒ…æ‹¬å‡ºå¤„å’Œç½®ä¿¡å
 
 ---
 
-## ÌáÉıĞ­Òé
+## å‡çº§åè®®
 
 **Do NOT auto-promote**. Human reviews each proposed memory before merging into `data/memory/hot/`.
 
@@ -238,16 +238,16 @@ note: "è¿™äº›æ˜¯åˆå¹¶åˆ°çƒ­è®°å¿†çš„å€™é€‰è®°å¿†ã€‚æ¯ä¸ªåŒ…æ‹¬å‡ºå¤„å’Œç½®ä¿¡å
 3. Link related memories with `[[slug]]`
 4. Add one-line pointer in `MEMORY.md` index
 
-**½¨Òé·ÅÖÃ**£º
+**ç›®æ ‡è·¯å¾„**ï¼š
 - References (#1, #2, #3, #5, #6, #7, #8): `data/memory/hot/reference/`
 - Project (#4, #10): `data/memory/hot/project/`
 - Feedback (#9): `data/memory/hot/feedback/`
 
-**ÖÃĞÅ¶È×¢ÊÍ**£º Promote High-confidence memories first. Medium-confidence memories (#5, #8) should retain confidence caveats in their body.
+**ç½®ä¿¡åº¦æ³¨æ„**ï¼šPromote High-confidence memories first. Medium-confidence memories (#5, #8) should retain confidence caveats in their body.
 
 ---
 
-## ÑĞ¾¿×¢ÊÍ£ºÎ´½â¾öµÄÒıÓÃ
+## ç ”ç©¶æ³¨é‡Šï¼šæœªå®Œå…¨è§£æé¡¹
 
 **OpenViking**: Has active user deployment evidence (confirmed via exploration), but public project identity and documentation status could not be resolved during this scout run. Requires dedicated verification before citing as reference.
 
@@ -255,4 +255,4 @@ note: "è¿™äº›æ˜¯åˆå¹¶åˆ°çƒ­è®°å¿†çš„å€™é€‰è®°å¿†ã€‚æ¯ä¸ªåŒ…æ‹¬å‡ºå¤„å’Œç½®ä¿¡å
 
 ---
 
-**¼ÇÒäÌá°¸½áÊø**
+**è®°å¿†ææ¡ˆç»“æŸ**
