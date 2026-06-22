@@ -1,0 +1,8 @@
+{
+  "worker": "scout-worker-fx-01",
+  "status": "running",
+  "current_issue": 13,
+  "current_phase": "Phase A - FX Intraday Research",
+  "last_heartbeat": "2026-06-22T18:57:51Z",
+  "run_id": "2026-06-23-fx-phase-a-001"
+}
