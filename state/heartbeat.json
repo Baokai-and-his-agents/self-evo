@@ -7,7 +7,15 @@
       "branch": "agent/local-code-worker-01/5-hooks-validator",
       "status": "stopped",
       "last_seen": "2026-06-18T17:36:35+0800"
+    },
+    {
+      "worker": "scout-worker-01",
+      "run_id": "2026-06-21-run-003",
+      "issue": 7,
+      "branch": "agent/scout-worker-01/7-autonomous-agent-ecosystem",
+      "status": "stopped",
+      "last_seen": "2026-06-21T11:41:16+0800"
     }
   ],
-  "updated_at": "2026-06-18T17:36:35+0800"
+  "updated_at": "2026-06-21T11:41:16+0800"
 }

@@ -1,0 +1,227 @@
+# Scout 来源注册 Schema
+# 定义批准的公开只读探索来源
+#
+# 架构分层：
+#   - rules/RESOURCE_APPROVALS.yaml 定义批准的能力 scope（能做什么操作）
+#   - 本 registry 定义具体来源 allowlist（可以访问哪些域名/URL）
+#
+# 新增来源规则：
+#   - 在已批准 scope 内新增公开只读来源：Agent 直接在 data/exploration/scout-sources.yaml 添加
+#   - 需要登录/token/付费/写操作/私有资源/新 scope：提交 resource approval proposal
+
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: Scout Source Registry
+description: Registry of approved public read-only exploration sources
+
+type: object
+required:
+  - version
+  - sources
+additionalProperties: false
+properties:
+  version:
+    type: string
+    description: Registry schema version
+    pattern: "^\\d+\\.\\d+$"
+
+  sources:
+    type: array
+    description: List of approved exploration sources
+    minItems: 1
+    items:
+      $ref: "#/$defs/source"
+
+$defs:
+  source:
+    type: object
+    required:
+      - id
+      - type
+      - base_url
+      - access_mode
+      - resource_approval_id
+      - required_scopes
+      - enabled
+    additionalProperties: false
+    properties:
+      id:
+        type: string
+        description: |
+          来源唯一标识符（kebab-case）
+          示例：github-trending, hacker-news, arxiv-cs-ai
+        pattern: "^[a-z0-9-]+$"
+
+      type:
+        type: string
+        description: |
+          来源类型
+          - web: 公开网站（HTML 抓取）
+          - api: 公开 API（JSON/XML）
+          - rss: RSS/Atom feed
+          - git: Git repository（公开只读）
+        enum:
+          - web
+          - api
+          - rss
+          - git
+
+      base_url:
+        type: string
+        description: |
+          来源根 URL（必须包含 scheme）
+          示例：
+            - https://github.com/trending
+            - https://news.ycombinator.com
+            - https://export.arxiv.org/api/query
+        format: uri
+
+      access_mode:
+        type: string
+        description: |
+          访问模式 — 引用 rules/RESOURCE_APPROVALS.yaml 中批准的能力 scope
+
+          public-web-read: 公开只读，无需身份验证
+            - HTTP GET 请求
+            - 遵守 robots.txt
+            - 尊重 rate limit headers
+            - User-Agent 标识为 research bot
+            - 不越过登录墙
+
+          如需以下任何访问方式，必须新建资源审批 proposal：
+            - 登录/身份验证（OAuth、API token）
+            - 付费 API（需要 billing）
+            - 写操作（POST、PUT、DELETE）
+            - 私有/内部资源
+            - 用户身份模拟
+            - 超出 public-web-read 的任何访问
+        enum:
+          - public-web-read
+
+      resource_approval_id:
+        type: string
+        description: |
+          对应的资源审批 ID（引用 rules/RESOURCE_APPROVALS.yaml）
+
+          必须使用仓库中实际存在的已批准资源 ID，例如：
+            - public-web-read
+            - github-repo-issue-and-branch-work
+
+          Scout runner 验证：
+            1. 该 ID 在 rules/RESOURCE_APPROVALS.yaml 中存在
+            2. 其 status 为 approved
+            3. 其 scope 覆盖本条目的 required_scopes
+        pattern: "^[a-z0-9-]+$"
+
+      required_scopes:
+        type: array
+        description: |
+          本来源所需的能力 scope 列表
+
+          必须是 rules/RESOURCE_APPROVALS.yaml 中对应 resource_approval_id 的实际 scope 子集
+
+          public-web-read 资源的可用 scope：
+            - read_public_pages: 读取公开 HTML 页面
+            - search_public_web: 公开 web 搜索
+            - read_public_docs: 读取公开文档/API
+
+          Scout runner 将验证 required_scopes 是 resource_approval_id 的 scope 子集
+        items:
+          type: string
+          enum:
+            - read_public_pages
+            - search_public_web
+            - read_public_docs
+        minItems: 1
+        uniqueItems: true
+
+      enabled:
+        type: boolean
+        description: |
+          来源是否启用
+          false = 已批准但暂停使用（如触发 rate limit、来源下线）
+
+      cursor_strategy:
+        type: string
+        description: |
+          Cursor 跟踪策略（用于恢复和去重）
+
+          timestamp: 时间戳游标（ISO 8601）
+            适用：RSS feeds、时间排序 API
+            示例：2026-06-22T10:00:00Z
+
+          item_id: 项目 ID 游标（来源特定格式）
+            适用：分页 API、数据库式来源
+            示例：github_repo_12345, hn_item_67890
+
+          etag: ETag 或 Last-Modified 头
+            适用：支持条件请求的 HTTP 资源
+            示例："abc123def456"
+
+          offset: 偏移量游标（整数）
+            适用：简单分页 API
+            示例：100（表示已处理前 100 项）
+        enum:
+          - timestamp
+          - item_id
+          - etag
+          - offset
+        default: timestamp
+
+      notes:
+        type: string
+        description: 可选的来源说明或限制
+
+examples:
+  - version: "1.0"
+    sources:
+      - id: github-trending
+        type: web
+        base_url: https://github.com/trending
+        access_mode: public-web-read
+        resource_approval_id: public-web-read
+        required_scopes:
+          - read_public_pages
+        enabled: true
+        cursor_strategy: timestamp
+
+      - id: hacker-news
+        type: api
+        base_url: https://hacker-news.firebaseio.com/v0
+        access_mode: public-web-read
+        resource_approval_id: public-web-read
+        required_scopes:
+          - read_public_docs
+        enabled: true
+        cursor_strategy: item_id
+
+      - id: arxiv-cs-ai
+        type: api
+        base_url: https://export.arxiv.org/api/query
+        access_mode: public-web-read
+        resource_approval_id: public-web-read
+        required_scopes:
+          - read_public_docs
+        enabled: true
+        cursor_strategy: timestamp
+
+      - id: producthunt-daily
+        type: web
+        base_url: https://www.producthunt.com
+        access_mode: public-web-read
+        resource_approval_id: public-web-read
+        required_scopes:
+          - read_public_pages
+        enabled: true
+        cursor_strategy: timestamp
+        notes: "公开 web 抓取，无需登录"
+
+# 无效示例（用于测试）说明：
+#
+# Product Hunt API 需要 token，当前未批准，不应出现在有效 examples 中。
+# 如需使用需提交资源审批 proposal 说明：
+#   1. 为何需要 API 而非 web 抓取
+#   2. Token 获取和存储方案（gitignored config）
+#   3. 访问权限范围（只读公开数据）
+#   4. Rate limit 策略
+#   5. 批准后在 rules/RESOURCE_APPROVALS.yaml 添加新条目
+#   6. 可能需要在本 schema 添加新 access_mode 值（如 api-with-token）

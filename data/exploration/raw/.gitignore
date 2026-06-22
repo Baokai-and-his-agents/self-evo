@@ -1,0 +1,19 @@
+# data/exploration/raw/ gitignore 规则
+# 本目录存储原始探索数据，仅提交精简的人类可审阅文件
+
+# 完整 ledger（原始 HTTP/API payload、每项完整内容）
+*-ledger.jsonl
+
+# Payload 缓存（外部 API 响应副本）
+payload-cache/
+
+# 下载缓存（下载的文件、文档）
+download-cache/
+
+# 去重缓存（已处理项目哈希）
+dedupe-cache/
+
+# 注意：以下文件是 tracked 的，不得 gitignore：
+# - *-decisions.md — 精简决策 ledger（URL/ID、标题、keep/reject、理由）
+# - *.md — 其他 Markdown 探索文档
+# - sample-*.* — 示例文件
