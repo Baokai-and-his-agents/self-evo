@@ -30,15 +30,16 @@ status: proposed
 - 在批准前，本 Issue 处于 blocked 状态
 
 **范围**：
-- 定义来源能力 scope：`public-web-read` 作为边界（HTTP GET 公开资源、遵守 robots.txt、尊重 rate limit）
-- 具体允许来源在 `rules/RESOURCE_APPROVALS.yaml` 中定义（业务 allowlist）
-- 能力分层：能力定义可以做什么，allowlist 定义可以访问哪里
-- 登录/token/付费/发布/越权访问需新资源审批 proposal
-- 只读检查 `rules/RESOURCE_APPROVALS.yaml`，仅把其中已批准的公开来源交给 Runner
-- Agent 不得直接修改 `rules/RESOURCE_APPROVALS.yaml` 或 `rules/EXPLORATION_POLICY.md`
-- 若 GitHub/HN/arXiv/Product Hunt 等目标来源尚未批准，候选任务应：
-  - Agent 写 `data/proposals/rule_changes/<date>-<topic>-resource-approval.md` proposal 和 GitHub 审批请求
-  - 由 `jlcbk` 修改或批准 `rules/` 中的规则文件后，Runner 才允许该来源
+- 能力分层架构：
+  - `rules/RESOURCE_APPROVALS.yaml` 定义批准的能力 scope 及其边界（如 `public-web-read`：HTTP GET 公开资源、遵守 robots.txt、尊重 rate limit）
+  - `data/exploration/scout-sources.yaml` 等 registry 实例定义具体来源 allowlist（GitHub/Hacker News/arXiv/Product Hunt 等域名/URL）
+- 新增来源的流程：
+  - 已有 `public-web-read` scope 内的公开、无凭证、只读 GET 来源：Agent 通过 `data/**` registry PR 直接添加，无需 rules proposal
+  - 仅当需要登录/token/付费/写操作/私有资源/新 scope 时：Agent 提交 `data/proposals/rule_changes/<date>-<topic>-resource-approval.md` proposal 和 GitHub 审批请求，由 `jlcbk` 批准 rules 变更
+- Runner 职责：
+  - 同时读取 `rules/RESOURCE_APPROVALS.yaml`（能力批准和 scopes）和 `data/exploration/scout-sources.yaml`（具体来源）
+  - 验证每个来源的 `resource_approval_id` 在 rules 中存在、status 为 approved、required_scopes 被覆盖
+  - Agent 不得直接修改 `rules/RESOURCE_APPROVALS.yaml` 或 `rules/EXPLORATION_POLICY.md`
 - 构建 Scout runner wrapper 脚本（`scripts/workers/scout_runner.py`）
 - Runner 启动 Claude CLI worker 执行 Scout 任务
 - Runner 强制执行：最大墙上时钟时间（可配置，如 2 小时）、最大 Claude 进程调用数（如 10）、最大重试（如 3）
@@ -51,10 +52,10 @@ status: proposed
 - [ ] 权限 proposal `2026-06-22-scout-runner-script-permissions.md` 获 `jlcbk` 批准
 - [ ] `state/.gitignore` 和 `data/exploration/raw/.gitignore` 存在且正确
 - [ ] `python data/tests/test_runtime_ignore.py` 通过
-- [ ] 能力分层文档：`data/exploration/scout-source-registry.schema.yaml` 定义 `public-web-read` scope
-- [ ] Runner 能读取现有资源审批结果，并拒绝任何未批准来源
-- [ ] 对尚未批准的目标来源，存在 `data/proposals/rule_changes/` proposal 和 GitHub 人工审批请求
-- [ ] 只有在 `jlcbk` 完成人工批准后，对应来源才可进入 Runner
+- [ ] 能力分层文档：`data/exploration/scout-source-registry.schema.yaml` 说明能力 scope 在 rules、具体来源在 data registry
+- [ ] Runner 同时读取 `rules/RESOURCE_APPROVALS.yaml` 和 `data/exploration/scout-sources.yaml`，验证 approval/status/required_scopes
+- [ ] 在已批准 scope 内添加公开只读来源通过 `data/**` registry PR，无需 rules proposal
+- [ ] 仅登录/token/付费/写操作/私有资源/新 scope 才需提交 resource approval proposal 由 `jlcbk` 批准 rules 变更
 - [ ] Scout runner 脚本存在于 `scripts/workers/scout_runner.py` 且启动 Claude CLI
 - [ ] Runner 强制执行墙上时钟超时（超出时终止进程）
 - [ ] Runner 强制执行最大调用数（N 个 Claude 进程后停止）

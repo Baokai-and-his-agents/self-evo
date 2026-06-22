@@ -33,7 +33,10 @@ except ImportError:
 def test_dependencies():
     """检查测试依赖"""
     if not HAS_YAML:
-        print("SKIP: PyYAML not available")
+        print("FAIL: PyYAML 缺失，无法执行 schema 验证")
+        return False
+    if not HAS_JSONSCHEMA:
+        print("FAIL: jsonschema 缺失，无法执行完整 schema 验证")
         return False
     return True
 
@@ -57,6 +60,21 @@ def test_schema_structure():
     schema = load_schema()
     if not schema:
         return False
+
+    # 验证 schema 声明与 $defs 一致
+    schema_version = schema.get('$schema', '')
+    if '$defs' in schema:
+        if 'draft-07' in schema_version:
+            print("FAIL: Schema 使用 $defs 但声明 draft-07（应使用 draft/2020-12 或改用 definitions）")
+            return False
+
+    # 验证 schema 本身有效
+    if HAS_JSONSCHEMA:
+        try:
+            jsonschema.Draft202012Validator.check_schema(schema)
+        except jsonschema.SchemaError as e:
+            print(f"FAIL: Schema 本身无效: {e.message}")
+            return False
 
     # 验证 schema 有顶层 sources 数组定义
     if 'properties' not in schema or 'sources' not in schema['properties']:
@@ -293,18 +311,17 @@ def test_valid_fixture():
 
 
 def test_documentation_consistency():
-    """测试文档不再声称具体来源必须写入 rules/"""
+    """测试面向实施的综合文档不再声称具体来源必须写入 rules/"""
+    # 检查 schema 文档
     schema_path = Path(__file__).parent.parent / "exploration" / "scout-source-registry.schema.yaml"
-
     if not schema_path.exists():
         print(f"FAIL: Schema file not found at {schema_path}")
         return False
 
-    # 读取原始文件内容（包含注释）
     with open(schema_path, 'r', encoding='utf-8') as f:
         schema_content = f.read()
 
-    # 检查是否有明确的架构分层说明
+    # 验证 schema 文档说明分层
     if "rules/RESOURCE_APPROVALS.yaml 定义批准的能力 scope" not in schema_content:
         print("FAIL: Schema 文档未明确能力 scope 与 registry 分层")
         return False
@@ -313,12 +330,47 @@ def test_documentation_consistency():
         print("FAIL: Schema 文档未明确 registry 定义具体来源")
         return False
 
-    # 检查是否说明在已批准 scope 内可直接添加来源
     if "在已批准 scope 内新增公开只读来源" not in schema_content:
         print("FAIL: Schema 文档未说明在已批准 scope 内可直接添加来源")
         return False
 
-    print("PASS: Schema 文档正确说明能力 scope 与 registry 分层")
+    # 检查 project candidates 文档
+    project_candidates_path = Path(__file__).parent.parent / "proposals" / "project_candidates" / "2026-06-21-autonomous-agent-followups.md"
+    if project_candidates_path.exists():
+        with open(project_candidates_path, 'r', encoding='utf-8') as f:
+            pc_content = f.read()
+
+        # 拒绝明确错误的短语
+        if "具体允许来源在 `rules/RESOURCE_APPROVALS.yaml` 中定义" in pc_content:
+            print("FAIL: project_candidates 仍声称具体来源在 rules/RESOURCE_APPROVALS.yaml 中定义")
+            return False
+
+        # 验证正确的架构描述存在
+        if "data/exploration/scout-sources.yaml` 等 registry 实例定义具体来源" not in pc_content:
+            print("FAIL: project_candidates 缺少正确的 registry 架构说明")
+            return False
+
+    # 检查 daily report 文档
+    daily_report_path = Path(__file__).parent.parent / "exploration" / "daily_reports" / "2026-06-21-autonomous-agent-ecosystem.md"
+    if daily_report_path.exists():
+        with open(daily_report_path, 'r', encoding='utf-8') as f:
+            dr_content = f.read()
+
+        if "具体允许来源在 `rules/RESOURCE_APPROVALS.yaml` 中定义" in dr_content:
+            print("FAIL: daily_report 仍声称具体来源在 rules/RESOURCE_APPROVALS.yaml 中定义")
+            return False
+
+    # 检查 permission proposal 文档
+    permission_proposal_path = Path(__file__).parent.parent / "proposals" / "rule_changes" / "2026-06-22-scout-runner-script-permissions.md"
+    if permission_proposal_path.exists():
+        with open(permission_proposal_path, 'r', encoding='utf-8') as f:
+            pp_content = f.read()
+
+        if "具体允许来源在 `rules/RESOURCE_APPROVALS.yaml` 中定义" in pp_content:
+            print("FAIL: permission_proposal 仍声称具体来源在 rules/RESOURCE_APPROVALS.yaml 中定义")
+            return False
+
+    print("PASS: 所有面向实施的综合文档正确说明能力 scope 与 registry 分层")
     return True
 
 

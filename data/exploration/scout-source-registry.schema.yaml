@@ -9,7 +9,7 @@
 #   - 在已批准 scope 内新增公开只读来源：Agent 直接在 data/exploration/scout-sources.yaml 添加
 #   - 需要登录/token/付费/写操作/私有资源/新 scope：提交 resource approval proposal
 
-$schema: "http://json-schema.org/draft-07/schema#"
+$schema: "https://json-schema.org/draft/2020-12/schema"
 title: Scout Source Registry
 description: Registry of approved public read-only exploration sources
 
