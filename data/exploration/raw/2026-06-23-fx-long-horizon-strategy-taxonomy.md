@@ -36,9 +36,9 @@
 ## Position Sizing Methods
 
 ### 1. Kelly / Fractional Kelly
-- Full Kelly: 最优但脆弱
-- Half/Quarter Kelly: 实践标准
-- Estimation error 敏感
+- Full Kelly: 简单二项模型下最优但对估计误差敏感
+- Half/Quarter Kelly: 常见 shrinkage 候选
+- 需与 fixed fractional, vol targeting, risk-constrained sizing 比较
 
 ### 2. Volatility Targeting
 - 目标波动率 10-15%
@@ -51,7 +51,7 @@
 
 ### 4. Pyramiding / Anti-Martingale
 - 盈利加仓
-- Whipsaw 风险，反转回吐
+- Whipsaw 风险，反转回吐（幅度取决于加仓规则）
 
 ---
 

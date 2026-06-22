@@ -287,23 +287,46 @@
 
 - **Total Entries:** 12
 - **Tier 1 (Academic/Central Bank):** 8
-- **Tier 2 (Industry Research):** 1
-- **Tier 4 (Practitioner Consensus):** 3
+- **Tier 2 (Industry Research):** 0
+- **Tier 4 (Practitioner Consensus):** 4
 - **Keep:** 12
 - **Reject:** 0
 
 **Strategy Family Coverage:**
 - Trend/Momentum: 6
 - Carry: 1
-- Position Sizing (Kelly): 3
-- Volatility Targeting: 3
+- Position Sizing (Kelly): 2
+- Volatility Targeting: 2
 - Mathematical Foundations: 1
 
+**Unique Study Count by Evidence Type:**
+- **FX 专门证据 (tier1):** 3 studies (ID 001, 003, 004 - JFE 2021, Menkhoff BIS, Moskowitz JFE 含 FX)
+- **跨资产 CTA 证据 (tier1):** 3 studies (ID 004, 005, 006 - Moskowitz, Pedersen, AQR 137年)
+- **Carry crash 专门 (tier1):** 1 study (ID 007 - UChicago)
+- **Kelly sizing 方法 (tier1):** 1 paper (ID 008 - arXiv)
+- **Vol targeting 系统风险 (tier1):** 1 central bank (ID 010 - ECB)
+- **Vol targeting 实证 (tier1):** 1 study (ID 011 - Harvey)
+- **数学基础 (tier4 共识):** 1 cluster (ID 012 - AM-GM, volatility drag)
+- **Kelly 实践共识 (tier4):** 1 cluster (ID 009 - fractional Kelly)
+
+**Market/Frequency Coverage:**
+- ID 003: FX, 48 currencies, 1976-2010, monthly
+- ID 004: Multi-asset (12 FX), 1985-2009, daily/weekly/monthly
+- ID 005: 12 FX forwards, 1985-2012, daily, TSMOM 1/3/12-month
+- ID 006: Multi-asset, 1880-2017, daily
+- ID 007: FX carry, 1983-2007, monthly
+- ID 010: Global vol-targeting strategies, 2020 March, crisis period
+- ID 011: 60+ assets (currencies subset), 1926+, daily
+
+**Total Unique Tier1 Studies:** 8
+- 不计重复引用（如 Moskowitz 同时在 004, 005 中）
+- 不计 tier4 practitioner consensus clusters
+
 **Coverage Assessment:**
-- Time-series momentum: Strong (4+ tier1 studies)
-- Carry trade crash risk: Moderate (1 tier1 study)
-- Kelly estimation error: Strong (tier1 + practitioner consensus)
-- Volatility targeting procyclicality: Strong (ECB + academic)
+- Time-series momentum: Strong (4 tier1 studies: ID 001, 002, 004, 005)
+- Carry trade crash risk: Moderate (1 tier1 study: ID 007)
+- Kelly estimation error: Strong (1 tier1 paper + practitioner consensus)
+- Volatility targeting procyclicality: Strong (ECB + Harvey)
 - Geometric growth / volatility drag: Strong (widespread consensus)
 
 **Gaps Identified:**

@@ -31,7 +31,7 @@
 - **伦敦开盘突破:** 实践共识强，学术引用存在，参数需验证
 
 **关键风险:**
-- **假突破率:** 跨资产参考数据 40-55%（ORB Setups，可能非 FX）
+- **假突破率:** 定性共识存在，但 FX 具体率需独立验证
 - **交易成本:** EUR/USD 估算 9-10 USD/lot，必须用目标 broker 实际数据
 - **过拟合:** DSR/PBO 方法成熟，但阈值需校准
 
@@ -44,20 +44,20 @@
 **最强证据:**
 - **Time-series momentum:** Moskowitz (2012) JFE 58 种工具，AQR 137 年，Pedersen Managed Futures Sharpe 1.8
 - **Carry crash risk:** UChicago (2008) 负偏度，VIX unwind
-- **Kelly 估计误差:** arXiv (2024) + practitioner consensus，Half-Kelly 标准
+- **Kelly 估计误差:** arXiv (2024) + practitioner consensus，fractional Kelly 作为 sizing 方法
 - **Volatility targeting procyclicality:** ECB (2020) 系统性风险，2020年3月实证
 
 **数学结论:**
 - **Geometric mean < Arithmetic mean:** volatility drag = σ²/2
 - **50% 损失需 100% 增长恢复:** 乘法过程不对称性
-- **2× Kelly = 零增长，>2× Kelly = 保证长期亏损**
+- **2× Kelly 结论:** 仅在简单二项模型的局部二次近似下成立，非普遍定理
 
 **关键风险:**
-- **Kelly estimation error:** 最危险，over-betting 灾难性
-- **Carry crash:** 负偏度，一次暴亏
+- **Kelly estimation error:** 最危险，必须保守估计 edge/variance
+- **Carry crash:** 负偏度，VIX hedge 候选
 - **Vol targeting procyclical:** 波动飙升强制去杠杆
-- **Pyramiding reversal:** 加仓后反转指数级放大亏损
-- **Martingale/grid:** 数学上保证破产
+- **Pyramiding reversal:** 加仓后反转放大亏损（幅度取决于加仓规则）
+- **Martingale/grid:** 有限资本、持续下注下 ruin probability 极高
 
 ---
 
@@ -69,18 +69,20 @@
 - **Tier1 相邻证据（非日内）:** 4 个
 - **Tier2-3 研究:** 8 组
 - **Practitioner consensus:** 20+ 组
-- **跨资产参考数据:** ORB Setups 240k+ 交易（可能非 FX）
+- **假突破率:** 定性共识强，FX 具体数字待验证
 
 **证据质量:** FX 日内时段效应有 5 个独立验证，证据充分；其他策略多为相邻证据或实践共识。
 
 ### Phase B 证据结构
 
-- **独立 Tier1 研究:** 8+（momentum, carry, managed futures, Kelly, vol targeting）
-- **Central Bank 文档:** ECB 金融稳定报告
-- **Practitioner consensus:** Kelly, volatility drag, fractional sizing
-- **数学事实:** AM-GM 不等式，几何财富过程
+- **FX 专门 tier1 研究:** 3 studies (JFE 2021, Menkhoff BIS, Moskowitz JFE)
+- **跨资产 CTA tier1 证据:** 3 studies (Moskowitz, Pedersen, AQR 137年)
+- **Carry crash 专门 tier1:** 1 study (UChicago)
+- **Kelly sizing tier1 paper:** 1 (arXiv)
+- **Vol targeting tier1:** 2 studies (ECB, Harvey)
+- **数学基础共识:** AM-GM 不等式，几何财富过程
 
-**证据质量:** Time-series momentum 和 carry trade 有多个独立长期研究；Kelly 和 vol targeting 有理论、实证和监管机构确认；数学结论为严格推导。
+**证据质量:** Time-series momentum 有 4 个独立 tier1 研究跨时间和资产验证；Carry crash 有专门研究；Kelly 和 vol targeting 有理论、实证和监管确认；数学结论为严格推导。
 
 ---
 
@@ -102,12 +104,12 @@
 | 策略 | 证据强度 | 优先级 |
 |------|----------|--------|
 | Time-series momentum (1-12月) | Tier 1 (Strong) | 优先回测 |
-| Carry trade (with crash awareness) | Tier 1 (Strong) | 必须包含 VIX hedge |
+| Carry trade (with crash awareness) | Tier 1 (Strong) | 评估 VIX hedge 成本 |
 | Managed Futures / CTA | Tier 1 (Strong) | 跨资产 TSMOM + vol targeting |
 | Cross-sectional momentum | Tier 1 (Strong) | 交易成本敏感 |
-| Half-Kelly sizing | Tier 1 (Strong - Mandatory) | 标准实践 |
+| Fractional Kelly sizing | Tier 1 (Strong - Sizing Method) | 与 fixed fractional、vol targeting 比较 |
 | Volatility targeting | Tier 2 (Moderate) | 对货币效果有限 |
-| Pyramiding | Tier 3 (Weak) | 反转风险 |
+| Pyramiding | Tier 3 (Weak) | 反转风险（取决于规则） |
 | Martingale/Grid | Tier 5 (Contradicted) | **永不使用** |
 
 ---
@@ -182,7 +184,7 @@
 
 ### Phase B（长期）Top 3 风险
 
-1. **Kelly Estimation Error:** 最危险，over-betting 导致负增长；Half-Kelly 必须
+1. **Kelly Estimation Error:** 最危险，over-betting 导致负增长；fractional Kelly 与其他 sizing 方法需比较
 2. **Carry Crash:** 负偏度，VIX 飙升 unwind；2008年10月实证
 3. **Volatility Targeting Procyclicality:** 波动飙升强制去杠杆，加剧抛售；ECB 2020年3月实证
 
@@ -207,14 +209,13 @@
 
 ### Phase B（长期）验证协议
 
-**7 大类检查:**
+**6 大类检查:**
 1. **Walk-forward:** 5 年训练，1 年测试，滚动
 2. **Parameter stability:** 子时期、跨币对验证
 3. **Portfolio attribution:** Signal, sizing, carry, vol target 各自贡献
 4. **Crisis stress test:** 2008, 2015 Swiss, 2020 COVID
 5. **Transaction cost:** Bid-ask + roll + swap + slippage 完整建模
-6. **Kelly shrinkage:** Edge/variance 保守估计，Half-Kelly mandatory
-7. **Correlation clustering:** 危机时相关性 → 1，分散失效
+6. **Kelly shrinkage:** Edge/variance 保守估计，与其他 sizing 方法比较
 
 **基准比较:**
 - 固定仓位（无动态调整）
@@ -355,9 +356,9 @@
 
 **如果资本 < $50k，时间有限，偏好自动化:**
 → **暂缓日内，优先 Phase B 长期策略**
-- Time-series momentum (1/3/12月)
-- Half-Kelly sizing
-- Vol targeting 10%
+- Time-series momentum (look-back 需实验网格)
+- Position sizing methods (fractional Kelly vs fixed fractional vs vol targeting)
+- Vol targeting (目标波动率需实验验证)
 - 日度调整，可半自动化
 
 **如果资本 > $50k，有开发能力，能接受高技术复杂度:**
@@ -369,17 +370,17 @@
 **如果追求最强学术支持，低频执行:**
 → **Phase B 纯长期组合**
 - Time-series momentum (Moskowitz, AQR)
-- Carry trade with VIX hedge (UChicago)
+- Carry trade with crash control (UChicago)
 - Managed Futures 风格（Pedersen）
-- Half-Kelly mandatory
+- Position sizing methods 实验比较
 
 ### 最小可行回测组合（Phase B）
 
-**策略:**
-1. Time-series momentum (1/3/12月 average)
-2. Carry trade (interest differential, VIX cut)
-3. Half-Kelly sizing (conservative edge/variance)
-4. Vol targeting 10%
+**策略实验网格:**
+1. Time-series momentum (多个 look-back 候选：1/3/6/12月)
+2. Carry trade (interest differential, VIX cut 阈值候选)
+3. Sizing methods (fractional Kelly vs fixed fractional vs vol targeting vs risk-constrained)
+4. Vol targeting (目标波动率候选：5%/10%/15%)
 
 **数据:**
 - 10+ 主要货币对
@@ -398,7 +399,7 @@
 
 ### Phase A 局限
 
-1. **FX 具体假突破率缺失:** ORB Setups 数据可能非 FX
+1. **FX 具体假突破率缺失:** 定性共识强，但缺乏 FX 专门的量化数据
 2. **Broker 依赖:** 交易成本建模必须用目标 broker 实际数据
 3. **时段效应幅度:** 学术研究未给出可交易的具体 pips 数字
 4. **配对交易日内适用性:** 方法有学术支持，但日内 FX 实证不足

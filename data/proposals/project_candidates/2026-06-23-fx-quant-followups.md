@@ -11,25 +11,25 @@
 ### A. 高优先级（强证据，可立即开始）
 
 #### A1. Time-Series Momentum Baseline
-- **目标:** 实现并验证 Moskowitz (2012) 1/3/12 月 TSMOM
+- **目标:** 实现并验证多参数 TSMOM
 - **数据:** 10+ 主要货币对，20+ 年日度数据
-- **方法:** Vol targeting 10%, Half-Kelly sizing, walk-forward 5+1
+- **方法:** Look-back 候选 (1/3/6/12月)，Vol targeting 候选 (5%/10%/15%)，Sizing 方法比较 (fractional Kelly/fixed fractional/vol targeting)，walk-forward 5+1
 - **预期时间:** 6-8 周
 - **成功标准:** Sharpe > 0.5，max DD < 30%，walk-forward 稳定
 
 #### A2. Carry Trade with Crash Protection
-- **目标:** 利差套利 + VIX hedge
+- **目标:** 利差套利 + crash control 候选
 - **数据:** 货币对 + swap rates + VIX 历史
-- **方法:** 做多高利差货币，VIX > 阈值时减仓
+- **方法:** 做多高利差货币，测试多种 crash control (VIX 阈值候选、no hedge baseline、其他 risk control)
 - **预期时间:** 4-6 周
-- **成功标准:** 正期望收益，2008 年回撤 < 50%
+- **成功标准:** 正期望收益，2008 年回撤可控，比较各 hedge 成本
 
-#### A3. Half-Kelly Position Sizing Framework
-- **目标:** 建立保守 Kelly 计算与仓位管理系统
+#### A3. Position Sizing Methods Comparison
+- **目标:** 比较多种 sizing 方法
 - **数据:** 策略历史收益
-- **方法:** Edge/variance 估计，shrinkage，Half-Kelly
+- **方法:** 实现并比较 fractional Kelly (多个 fraction 候选)、fixed fractional、vol targeting、risk-constrained sizing
 - **预期时间:** 2-4 周
-- **成功标准:** Over-betting 保护，稳健参数估计
+- **成功标准:** 保守估计 edge/variance，各方法 risk-return profile 清晰
 
 ### B. 中优先级（需适配验证）
 
@@ -107,7 +107,7 @@
 ### 路径 1: 长期策略优先（推荐）
 
 **Phase 1 (2-3 个月):**
-- A3: Half-Kelly Framework
+- A3: Position Sizing Methods Comparison
 - A1: Time-Series Momentum Baseline
 - D1: Transaction Cost Model
 
@@ -228,7 +228,7 @@
 ## 不推荐的项目
 
 ### X1. Martingale/Grid 系统
-- **原因:** 数学上保证破产
+- **原因:** 有限资本下 ruin probability 极高
 
 ### X2. Full Kelly without Shrinkage
 - **原因:** 估计误差下灾难性
@@ -247,8 +247,8 @@
 ## 总结
 
 **推荐起点:**
-1. A3: Half-Kelly Framework（2-4 周）
-2. A1: Time-Series Momentum（6-8 周）
+1. A3: Position Sizing Methods Comparison（2-4 周）
+2. A1: Time-Series Momentum Baseline（6-8 周）
 3. D1: Transaction Cost Model（3-4 周）
 
 **总计: 11-16 周（3-4 个月）**
@@ -264,10 +264,10 @@
 
 **最大教训:**
 - Kelly 估计误差最危险
-- Martingale 保证破产
+- Martingale 在有限资本下 ruin probability 极高
 - "算术亏损、指数盈利"是营销口号
 - 财富过程本质是乘法的
 
 ---
 
-**候选项目完成。建议从 Half-Kelly + TSMOM + Cost Model 开始。**
+**候选项目完成。建议从 Position Sizing Comparison + TSMOM + Cost Model 开始。**

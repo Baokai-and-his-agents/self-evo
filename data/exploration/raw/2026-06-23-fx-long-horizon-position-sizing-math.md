@@ -86,7 +86,7 @@ Geometric Mean < Arithmetic Mean
   ```
   Total Loss ≈ N × 2% (算术级近似，忽略复利)
   ```
-  
+
 - **盈利阶段：** 加仓（pyramiding），每次盈利增加仓位：
   ```
   Position_t = Position_0 × (1 + scale)^t
@@ -109,7 +109,7 @@ Geometric Mean < Arithmetic Mean
 - **高胜率、小盈利、偶尔大亏（负偏度）：** 常见于 mean reversion, grid, martingale
   - 99 次小赢 +1%，1 次大亏 -50%
   - 总收益：0.99 × 0.01 - 0.01 × 0.50 = -0.005 = **负期望**
-  
+
 - **低胜率、小亏、偶尔大赢（正偏度）：** 常见于 trend following, anti-martingale
   - 60 次小亏 -1%，40 次大赢 +3%
   - 总收益：0.60 × (-0.01) + 0.40 × 0.03 = +0.006 = **正期望**
@@ -118,7 +118,7 @@ Geometric Mean < Arithmetic Mean
 
 #### 解释 C：Kelly / Fractional Kelly 下的财富路径
 
-Kelly 准则最大化**对数财富的期望增长**：
+Kelly 准则最大化**对数财富的期望增长**。在简单二项模型下（已知固定胜率 p、盈亏比 b）：
 
 ```
 f* = (p × b - q) / b
@@ -126,15 +126,20 @@ f* = (p × b - q) / b
 
 其中 p = 胜率，q = 1 - p，b = 盈亏比。
 
-**Full Kelly 下的财富路径：**
+**Full Kelly 下的财富路径（简单二项模型）：**
 - 盈利时：W × (1 + f* × R)
 - 亏损时：W × (1 - f* × R)
 
-由于 f* 通常 < 1，单次亏损的**绝对金额**小于单次盈利（当 R > 1 时）。
+**关于 2× Kelly 的结论：**
 
-**但仍是几何过程：** 连续多次亏损仍会导致显著资金缩水。
+在上述简单二项模型中，围绕最优 f* 进行局部二次近似时，2× Kelly (2f*) 对应零增长，>2× Kelly 导致负增长。这是特定模型下的性质，不是普遍数学定理。
 
-**结论 5:** Kelly 准则控制单次亏损比例，但**不改变财富过程的乘法本质**。长期增长仍由几何均值决定。
+现实交易中：
+- 收益分布非二项，可能有厚尾、偏度
+- 参数（edge, variance）是估计量，存在估计误差
+- 存在交易成本、滑点、相关性变化
+
+**结论 5:** Kelly 准则控制单次亏损比例，但**不改变财富过程的乘法本质**。长期增长仍由几何均值决定。2× Kelly 结论仅在特定简单模型和已知参数下成立。
 
 ### 2.3 路径依赖与反例
 
@@ -151,7 +156,7 @@ f* = (p × b - q) / b
 
 **实际财富：** $120,000 - $96,000 = $24,000（亏损 76%）
 
-**结论：** 加仓后的反转可以**指数级放大亏损**。
+**结论：** 加仓后的反转可以**放大亏损（幅度取决于加仓规则和反转幅度）**。
 
 #### 反例 2：Gap 与 Slippage
 
@@ -180,6 +185,19 @@ f* = (p × b - q) / b
 - Pyramiding: 盈利后增加固定金额或固定比例仓位
 - Trend following + vol targeting
 
+**加仓规则示例：**
+
+1. **线性加仓：** 每次盈利后增加固定比例（如 +20% 初始仓位）
+   - 反转损失 = 当前总仓位 × 反转幅度
+
+2. **几何加仓：** 每次盈利后仓位乘以固定倍数（如 ×1.5）
+   - Position_t = Position_0 × 1.5^t
+   - 反转后快速回吐，但非固定"指数级"
+
+3. **Doubling schedule：** 每次盈利后仓位加倍
+   - Position_t = Position_0 × 2^t
+   - 反转损失最大化
+
 **理论优势：**
 - 顺应趋势，截断亏损、让利润奔跑
 - Kelly 理论支持（当 edge > 0）
@@ -190,24 +208,38 @@ f* = (p × b - q) / b
 - 估计误差：edge 和 volatility 估计不准，导致过度或不足加仓
 - 心理难度：盈利后加仓放大回撤心理压力
 
+**反转回吐取决于：**
+- 加仓规则（线性、几何、doubling）
+- 趋势持续时间与加仓次数
+- 反转幅度
+- 是否有分层止损
+
 ### 3.2 Martingale（亏损加仓）
 
 **定义：** 亏损时增加仓位（averaging down, grid trading, doubling down）。
 
-**为何危险：**
-- 亏损时增加暴露，放大后续损失
-- 无限资金假设：理论上需要无限资金支持连续加仓
-- 实际破产风险：连续亏损导致资金耗尽
-
-**数学上保证亏损（有限资金）：**
+**Risk-of-ruin 分析：**
 
 假设每次亏损加倍仓位，连续 N 次亏损后：
 - 总投入：1 + 2 + 4 + ... + 2^N = 2^(N+1) - 1
 - 如果 N = 10，总投入 2047 单位资金
 
-**一旦资金耗尽，无法继续，锁定永久亏损。**
+**成立条件：**
+- 有限资本
+- 持续下注（无停止规则或停止条件不满足）
+- 每次独立亏损概率 > 0
+- 有限赔率（无法无限加倍）
 
-**结论 6:** Martingale 在有限资金和有限时间下**几乎保证破产**。
+**在上述条件下，ruin probability 可趋近 1。**
+
+具体概率取决于：
+- 初始资本与最小下注比例
+- 单次亏损概率
+- 加仓倍数
+- 最大层级限制
+- 价格过程（如均值回归 vs 趋势）
+
+**结论 6:** Martingale 在有限资本、持续下注、无有利停止规则的条件下，长期 ruin probability 极高。
 
 ---
 
@@ -321,17 +353,17 @@ f* = (p × b - q) / b
 
 ### 7.1 Position Sizing 原则
 
-1. **Never exceed Kelly:** Full Kelly 是上界，超过 2× Kelly 保证长期亏损
-2. **Use Fractional Kelly:** Half Kelly（0.5f*）或 Quarter Kelly（0.25f*）更稳健
-3. **Shrinkage for uncertainty:** 估计不确定时大幅缩减仓位
+1. **Conservative estimation:** 估计 edge 和 variance 时保持保守，考虑估计误差
+2. **Compare shrinkage methods:** 评估 Half-Kelly (0.5f*)、Quarter-Kelly (0.25f*)、fixed fractional、vol targeting、risk-constrained sizing
+3. **Avoid over-betting:** Full Kelly 对估计误差极度敏感；在简单二项模型的局部二次近似下，2× Kelly 对应零增长
 4. **Hard stop-loss:** 必须设置，但要预留 slippage buffer
 5. **Portfolio heat limit:** 限制同时开仓的总风险暴露
 
 ### 7.2 避免的陷阱
 
-1. **Martingale / Grid / Averaging Down:** 亏损加仓，几乎保证破产
-2. **Over-leverage after wins:** 加仓后反转可能指数级放大亏损
-3. **Ignoring estimation error:** Full Kelly 在估计误差下灾难性
+1. **Martingale / Grid / Averaging Down:** 有限资本、持续下注下 ruin probability 可趋近 1
+2. **Over-leverage after wins:** 加仓后反转可能放大亏损（具体幅度取决于加仓规则）
+3. **Ignoring estimation error:** Full Kelly 在估计误差下表现极差
 4. **Ignoring transaction costs:** 高频调整迅速侵蚀收益
 5. **Believing in free convexity:** 所有 convexity 都有成本
 

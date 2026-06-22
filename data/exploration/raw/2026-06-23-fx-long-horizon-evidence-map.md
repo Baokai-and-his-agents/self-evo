@@ -37,10 +37,11 @@
 - 实证明确
 
 ### 4. Kelly Estimation Error
-**Evidence: Tier 1 (Strong)**
+**Evidence: Tier 1 (Strong - Position Sizing Method)**
 - arXiv (2024): 估计风险
-- Practitioner consensus: Half-Kelly standard
-- 数学推导明确
+- Practitioner consensus: Fractional Kelly standard
+- 数学推导：简单二项模型下的局部性质
+- **注：Kelly 是 sizing objective，不是 alpha 或策略**
 
 ### 5. Volatility Targeting Procyclicality
 **Evidence: Tier 1 (Strong)**
@@ -68,7 +69,7 @@
 
 ### 9. Martingale / Grid
 **Evidence: Tier 5 (Contradicted - Mathematically)**
-- 有限资金保证破产
+- 有限资本、持续下注、无有利停止规则下 ruin probability 极高
 - 理论与实证一致反对
 
 ### 10. Vol Targeting on Currencies
@@ -84,7 +85,7 @@
 **Strong Evidence (可直接用于回测):**
 - Time-series momentum
 - Carry trade (with crash awareness)
-- Kelly criterion (fractional)
+- Fractional Kelly sizing (作为 sizing method 比较候选)
 - Volatility drag (geometric growth)
 
 **Moderate Evidence (需谨慎验证):**
@@ -93,5 +94,5 @@
 
 **Weak/Contradicted (避免或需重大修正):**
 - "算术亏损、指数盈利"（营销口号）
-- Martingale/grid（保证亏损）
-- Full Kelly without shrinkage（灾难性）
+- Martingale/grid（有限资本下 ruin probability 极高）
+- Full Kelly without shrinkage（估计误差下表现极差）

@@ -11,7 +11,7 @@
 ### 1. Kelly Estimation Error
 - **最危险**
 - Over-estimate edge → over-bet → 负增长
-- 2× Kelly = 零增长，>2× = 保证亏损
+- 简单模型下 2× Kelly 对应零增长
 - Mitigation: Half-Kelly, shrinkage
 
 ### 2. Carry Crash

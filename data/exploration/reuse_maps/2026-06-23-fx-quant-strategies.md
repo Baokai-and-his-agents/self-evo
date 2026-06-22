@@ -90,7 +90,7 @@
 ## 明确避免的方法
 
 ### 1. Martingale / Grid Trading / Averaging Down
-- **原因:** 数学上保证破产（有限资金）
+- **原因:** 有限资本下 ruin probability 极高
 - **替代:** Anti-martingale（盈利加仓）
 
 ### 2. Full Kelly without Shrinkage

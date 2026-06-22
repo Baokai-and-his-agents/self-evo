@@ -20,7 +20,7 @@
 3. **最强学术支持:** Time-series momentum（Moskowitz 2012，AQR 137年），Carry crash risk（UChicago 2008）
 4. **Kelly 估计误差:** 最危险的实践陷阱，over-betting 导致负增长，Half-Kelly 是实践标准
 5. **Volatility targeting procyclicality:** ECB 确认系统性风险，2020年3月 risk parity 加剧抛售
-6. **反例充分:** 加仓后反转可指数级放大亏损，martingale 保证破产
+6. **反例充分:** 加仓后反转可放大亏损，martingale 在有限资本下 ruin probability 极高
 
 ### 证据覆盖
 
@@ -57,7 +57,7 @@
 - Full Kelly：理论最优但对估计误差极敏感，over-betting 灾难性
 - Half-Kelly：标准实践，保留 75% 增长率，减少 50% 波动
 - Quarter-Kelly：高不确定性环境
-- **关键警告:** 2× Kelly = 零增长，>2× Kelly = 保证长期亏损
+- **关键警告:** 在简单二项模型的局部二次近似下，2× Kelly 对应零增长，>2× Kelly 导致负增长
 
 **2. Volatility Targeting**
 - 证据：ECB (2020) 系统性风险报告，Harvey (Duke) 60+ 资产研究，Moreira & Muir (2017) JoF
@@ -69,7 +69,7 @@
 **3. Pyramiding / Anti-Martingale**
 - 证据：理论支持（Kelly, trend following），但反转回吐实证不足
 - 机制：盈利时加仓
-- 风险：反转回吐可指数级放大亏损（示例：2× 仓位反转 15% = 亏损 76%）
+- 风险：反转回吐可放大亏损（示例：2× 仓位反转 15% = 亏损 76%）
 - Whipsaw：震荡市场累积成本
 
 **4. Trailing Stops & Drawdown Control**
@@ -156,7 +156,7 @@ Geometric Mean < Arithmetic Mean (除非零波动)
 
 ### 1. Kelly Estimation Error（最危险）
 - Over-estimate edge → over-bet → 负增长
-- 2× Kelly = 零增长，>2× = 保证亏损
+- 简单模型下 2× Kelly 对应零增长
 - Mitigation: Half-Kelly, shrinkage, conservative estimates
 
 ### 2. Carry Crash
@@ -176,7 +176,7 @@ Geometric Mean < Arithmetic Mean (除非零波动)
 
 ### 5. Martingale / Grid（保证破产）
 - 亏损加仓
-- 数学上保证破产（有限资金）
+- 有限资本下 ruin probability 极高
 - Mitigation: **永不使用**
 
 ---
