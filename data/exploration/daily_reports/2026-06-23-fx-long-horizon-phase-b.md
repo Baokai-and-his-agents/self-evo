@@ -18,7 +18,7 @@
 1. **数学审计结论:** 财富过程是乘法的，长期增长由几何均值决定，volatility drag = σ²/2
 2. **"算术亏损、指数盈利":** 字面意义数学不一致；可能解释存在但成立条件极严格，现实中几乎不可能满足
 3. **最强学术支持:** Time-series momentum（Moskowitz 2012，AQR 137年），Carry crash risk（UChicago 2008）
-4. **Kelly 估计误差:** 最危险的实践陷阱，over-betting 导致负增长，Half-Kelly 是实践标准
+4. **Kelly 估计误差:** 最危险的实践陷阱，over-betting 导致负增长，fractional Kelly（如 Half-Kelly）是实验候选，sizing 方法需比较验证
 5. **Volatility targeting procyclicality:** ECB 确认系统性风险，2020年3月 risk parity 加剧抛售
 6. **反例充分:** 加仓后反转可放大亏损，martingale 在有限资本下 ruin probability 极高
 
@@ -202,17 +202,17 @@ Phase B 交付：
 2. Bid-ask, roll, swap 完整成本数据
 3. 多 regime 覆盖：至少 2 次货币危机、2 次股市崩盘
 
-### 优先回测策略
-1. **Time-series momentum:** 候选配置 1/3/6/12 月 (source: Moskowitz 1-12月，Pedersen 实验用1月)，vol targeting 5%-15% 网格
-2. **Carry trade:** 带 VIX hedge 或 drawdown cut (实验性)
-3. **Half-Kelly sizing:** 保守 edge/variance 估计
+### 优先回测策略（实验候选配置）
+1. **Time-series momentum:** 候选 look-back 网格 1/3/6/12 月 (source: Moskowitz 1-12月验证，Pedersen 实验用1月)，候选 vol targeting 网格 5%/10%/15% (source: Pedersen 实验用10%)
+2. **Carry trade:** 实验候选包括 VIX hedge 网格、no hedge baseline、其他 risk control (source: UChicago 2008 crash 分析)
+3. **Position sizing:** 比较 fractional Kelly (多个 fraction)、fixed fractional、vol targeting、risk-constrained sizing (source: Kelly Criterion 文献)
 
 ### 验证协议
-1. Walk-forward 多窗口比较：候选配置包括 (train:test = 5:1, 4:1, 3:1 年)，滚动验证
+1. Walk-forward 多窗口比较：候选配置 train:test = 5:1 / 4:1 / 3:1 年 (source: 标准回测方法)，滚动验证
 2. Parameter stability: 子时期、跨币对验证
 3. Portfolio attribution: signal, sizing, carry, vol target 分解
 4. Baseline 比较：固定仓位、无加仓、buy-and-hold
-5. 交易成本：bid-ask + slippage + swap 完整建模
+5. 交易成本：bid-ask + slippage + swap 完整建模 (source: 实盘成本建模最佳实践)
 6. Crisis 压力测试：2008, 2015 Swiss, 2020 COVID
 
 ### 避免的陷阱

@@ -10,7 +10,7 @@
 
 ### 1. Time-Series Momentum (Moskowitz et al. 2012)
 - **来源:** Journal of Financial Economics
-- **复用:** 候选配置 1/3/6/12 月 look-back (source: 1-12月验证)，vol targeting 5%-15% 网格 (source: Pedersen 实验用10%)
+- **复用:** 候选 look-back 网格 1/3/6/12 月 (source: 1-12月验证)，候选 vol targeting 网格 5%/10%/15% (source: Pedersen 实验用10%)
 - **适用:** 货币、商品、股指、债券
 - **实现:** Pedersen "Demystifying Managed Futures" 完整描述
 
@@ -22,19 +22,19 @@
 
 ### 3. Carry Trade Crash Risk (UChicago 2008)
 - **来源:** Journal of Financial Economics
-- **复用:** VIX hedge, crash risk monitoring (实验性候选)
+- **复用:** 实验候选包括 VIX hedge 网格、crash risk monitoring、no hedge baseline (source: crash 分析)
 - **适用:** 高 carry 货币组合
 - **注意:** 负偏度，需止损
 
 ### 4. Kelly Criterion & Fractional Kelly
 - **来源:** 广泛文献 + practitioner consensus
-- **复用:** Half-Kelly (0.5f*) 或 Quarter-Kelly (0.25f*)
+- **复用:** 比较 fractional Kelly (如 Half-Kelly 0.5f*, Quarter-Kelly 0.25f*)、fixed fractional、vol targeting 等 sizing 方法
 - **适用:** 所有策略的仓位管理
 - **注意:** 估计误差敏感，必须保守
 
 ### 5. Volatility Targeting (Moreira & Muir 2017)
 - **来源:** Journal of Finance
-- **复用:** 目标波动率，动态杠杆
+- **复用:** 候选 vol target 网格 (如 5%/10%/15%)，动态杠杆实验
 - **适用:** Risk assets（股票、信贷）有效，货币效果有限
 - **注意:** Procyclicality 风险
 
@@ -62,7 +62,7 @@
 
 ### 3. Walk-Forward Analysis
 - **来源:** 标准回测方法
-- **复用:** 多窗口比较候选 (train:test = 5:1, 4:1, 3:1 年)，滚动验证
+- **复用:** 多窗口比较候选 train:test = 5:1 / 4:1 / 3:1 年，滚动验证
 - **适配:** 根据数据频率调整窗口
 - **适用:** 所有策略验证
 
@@ -130,13 +130,13 @@
 3. 交易成本建模
 
 ### Phase 2: 基准策略（4-6 周）
-1. Time-series momentum 候选配置网格 (1/3/6/12月 look-back)
-2. Half-Kelly sizing
-3. Vol targeting 候选范围 5%-15% (source: Pedersen 实验用10%)
-4. Walk-forward 多窗口比较 (train:test = 5:1, 4:1, 3:1 年)
+1. Time-series momentum 候选网格：look-back 1/3/6/12月 (source: Moskowitz 1-12月)
+2. Position sizing 方法比较：fractional Kelly / fixed fractional / vol targeting
+3. Vol targeting 候选网格：5%/10%/15% (source: Pedersen 实验用10%)
+4. Walk-forward 候选窗口：train:test = 5:1 / 4:1 / 3:1 年
 
 ### Phase 3: 扩展策略（6-8 周）
-1. Carry trade with VIX hedge (实验性候选)
+1. Carry trade 实验候选：VIX hedge 网格 + no hedge baseline (source: UChicago 2008)
 2. Cross-sectional momentum
 3. 组合优化
 

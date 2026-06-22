@@ -13,21 +13,21 @@
 #### A1. Time-Series Momentum Baseline
 - **目标:** 实现并验证多参数 TSMOM
 - **数据:** 10+ 主要货币对，20+ 年日度数据
-- **方法:** Look-back 候选网格 (1/3/6/12月，source: Moskowitz 1-12月验证)，Vol targeting 候选范围 (5%/10%/15%，source: Pedersen 实验用10%)，Sizing 方法比较 (fractional Kelly/fixed fractional/vol targeting)，walk-forward 多窗口比较 (train:test = 5:1, 4:1, 3:1 年)
+- **方法:** Look-back 候选网格 (1/3/6/12月，source: Moskowitz 1-12月验证)，Vol targeting 候选网格 (5%/10%/15%，source: Pedersen 实验用10%)，Sizing 方法比较 (fractional Kelly 多个 fraction/fixed fractional/vol targeting)，walk-forward 候选窗口 (train:test = 5:1 / 4:1 / 3:1 年)
 - **预期时间:** 6-8 周
 - **成功标准:** Sharpe > 0.5，max DD < 30%，walk-forward 稳定
 
 #### A2. Carry Trade with Crash Protection
 - **目标:** 利差套利 + crash control 实验候选
 - **数据:** 货币对 + swap rates + VIX 历史
-- **方法:** 做多高利差货币，测试多种 crash control 实验候选 (VIX 阈值网格、no hedge baseline、其他 risk control)
+- **方法:** 做多高利差货币，实验候选包括 VIX 阈值网格、no hedge baseline、其他 risk control，比较各方案成本与保护效果
 - **预期时间:** 4-6 周
-- **成功标准:** 正期望收益，2008 年回撤可控，比较各 hedge 成本
+- **成功标准:** 正期望收益，2008 年回撤可控，各 hedge 方案成本对照清晰
 
 #### A3. Position Sizing Methods Comparison
 - **目标:** 比较多种 sizing 方法
 - **数据:** 策略历史收益
-- **方法:** 实现并比较 fractional Kelly (多个 fraction 候选)、fixed fractional、vol targeting、risk-constrained sizing
+- **方法:** 实现并比较 fractional Kelly (多个 fraction 候选，如 0.25/0.5/0.75)、fixed fractional、vol targeting、risk-constrained sizing
 - **预期时间:** 2-4 周
 - **成功标准:** 保守估计 edge/variance，各方法 risk-return profile 清晰
 
@@ -107,7 +107,7 @@
 ### 路径 1: 长期策略优先（推荐）
 
 **Phase 1 (2-3 个月):**
-- A3: Position Sizing Methods Comparison
+- A3: Position Sizing Methods Comparison（比较 fractional Kelly 多个 fraction / fixed fractional / vol targeting）
 - A1: Time-Series Momentum Baseline
 - D1: Transaction Cost Model
 
@@ -130,7 +130,7 @@
 ### 路径 2: 日内+长期并行
 
 **Phase 1 (2-3 个月):**
-- A3: Half-Kelly Framework
+- A3: Position Sizing Framework（比较 fractional Kelly / fixed fractional / vol targeting）
 - D1: Transaction Cost Model
 - B1: Intraday Time-of-Day（并行）
 
