@@ -313,3 +313,239 @@
 
 下一步：继续 Strategy Family 2 (Breakout)，然后 3-7，最后跨领域主题（交易成本、数据、风险）。
 
+
+## Strategy Family 2: Breakout Strategies
+
+### ID: 028
+- **URL:** https://ideas.repec.org/p/hhs/umnees/0845.html
+- **Title:** Assessing the profitability of intraday opening range breakout strategies
+- **Authors:** Holmberg, Ulf & Lönnbark, Carl & Lundström, Christian
+- **Source Type:** paper
+- **Credibility:** tier1
+- **Decision:** keep
+- **Reason:** 学术论文，Umeå University，发表于 Finance Research Letters (2013)
+- **Evidence Extracted:**
+  - 开盘区间突破（ORB）策略基于正态分布回报识别大幅日内价格移动
+  - 当价格超过预定阈值时交易
+  - 研究原油期货
+  - ORB 策略产生显著高于零的回报
+  - 相对公平博弈，成功率提高
+  - 方法涉及 Low, High, Open, Close 的联合分布
+- **Counter-Evidence:** 研究针对期货市场（原油），可能不直接适用于外汇现货
+- **Strategy Family:** breakout
+- **Query Set:** 2.1
+- **Date Accessed:** 2026-06-23
+
+### ID: 029-034 (False Breakout Literature)
+- **URLs:** Multiple sources (FN Trading Lab, ORB Setups, FibAlgo, Trading Zenith, Prof FX, FXRobotEasy, GrandAlgo)
+- **Source Type:** blog, tutorial, research
+- **Credibility:** tier2-tier4
+- **Decision:** keep (as practitioner consensus)
+- **Reason:** 多个独立来源一致描述假突破模式和过滤方法，包含数据驱动分析
+- **Evidence Extracted:** (合并关键发现)
+  - **假突破定义：** 价格突破关键水平但迅速反转回区间内
+  - **假突破率：** 
+    - 原始突破信号：40-55% 失败（ORB Setups: 65.9% 用默认设置）
+    - 主要货币对：50-60% 假突破
+    - 亚洲时段：60-70% 假突破（流动性低）
+    - 1 小时蜡烛收盘确认：33% 成功率
+    - 4 小时蜡烛收盘确认：66% 成功率
+    - 4 小时 + 成交量确认：73% 成功率
+  - **假突破特征：**
+    - 长影线，实体弱（收盘接近或回到水平内）
+    - 突破后立即反转（1-3 根蜡烛内）
+    - 低流动性时段突破（亚洲时段、午餐时间）
+    - 突破直接撞上更高时间框架的对立区域
+    - 低成交量（< 1.5× 平均值）
+  - **时段失败率：**
+    - 9:00 AM ET: 34.0% 胜率（ORB Setups 数据，67,996 笔交易）
+    - 10:00 AM ET: 29.9% 胜率（最差，"10:30 反转"区域，96,112 笔交易）
+    - 12:00 PM ET: 44.1% 胜率（中午突破更干净）
+    - 3:00 PM ET: 51.7% 胜率（日内晚段最高胜率）
+    - 周五下午（伦敦时间 12:00 后）：71% 失败率
+  - **ORB 区间宽度：**
+    - 窄区间（5 分钟 ORB < $0.50）：51.0% 胜率
+    - 宽区间（> $2.00）：34.6% 胜率
+    - 差异：16.4 个百分点（单一过滤器）
+  - **过滤方法（多来源共识）：**
+    1. 更高时间框架确认（4 小时或日线收盘）
+    2. 成交量扩张（≥ 1.5× 平均，理想 2×）
+    3. VWAP 对齐（多头时价格在 VWAP 上方且 VWAP 上升）
+    4. 蜡烛实体收盘在水平外（不仅是影线）
+    5. 避开 10 AM ET 时段
+    6. 避开窄区间和极宽区间
+    7. 等待回测（突破后回到水平，反弹进入）
+    8. 与日线/4 小时趋势对齐
+  - **学术支持：** "伦敦开盘突破模式在 2010-2015 学术文献中有广泛研究，当按波动率和趋势偏好过滤时，60-70% 时间延续"（FXRobotEasy 引用）
+  - **关键洞察：** "假突破不是缺陷，而是策略的结构性成本，是捕捉 50-60% 真实突破的代价"
+- **Counter-Evidence:** 
+  - 部分来源为零售交易教育网站，可能存在营销偏见
+  - ORB Setups 数据样本（240,102 笔交易，600+ 标的）未明确说明市场和时期
+  - 具体数字（如 73% 成功率）需要独立验证
+- **Strategy Family:** breakout
+- **Query Set:** 2.1, 2.4
+- **Date Accessed:** 2026-06-23
+
+
+## Strategy Family 3: Mean Reversion & Statistical Arbitrage
+
+### ID: 035
+- **URL:** https://papers.ssrn.com/sol3/papers.cfm?abstract_id=4771108
+- **Title:** Cointegration-Based Strategies in Forex Pairs Trading
+- **Authors:** Tetiana Lemishko, [co-authors not listed]
+- **Source Type:** paper
+- **Credibility:** tier1
+- **Decision:** keep
+- **Reason:** SSRN 论文，专注于外汇市场的协整配对交易
+- **Evidence Extracted:**
+  - 配对交易利用相关资产间的价格差异
+  - 协整识别非平稳时间序列数据间的长期均衡关系
+  - 当偏离发生时提供交易机会
+  - 通过参数优化识别盈利策略
+  - 旨在增强算法框架的可靠性和客观性，减少情绪偏差
+- **Counter-Evidence:** 摘要未提供具体回测结果或失败率
+- **Strategy Family:** stat_arb, mean_reversion
+- **Query Set:** 3.2, 4.1
+- **Date Accessed:** 2026-06-23
+
+### ID: 036-037 (GitHub Pairs Trading Implementations)
+- **URLs:**
+  - https://github.com/LucaCereghetti/Pairs-Trading-Mean-Reversion-Strategy
+  - https://github.com/XanderRobbins/Universal-Pairs-Trading-System
+- **Source Type:** github
+- **Credibility:** tier3
+- **Decision:** keep
+- **Reason:** 专业级配对交易系统，Ornstein-Uhlenbeck 过程建模，包含完整验证流程
+- **Evidence Extracted:**
+  - Ornstein-Uhlenbeck 过程建模外汇价格
+  - 协整检验：Engle-Granger, Johansen, ADF, half-life
+  - Hedge ratio 调整的对数价差
+  - Z-score 信号生成（阈值突破）
+  - Regime 检测和波动率调整入场阈值
+  - ATR-based 风险管理
+  - 交易成本和滑点建模
+  - 完整可视化：价差、权益曲线、交易分布、月度热图、滚动协整 p-value
+  - 入场：z-score 突破阈值 AND regime 均值回归 AND 动量确认
+  - 退出：z-score 回穿退出阈值 OR regime 转为 Volatile_Trending
+- **Counter-Evidence:** GitHub 项目，文档和社区验证有限
+- **Strategy Family:** stat_arb, mean_reversion
+- **Query Set:** 3.2, 4.1
+- **Date Accessed:** 2026-06-23
+
+### ID: 038
+- **URL:** https://shs.hal.science/halshs-01566803v1/document
+- **Title:** Statistical arbitrage based on pairs trading of mean-reverting returns (HAL)
+- **Authors:** Zhe Huang & Franck Moraux
+- **Source Type:** research
+- **Credibility:** tier1
+- **Decision:** keep
+- **Reason:** 学术研究论文，University of Rennes 1 and CREM UMR CNRS
+- **Evidence Extracted:**
+  - 三种策略比较：百分比、协整长期残差标准差、Bollinger Bands（动态标准差）
+  - 每种策略有/无 ECM-DCC-GARCH 双重确认
+  - 最佳策略：Bollinger Bands without GARCH 确认（按利润因子优化）
+  - 样本外测试中最高利润因子
+  - 绝对净利润 $4024.97，最大回撤 $1453.49
+  - 但按净利润优化时，最高净利润伴随更高最大回撤，降低利润因子表现
+- **Counter-Evidence:** 具体市场和时期未在摘要中明确
+- **Strategy Family:** stat_arb, mean_reversion
+- **Query Set:** 3.2, 4.1
+- **Date Accessed:** 2026-06-23
+
+### ID: 039-042 (Mean Reversion Practitioner Guides)
+- **URLs:** Multiple (LinkedIn/Shubham, AlphaExCapital, DNS Research, FXRobotEasy)
+- **Source Type:** blog, tutorial
+- **Credibility:** tier4
+- **Decision:** keep (as practitioner consensus)
+- **Reason:** 多来源一致描述均值回归实施方法
+- **Evidence Extracted:** (合并关键点)
+  - **核心逻辑：** 价格极端（超买/超卖）倾向于回归平均值
+  - **常用指标：**
+    - RSI(14) < 30 买入，> 70 卖出
+    - 价格触及下轨 Bollinger Band(20,2) + RSI < 30 买入
+    - 价格触及上轨 + RSI > 70 卖出
+  - **退出：** 中线 Bollinger Band（20-SMA）或 RSI 50
+  - **止损：** 1.5-2× ATR 超出入场点
+  - **胜率：** 60-75%（但 R:R 小，0.7-1.5:1）
+  - **最佳市场：** 震荡市场（40-60% 的时间）
+  - **最差市场：** 趋势市场（RSI 超卖时价格继续下跌）
+  - **Regime 过滤至关重要：** ADX > 25 表示趋势，避免交易均值回归
+  - 有 regime 过滤：~70% 胜率；无过滤：~55% 胜率
+  - **RSI-2 极端策略：** Larry Connors 开发，使用 2 周期 RSI 捕捉微趋势耗尽
+  - GBP/JPY 2022 研究：RSI-2 < 10 时，83% 概率在 3 分钟内回撤 5 pips
+  - **配对相关性均值回归：** EUR/USD vs GBP/USD，相关性 > 0.80
+  - 比率超出 2 标准差时交易，回到 20-MA 时退出
+  - 市场中性策略，Sharpe Ratio 1.5+（EUR/GBP cross 与 USD pairs）
+  - **最佳货币对：** EUR/USD (ATR ~1.5 pips), GBP/JPY (ATR ~2 pips)
+  - **LinkedIn 示例回测：** 胜率 62%，最大回撤 5.2%，平均持仓 2-5 天，期望值 0.4
+- **Counter-Evidence:** 
+  - 多数为教育材料，缺少独立验证
+  - 具体数字（如 83% 概率）需要验证
+  - LinkedIn 示例未说明时期和样本大小
+- **Strategy Family:** mean_reversion, stat_arb
+- **Query Set:** 3.1, 3.2, 4.1
+- **Date Accessed:** 2026-06-23
+
+---
+
+## Cross-Cutting: Transaction Costs & Execution
+
+### ID: 043-048 (Transaction Cost Literature)
+- **URLs:** Multiple (ForexMechanics, AlphaExCapital, BrokerChampion, forex-basics.com, BabyPips, KenMacro)
+- **Source Type:** blog, tutorial, broker_research
+- **Credibility:** tier2-tier4
+- **Decision:** keep (as practitioner consensus on execution reality)
+- **Reason:** 多来源一致描述真实交易成本结构
+- **Evidence Extracted:** (合并关键发现)
+  - **交易成本构成：**
+    1. Bid-ask spread（基准成本）
+    2. Commission（ECN 账户）
+    3. Slippage（实际成交与预期价格差异）
+    4. Swap/rollover（隔夜持仓费用）
+    5. 货币转换费（非 USD 账户）
+    6. 账户费用（不活跃费、提款费）
+  - **EUR/USD 典型 spread（2026）：**
+    - Standard 账户：0.6-1.2 pips
+    - ECN 账户：0.1-0.3 pips（+ 佣金 3-7 USD/lot 往返）
+    - 有效成本相当：ECN 0.2 pips + 7 USD = 9 USD/lot；Standard 1.0 pip = 10 USD/lot
+  - **Spread 扩大：**
+    - 重大新闻（NFP, FOMC）：扩大 10-30× 正常水平，持续 30-90 秒
+    - 低流动性时段：亚洲时段、午餐时间、纽约尾盘
+    - 周五下午（伦敦时间 12:00 后）
+  - **Slippage：**
+    - 定义：预期价格与实际成交价差异（spread 后的额外成本）
+    - 示例：1 pip spread + 4 pips slippage = 5 pips 总入场成本
+    - 高频交易者最敏感：微薄利润迅速被侵蚀
+    - 新闻期间：0.2 pip spread 的 broker 可能实际 slippage 0.3 pips = 0.5 pips 总成本
+  - **Swap：** 对日内交易者可忽略（大多数 broker 日内免除），对摆动交易者重要（5-15 USD/夜）
+  - **成本对策略的影响：**
+    - 剥头皮/日内高频：成本是目标利润的大比例，ECN 账户节省 5-15%
+    - 摆动交易：成本差异边际（50-150 USD/年）
+  - **关键教训：**
+    - 使用"全部成本"（all-in cost）比较 broker，不是广告 spread
+    - 有效 spread = 在你实际交易的时段和条件下观察到的 spread
+    - 执行质量（slippage、requotes）与 spread 同等重要
+    - 计算：spread（pips）× pip value × lots + 往返佣金 + 预期 slippage
+- **Counter-Evidence:** 具体数字因 broker、时段、市场条件变化
+- **Strategy Family:** cross_cutting
+- **Query Set:** 8.1, 8.2
+- **Date Accessed:** 2026-06-23
+
+---
+
+## Checkpoint 2 Summary (2026-06-23, ~17:00 UTC)
+
+已完成策略家族：
+1. Trend/Momentum: 10 篇 tier1 论文，8 组实践指南
+2. Breakout: 1 篇 tier1 论文，7 组假突破研究（含 240k+ 交易数据分析）
+3. Mean Reversion & Stat Arb: 2 篇 tier1 论文，2 个专业级 GitHub 实现，5 组实践指南
+4. Transaction Costs: 6 组详细成本结构分析
+
+关键发现：
+- **假突破率：** 原始信号 40-55% 失败，4 小时确认降至 34%，10 AM ET 时段最差（29.9% 胜率）
+- **均值回归胜率：** 60-75%（有 regime 过滤），但 R:R 小；趋势市场失效
+- **交易成本：** EUR/USD 全部成本 ~9-10 USD/lot，新闻时 spread 扩大 10-30×
+- **协整配对：** Bollinger Bands 策略（无 GARCH）最高利润因子（学术验证）
+
+下一步：继续 Order Flow/Microstructure, Volatility, Event-Driven，然后数据质量和风险文献。
+
