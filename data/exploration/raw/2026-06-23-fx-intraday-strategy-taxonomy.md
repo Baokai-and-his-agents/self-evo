@@ -1,8 +1,8 @@
 # FX Intraday Strategy Taxonomy
 # Phase A: Day Trading, No Overnight
 
-**Date:** 2026-06-23  
-**Worker:** scout-worker-fx-01  
+**Date:** 2026-06-23
+**Worker:** scout-worker-fx-01
 **Run ID:** 2026-06-23-fx-phase-a-001
 
 ---

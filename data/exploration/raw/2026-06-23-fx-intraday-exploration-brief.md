@@ -1,10 +1,10 @@
 # FX Intraday Quantitative Strategy Exploration Brief
 # Phase A: Intraday Trading, No Overnight Holdings
 
-**Date:** 2026-06-23  
-**Worker:** scout-worker-fx-01  
-**Run ID:** 2026-06-23-fx-phase-a-001  
-**Issue:** #13  
+**Date:** 2026-06-23
+**Worker:** scout-worker-fx-01
+**Run ID:** 2026-06-23-fx-phase-a-001
+**Issue:** #13
 **Phase:** A only (Phase B will follow separately)
 
 ---

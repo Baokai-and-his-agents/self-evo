@@ -1,8 +1,8 @@
 # FX Intraday Source Decision Ledger
 # Phase A: Day Trading, No Overnight
 
-**Date:** 2026-06-23  
-**Worker:** scout-worker-fx-01  
+**Date:** 2026-06-23
+**Worker:** scout-worker-fx-01
 **Run ID:** 2026-06-23-fx-phase-a-001
 
 ---
@@ -241,7 +241,7 @@
 - **Date Accessed:** 2026-06-23
 
 ### ID: 018-019 (GitHub Implementations)
-- **URLs:** 
+- **URLs:**
   - https://github.com/vighneshiyer/forex-backtester-python (archived)
   - https://github.com/GeniusMathematicsConsultants/ForexBacktestingPython
 - **Source Type:** github
@@ -344,7 +344,7 @@
 - **Reason:** 多个独立来源一致描述假突破模式和过滤方法，包含数据驱动分析
 - **Evidence Extracted:** (合并关键发现)
   - **假突破定义：** 价格突破关键水平但迅速反转回区间内
-  - **假突破率：** 
+  - **假突破率：**
     - 原始突破信号：40-55% 失败（ORB Setups: 65.9% 用默认设置）
     - 主要货币对：50-60% 假突破
     - 亚洲时段：60-70% 假突破（流动性低）
@@ -378,7 +378,7 @@
     8. 与日线/4 小时趋势对齐
   - **学术支持：** "伦敦开盘突破模式在 2010-2015 学术文献中有广泛研究，当按波动率和趋势偏好过滤时，60-70% 时间延续"（FXRobotEasy 引用）
   - **关键洞察：** "假突破不是缺陷，而是策略的结构性成本，是捕捉 50-60% 真实突破的代价"
-- **Counter-Evidence:** 
+- **Counter-Evidence:**
   - 部分来源为零售交易教育网站，可能存在营销偏见
   - ORB Setups 数据样本（240,102 笔交易，600+ 标的）未明确说明市场和时期
   - 具体数字（如 73% 成功率）需要独立验证
@@ -478,7 +478,7 @@
   - 市场中性策略，Sharpe Ratio 1.5+（EUR/GBP cross 与 USD pairs）
   - **最佳货币对：** EUR/USD (ATR ~1.5 pips), GBP/JPY (ATR ~2 pips)
   - **LinkedIn 示例回测：** 胜率 62%，最大回撤 5.2%，平均持仓 2-5 天，期望值 0.4
-- **Counter-Evidence:** 
+- **Counter-Evidence:**
   - 多数为教育材料，缺少独立验证
   - 具体数字（如 83% 概率）需要验证
   - LinkedIn 示例未说明时期和样本大小
