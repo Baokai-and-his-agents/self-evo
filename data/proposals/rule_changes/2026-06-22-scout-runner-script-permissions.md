@@ -11,7 +11,7 @@ related_issue: 7
 
 ## 背景
 
-当前 `scripts/**` 目录在 `rules/RESOURCE_APPROVALS.yaml` 和 `rules/EXPLORATION_POLICY.md` 中全部受到保护，Agent 不可写入。这一保护设计是为了防止自动化修改关键基础设施代码，如 hooks、policy validators、schema validators 等安全敏感脚本。
+当前 `scripts/**` 目录全部受到保护，Agent 不可写入。这一保护来自 `scripts/policy.json` 中的 `protected_hook_implementation: ["scripts/**"]` 规则。`rules/PERMISSIONS.yaml` 当前没有 scripts 路径条目。这一保护设计是为了防止自动化修改关键基础设施代码，如 hooks、policy validators、schema validators 等安全敏感脚本。
 
 然而，为了支持自主 Scout 垂直切片（Issue #7，项目候选 A.1-A.4），我们需要引入 Scout runner wrapper 脚本 `scripts/workers/scout_runner.py`，由 Agent 编写和维护。该脚本不涉及治理逻辑或 repo 安全策略，而是作为 Scout worker 的生命周期管理器：启动 Claude CLI 子进程、强制执行超时和调用数限制、捕获遥测、处理恢复。
 
@@ -23,14 +23,18 @@ related_issue: 7
 
 ### 1. 缩小 `scripts/` 保护范围
 
-将 `scripts/**` 的全局保护缩小为以下特定子目录和文件的保护：
+将 `scripts/**` 的全局保护缩小为以下实际存在的特定路径的保护：
 
 **保持受保护（Agent 不可写）**：
 - `scripts/hooks/**` — Git hooks 和生命周期回调
-- `scripts/policy/**` — 治理策略验证器
-- `scripts/validators/**` — Schema 和结构验证器
-- `scripts/tests/test_*.py` — 测试套件主文件
-- `scripts/validate_*.py` — 顶层验证入口点
+- `scripts/policy.json` — 治理策略定义
+- `scripts/_policy.py` — 策略验证逻辑
+- `scripts/validate_run.py` — 顶层验证入口点
+- `scripts/validate-run.ps1` — PowerShell 验证入口点
+- `scripts/install-hooks.*` — Hook 安装脚本
+- `scripts/tests/**` — 测试套件（安全测试）
+
+最终受保护路径列表由 `jlcbk` 在审批时确定。
 
 ### 2. 新增 Agent 可写区域
 
@@ -38,7 +42,8 @@ related_issue: 7
 
 **Agent 可写**：
 - `scripts/workers/**` — Scout、Builder 等自主 worker 脚本
-- `scripts/utils/**` — 通用工具函数（非治理逻辑）
+
+如需共享普通工具函数，可在后续 proposal 中单独审查具体路径，不宽泛开放 `scripts/utils/**`。
 
 ### 3. Scout Runner 路径
 
@@ -90,9 +95,9 @@ Agent 可编写辅助测试工具在 `scripts/workers/` 或 `scripts/utils/` 下
 
 ### 阶段 2：更新规则文件（人工执行）
 
-在获得批准后，由 `jlcbk` 或授权人员更新：
-- `rules/RESOURCE_APPROVALS.yaml` — 修改 `scripts/` 保护范围
-- `rules/EXPLORATION_POLICY.md` — 记录新的 Agent 可写区域和边界
+在获得批准后，由 `jlcbk` 或授权人员人工修改：
+- `scripts/policy.json` — 调整 `protected_hook_implementation` 为具体受保护路径列表
+- 视治理需要，可同步更新 `rules/PERMISSIONS.yaml` 添加 scripts 路径条目和文档说明
 
 ### 阶段 3：Agent 交付 Scout Runner
 
@@ -108,17 +113,19 @@ Agent 可编写辅助测试工具在 `scripts/workers/` 或 `scripts/utils/` 下
 - 测试文件
 - 项目候选文档的同步更新
 
-**本 PR 不修改** `rules/RESOURCE_APPROVALS.yaml` 或 `rules/EXPLORATION_POLICY.md`。这些规则文件的修改必须在本 proposal 获得 `jlcbk` 批准后，由人工在后续 PR 中完成。
+**本 PR 不修改** `scripts/policy.json`、`rules/PERMISSIONS.yaml` 或 `rules/EXPLORATION_POLICY.md`。这些规则文件的修改必须在本 proposal 获得 `jlcbk` 批准后，由人工在后续 PR 中完成。
 
 ---
 
 ## 验收标准
 
 - [ ] 本 proposal 由 `jlcbk` 审查并批准或修订
-- [ ] 批准后，`rules/RESOURCE_APPROVALS.yaml` 更新保护范围
-- [ ] 批准后，`rules/EXPLORATION_POLICY.md` 记录新边界
+- [ ] 批准后，`scripts/policy.json` 更新保护范围
+- [ ] 批准后，视需要同步更新 `rules/PERMISSIONS.yaml` 和文档说明
 - [ ] Agent 能在 `scripts/workers/` 下创建 Scout runner
-- [ ] 测试验证：Agent 仍不能修改 `scripts/hooks/`、`scripts/policy/`、`scripts/validators/`
+- [ ] 路径分类测试验证：`classify_path('scripts/workers/scout_runner.py')` 返回 `read_write`
+- [ ] 路径分类测试验证：`scripts/hooks/**`、`scripts/policy.json`、`scripts/_policy.py`、`scripts/validate_run.py`、`scripts/tests/**` 仍为 `protected`
+- [ ] 上述测试由后续规则变更 PR 添加或更新
 - [ ] 项目候选 Issue #A.1 解除阻塞
 
 ---
@@ -143,11 +150,11 @@ Agent 可编写辅助测试工具在 `scripts/workers/` 或 `scripts/utils/` 下
 
 - 项目候选：`data/proposals/project_candidates/2026-06-21-autonomous-agent-followups.md`
 - Issue #7 研究报告：`data/exploration/daily_reports/2026-06-21-autonomous-agent-ecosystem.md`
-- 当前治理规则：`rules/RESOURCE_APPROVALS.yaml`、`rules/EXPLORATION_POLICY.md`
+- 当前治理规则：`scripts/policy.json`、`rules/PERMISSIONS.yaml`、`rules/EXPLORATION_POLICY.md`
 
 ---
 
-**提案人**：Agent (Scout worker 01)  
-**审批人**：jlcbk  
-**状态**：待审批  
+**提案人**：Agent (Scout worker 01)
+**审批人**：jlcbk
+**状态**：待审批
 **前置条件**：Issue #A.1 实施需本 proposal 批准

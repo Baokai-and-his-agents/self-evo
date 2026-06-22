@@ -26,7 +26,7 @@ status: proposed
 
 **前置条件**：
 - `data/proposals/rule_changes/2026-06-22-scout-runner-script-permissions.md` 获得 `jlcbk` 批准
-- `rules/RESOURCE_APPROVALS.yaml` 和 `rules/EXPLORATION_POLICY.md` 更新为允许 Agent 写入 `scripts/workers/**`
+- `scripts/policy.json` 更新为允许 Agent 写入 `scripts/workers/**`（视需要同步更新 `rules/PERMISSIONS.yaml` 和文档）
 - 在批准前，本 Issue 处于 blocked 状态
 
 **范围**：

@@ -5,7 +5,7 @@ type: object
 required:
   - id
   - type
-  - base_url_or_domain
+  - base_url
   - access_mode
   - enabled
 properties:
@@ -30,20 +30,22 @@ properties:
       - rss
       - git
 
-  base_url_or_domain:
+  base_url:
     type: string
     description: |
-      来源根 URL 或域名
+      来源根 URL（必须包含 scheme）
       示例：
         - https://github.com/trending
-        - news.ycombinator.com
+        - https://news.ycombinator.com
         - https://export.arxiv.org/api/query
-    format: uri
 
   access_mode:
     type: string
     description: |
-      访问模式 — 定义能力边界
+      访问模式 — 定义能力边界（能力 scope）
+
+      rules/RESOURCE_APPROVALS.yaml 定义批准的能力 scope（可以做什么操作）
+      本 registry 定义具体来源 allowlist（可以访问哪些域名/URL）
 
       public-web-read: 公开只读，无需身份验证
         - HTTP GET 请求
@@ -66,10 +68,16 @@ properties:
     type: string
     description: |
       对应的资源审批 ID（引用 rules/RESOURCE_APPROVALS.yaml）
-      示例：resource-001-github-public-read
 
-      Scout runner 只读检查该字段，验证来源已在 rules/ 中批准
-    pattern: "^resource-[0-9]+-[a-z0-9-]+$"
+      必须使用仓库中实际存在的稳定资源 ID，例如：
+        - public-web-read
+        - github-repo-issue-and-branch-work
+
+      Scout runner 只读检查该字段，验证：
+        1. 该 ID 在 rules/RESOURCE_APPROVALS.yaml 中存在
+        2. 其 status 为 approved
+        3. 其 scope 覆盖本条目的访问方式
+    pattern: "^[a-z0-9-]+$"
 
   enabled:
     type: boolean
@@ -108,9 +116,9 @@ properties:
 example_github_trending:
   id: github-trending
   type: web
-  base_url_or_domain: https://github.com/trending
+  base_url: https://github.com/trending
   access_mode: public-web-read
-  resource_approval_id: resource-001-github-public-read
+  resource_approval_id: public-web-read
   enabled: true
   cursor_strategy: timestamp
 
@@ -118,9 +126,9 @@ example_github_trending:
 example_hacker_news:
   id: hacker-news
   type: api
-  base_url_or_domain: https://hacker-news.firebaseio.com/v0
+  base_url: https://hacker-news.firebaseio.com/v0
   access_mode: public-web-read
-  resource_approval_id: resource-002-hackernews-public-api
+  resource_approval_id: public-web-read
   enabled: true
   cursor_strategy: item_id
 
@@ -128,58 +136,43 @@ example_hacker_news:
 example_arxiv:
   id: arxiv-cs-ai
   type: api
-  base_url_or_domain: https://export.arxiv.org/api/query
+  base_url: https://export.arxiv.org/api/query
   access_mode: public-web-read
-  resource_approval_id: resource-003-arxiv-public-api
+  resource_approval_id: public-web-read
   enabled: true
   cursor_strategy: timestamp
 
-# 示例 4：Product Hunt（取决于访问方式）
-# 场景 A：公开 web 抓取（每日产品页面，无需登录）
+# 示例 4：Product Hunt（公开 web 抓取，无需登录）
 example_producthunt_web:
   id: producthunt-daily
   type: web
-  base_url_or_domain: https://www.producthunt.com
+  base_url: https://www.producthunt.com
   access_mode: public-web-read
-  resource_approval_id: resource-004-producthunt-public-web
+  resource_approval_id: public-web-read
   enabled: true
   cursor_strategy: timestamp
 
-# 场景 B：Product Hunt API（需要 API token）
-# 这种情况不能使用 public-web-read，需要新的资源审批 proposal
-# 该 proposal 应说明：
-#   - 需要 API token（从 Product Hunt developer portal 获取）
-#   - token 存储在 gitignored config（不提交 repo）
-#   - token 权限范围：只读公开数据
-#   - 批准后在 rules/RESOURCE_APPROVALS.yaml 添加 resource-00X-producthunt-api
-# 示例（假设已批准）：
-example_producthunt_api:
-  id: producthunt-api
-  type: api
-  base_url_or_domain: https://api.producthunt.com/v2
-  access_mode: public-web-read  # 错误！API token 访问不能用 public-web-read
-  # 正确的 access_mode 需要在 schema 中添加新值，并走审批流程
-  # 当前 schema 只支持 public-web-read 作为能力边界
-  resource_approval_id: resource-005-producthunt-api-readonly
-  enabled: false  # 默认禁用直到审批完成
-  cursor_strategy: item_id
-
-# 关于 Product Hunt：
-# - 如果只抓取公开页面（无需登录），使用 example_producthunt_web
-# - 如果需要 API 访问（需要 token），必须提交新 proposal 说明：
+# 示例 5：Product Hunt API（需要 API token）
+# 当前未批准 — 注释示例说明需要的 proposal 流程
+#
+# 如需使用 Product Hunt API（需要 token），必须提交新资源审批 proposal 说明：
 #   1. 为何需要 API 而非 web 抓取
-#   2. Token 获取和存储方案
+#   2. Token 获取和存储方案（gitignored config）
 #   3. 访问权限范围（只读公开数据）
 #   4. Rate limit 策略
-# - 批准后在 rules/RESOURCE_APPROVALS.yaml 添加对应条目
-# - Scout runner 读取 rules/ 中的批准状态，只传递已批准的来源给 worker
-
-# 能力边界说明：
-# public-web-read 是当前唯一批准的能力 scope
-# 它涵盖：HTTP GET 公开资源、RSS feeds、无需身份验证的 API
-# 具体允许哪些域名/来源由 rules/RESOURCE_APPROVALS.yaml 定义（业务 allowlist）
-# 能力定义 scope（可以做什么），allowlist 定义具体来源（可以访问哪里）
-# 这种分层避免每个新来源都要扩展能力边界
+#   5. 批准后在 rules/RESOURCE_APPROVALS.yaml 添加新条目（如 producthunt-api-readonly）
+#   6. 可能需要在本 schema 添加新 access_mode 值（如 api-with-token）
+#
+# 在批准前，该来源不应出现在有效 registry 实例中，或应标记为：
+# example_producthunt_api_pending:
+#   id: producthunt-api
+#   type: api
+#   base_url: https://api.producthunt.com/v2
+#   access_mode: public-web-read  # 占位 — 实际需要新 access_mode
+#   resource_approval_id: pending-approval
+#   enabled: false  # 明确标记为不可运行
+#   cursor_strategy: item_id
+#   notes: "Requires API token approval proposal before use"
 
 # 关于登录/token/付费访问：
 # 任何需要以下的访问方式，都需要新的资源审批 proposal：
