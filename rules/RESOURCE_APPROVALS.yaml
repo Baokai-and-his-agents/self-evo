@@ -65,3 +65,18 @@ resources:
     approved_by: user
     approved_at: 2026-06-23
     notes: "Agent-Reach v1.5.0 installed for the local Claude Code runtime. Approved channels are public, no-login, read-only access through Jina Reader, Exa via mcporter, GitHub public reads, YouTube metadata/transcripts, RSS/Atom, V2EX public API, and Bilibili public search. This approval excludes cookies, browser sessions, private accounts, Twitter/X, Reddit, XiaoHongShu, Xueqiu, LinkedIn authenticated access, posting, commenting, messaging, forking, purchases, and all other write actions."
+
+  - id: firecrawl-public-scrape
+    type: api
+    provider: Firecrawl
+    status: approved
+    scope:
+      - scrape_public_page
+      - extract_public_page_markdown
+    credential_ref: env:FIRECRAWL_API_KEY
+    cost_limit_usd_per_day: 1
+    runtime_limit_minutes_per_day: 30
+    expires_at: null
+    approved_by: user
+    approved_at: 2026-06-23
+    notes: "Approved for low-volume, read-only Firecrawl v2 single-page scrape requests against public pages without login, cookies, forms, private data, or account sessions. The initial live verification used POST /v2/scrape on https://example.com and returned HTTP 200. This approval does not include search, crawl, map, batch scrape, browser actions, authenticated pages, private content, or bulk downloading. Keep the API key only in the Windows user environment variable FIRECRAWL_API_KEY and never print or commit it."
