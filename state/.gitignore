@@ -1,0 +1,25 @@
+# state/ 运行时数据 gitignore 规则
+# 本目录存储增长的运行时状态，仅提交摘要和 schemas
+
+# 遥测数据（增长的 JSONL 日志）
+telemetry/
+
+# 检查点状态（工作流恢复）
+checkpoints/
+
+# Scout cursor（每来源 last-seen 状态）
+scout_cursor.json
+
+# SQLite 数据库（coordination、memory FTS、access tracking）
+*.db
+
+# 下载缓存（外部资源副本）
+download-cache/
+
+# 去重缓存（已处理项目指纹）
+dedupe-cache/
+
+# 注意：以下文件和目录是 tracked 的，不得 gitignore：
+# - claims/ — 资源审批声明（人工审查需要）
+# - heartbeat.json — Agent 活动监控（治理需要）
+# - memory_access.db 之外的明确 tracked 文件

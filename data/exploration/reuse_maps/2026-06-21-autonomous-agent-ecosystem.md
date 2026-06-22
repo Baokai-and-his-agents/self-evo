@@ -54,7 +54,9 @@ Memory content with [[linked-memory]] references.
 
 **方案**：基于文件的结构化日志，使用 OpenTelemetry 兼容 schema 进行本地分析。
 
-**集成方式**：Scout runner wrapper 捕获可用的结构化 CLI 输出/使用数据，写入 gitignored `state/telemetry/<date>/<run-id>.jsonl`，使用标准 spans。
+**集成方式**：Scout runner wrapper (`scripts/workers/scout_runner.py`) 捕获可用的结构化 CLI 输出/使用数据，写入 gitignored `state/telemetry/<date>/<run-id>.jsonl`，使用标准 spans。
+
+**前置条件**：权限 proposal `data/proposals/rule_changes/2026-06-22-scout-runner-script-permissions.md` 需获 jlcbk 批准，允许 Agent 写入 `scripts/workers/**`。
 
 ```python
 import json

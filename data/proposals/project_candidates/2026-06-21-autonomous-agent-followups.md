@@ -24,32 +24,47 @@ status: proposed
 **目标**：通过批准来源启用边界 Scout 执行
 **预计工期**：1 周
 
+**前置条件**：
+- `data/proposals/rule_changes/2026-06-22-scout-runner-script-permissions.md` 获得 `jlcbk` 批准
+- `rules/RESOURCE_APPROVALS.yaml` 和 `rules/EXPLORATION_POLICY.md` 更新为允许 Agent 写入 `scripts/workers/**`
+- 在批准前，本 Issue 处于 blocked 状态
+
 **范围**：
+- 定义来源能力 scope：`public-web-read` 作为边界（HTTP GET 公开资源、遵守 robots.txt、尊重 rate limit）
+- 具体允许来源在 `rules/RESOURCE_APPROVALS.yaml` 中定义（业务 allowlist）
+- 能力分层：能力定义可以做什么，allowlist 定义可以访问哪里
+- 登录/token/付费/发布/越权访问需新资源审批 proposal
 - 只读检查 `rules/RESOURCE_APPROVALS.yaml`，仅把其中已批准的公开来源交给 Runner
 - Agent 不得直接修改 `rules/RESOURCE_APPROVALS.yaml` 或 `rules/EXPLORATION_POLICY.md`
 - 若 GitHub/HN/arXiv/Product Hunt 等目标来源尚未批准，候选任务应：
   - Agent 写 `data/proposals/rule_changes/<date>-<topic>-resource-approval.md` proposal 和 GitHub 审批请求
   - 由 `jlcbk` 修改或批准 `rules/` 中的规则文件后，Runner 才允许该来源
-- 构建 Scout runner wrapper 脚本（`scripts/scout_runner.py`）
+- 构建 Scout runner wrapper 脚本（`scripts/workers/scout_runner.py`）
 - Runner 启动 Claude CLI worker 执行 Scout 任务
 - Runner 强制执行：最大墙上时钟时间（可配置，如 2 小时）、最大 Claude 进程调用数（如 10）、最大重试（如 3）
 - Runner 捕获：可用的结构化 CLI 输出/用量、退出码、墙上时钟持续时间
 - 未知 token/成本记录为 "unknown" 带解释（hooks 不暴露内部调用级指标）
 - Runner 使用 data/config 或现有 rules 的只读结果，不绕过规则
-- 手动调用：用户运行 `python scripts/scout_runner.py --issue <N>`
+- 手动调用：用户运行 `python scripts/workers/scout_runner.py --issue <N>`
 
 **验收标准**：
+- [ ] 权限 proposal `2026-06-22-scout-runner-script-permissions.md` 获 `jlcbk` 批准
+- [ ] `state/.gitignore` 和 `data/exploration/raw/.gitignore` 存在且正确
+- [ ] `python data/tests/test_runtime_ignore.py` 通过
+- [ ] 能力分层文档：`data/exploration/scout-source-registry.schema.yaml` 定义 `public-web-read` scope
 - [ ] Runner 能读取现有资源审批结果，并拒绝任何未批准来源
 - [ ] 对尚未批准的目标来源，存在 `data/proposals/rule_changes/` proposal 和 GitHub 人工审批请求
 - [ ] 只有在 `jlcbk` 完成人工批准后，对应来源才可进入 Runner
-- [ ] Scout runner 脚本存在且启动 Claude CLI
+- [ ] Scout runner 脚本存在于 `scripts/workers/scout_runner.py` 且启动 Claude CLI
 - [ ] Runner 强制执行墙上时钟超时（超出时终止进程）
 - [ ] Runner 强制执行最大调用数（N 个 Claude 进程后停止）
 - [ ] Runner 捕获 CLI 输出并将运行遥测写入 gitignored `state/telemetry/<date>/<run-id>.jsonl`
 - [ ] Runner 在终止时写入部分结果（信号处理器）
 - [ ] 手动调用先记录在 `data/` 下的使用文档或 proposal；如需进入 `rules/EXPLORATION_POLICY.md`，必须另走人工批准的规则变更
 
-**前置依赖**：None
+**前置依赖**：
+- 权限 proposal 获 `jlcbk` 批准（blocked 直到批准）
+- `.gitignore` 文件和测试（本 PR 交付）
 
 **风险**：低（手动触发、仅批准来源、边界执行）
 

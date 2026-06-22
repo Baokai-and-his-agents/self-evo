@@ -50,13 +50,13 @@ status: complete
 **Scout 垂直切片范围**：
 
 1. **批准资源注册表** (`rules/RESOURCE_APPROVALS.yaml`)
-   - GitHub Search / REST API
-   - Hacker News API
-   - arXiv API
-   - Product Hunt API（仅当资源批准且 API 可用时）
+   - 能力分层：`public-web-read` 作为 scope（HTTP GET 公开资源、遵守 robots.txt）
+   - 具体来源为业务 allowlist：GitHub/Hacker News/arXiv/Product Hunt 等
+   - 登录/token/付费访问需新资源审批 proposal
+   - Schema 定义：`data/exploration/scout-source-registry.schema.yaml`
 
 2. **手动触发，预留调度占位**
-   - 用户在本地运行 Scout worker
+   - 用户在本地运行 Scout worker：`python scripts/workers/scout_runner.py --issue <N>`
    - `rules/EXPLORATION_POLICY.md` 定义批准来源、每日限额
    - 后续：添加计划调用
 
@@ -88,12 +88,15 @@ status: complete
    - 未来：preference learner 汇总模式
 
 **Scout Runner/Wrapper**（执行边界）：
-- 本地脚本，启动 Claude CLI worker 执行 Scout 任务
+- 本地脚本 `scripts/workers/scout_runner.py`，启动 Claude CLI worker 执行 Scout 任务
+- 权限前置：需 `data/proposals/rule_changes/2026-06-22-scout-runner-script-permissions.md` 获 jlcbk 批准
 - 捕获可用的结构化 CLI 输出/用量
 - 强制执行：最大运行时（墙上时钟）、最大 Claude 进程调用数、最大重试、扫描/保留限制
 - 检测：工具调用重复、无进展、生命周期违规
 - 写入：终止时部分结果、cursor/完整 ledger 到 gitignored state、精简 decisions 到 tracked
 - 提交到 repo：仅摘要、tracked decisions、schemas（不含增长的运行时状态）
+- `.gitignore` 文件：`state/.gitignore`、`data/exploration/raw/.gitignore`
+- 测试：`python data/tests/test_runtime_ignore.py` 验证 gitignore 规则
 
 **时间线**：3-4 周到工作的 Scout 垂直切片
 

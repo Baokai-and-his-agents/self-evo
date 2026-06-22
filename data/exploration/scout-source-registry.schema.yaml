@@ -1,0 +1,201 @@
+# Scout 来源注册 Schema
+# 定义批准的公开只读探索来源
+
+type: object
+required:
+  - id
+  - type
+  - base_url_or_domain
+  - access_mode
+  - enabled
+properties:
+  id:
+    type: string
+    description: |
+      来源唯一标识符（kebab-case）
+      示例：github-trending, hacker-news, arxiv-cs-ai
+    pattern: "^[a-z0-9-]+$"
+
+  type:
+    type: string
+    description: |
+      来源类型
+      - web: 公开网站（HTML 抓取）
+      - api: 公开 API（JSON/XML）
+      - rss: RSS/Atom feed
+      - git: Git repository（公开只读）
+    enum:
+      - web
+      - api
+      - rss
+      - git
+
+  base_url_or_domain:
+    type: string
+    description: |
+      来源根 URL 或域名
+      示例：
+        - https://github.com/trending
+        - news.ycombinator.com
+        - https://export.arxiv.org/api/query
+    format: uri
+
+  access_mode:
+    type: string
+    description: |
+      访问模式 — 定义能力边界
+
+      public-web-read: 公开只读，无需身份验证
+        - HTTP GET 请求
+        - 遵守 robots.txt
+        - 尊重 rate limit headers
+        - User-Agent 标识为 research bot
+        - 不越过登录墙
+
+      如需以下任何访问方式，必须新建资源审批 proposal：
+        - 登录/身份验证（OAuth、API token）
+        - 付费 API（需要 billing）
+        - 写操作（POST、PUT、DELETE）
+        - 私有/内部资源
+        - 用户身份模拟
+        - 超出 public-web-read 的任何访问
+    enum:
+      - public-web-read
+
+  resource_approval_id:
+    type: string
+    description: |
+      对应的资源审批 ID（引用 rules/RESOURCE_APPROVALS.yaml）
+      示例：resource-001-github-public-read
+
+      Scout runner 只读检查该字段，验证来源已在 rules/ 中批准
+    pattern: "^resource-[0-9]+-[a-z0-9-]+$"
+
+  enabled:
+    type: boolean
+    description: |
+      来源是否启用
+      false = 已批准但暂停使用（如触发 rate limit、来源下线）
+
+  cursor_strategy:
+    type: string
+    description: |
+      Cursor 跟踪策略（用于恢复和去重）
+
+      timestamp: 时间戳游标（ISO 8601）
+        适用：RSS feeds、时间排序 API
+        示例：2026-06-22T10:00:00Z
+
+      item_id: 项目 ID 游标（来源特定格式）
+        适用：分页 API、数据库式来源
+        示例：github_repo_12345, hn_item_67890
+
+      etag: ETag 或 Last-Modified 头
+        适用：支持条件请求的 HTTP 资源
+        示例："abc123def456"
+
+      offset: 偏移量游标（整数）
+        适用：简单分页 API
+        示例：100（表示已处理前 100 项）
+    enum:
+      - timestamp
+      - item_id
+      - etag
+      - offset
+    default: timestamp
+
+# 示例 1：GitHub Trending（公开 web 抓取）
+example_github_trending:
+  id: github-trending
+  type: web
+  base_url_or_domain: https://github.com/trending
+  access_mode: public-web-read
+  resource_approval_id: resource-001-github-public-read
+  enabled: true
+  cursor_strategy: timestamp
+
+# 示例 2：Hacker News（公开 API）
+example_hacker_news:
+  id: hacker-news
+  type: api
+  base_url_or_domain: https://hacker-news.firebaseio.com/v0
+  access_mode: public-web-read
+  resource_approval_id: resource-002-hackernews-public-api
+  enabled: true
+  cursor_strategy: item_id
+
+# 示例 3：arXiv（公开 API）
+example_arxiv:
+  id: arxiv-cs-ai
+  type: api
+  base_url_or_domain: https://export.arxiv.org/api/query
+  access_mode: public-web-read
+  resource_approval_id: resource-003-arxiv-public-api
+  enabled: true
+  cursor_strategy: timestamp
+
+# 示例 4：Product Hunt（取决于访问方式）
+# 场景 A：公开 web 抓取（每日产品页面，无需登录）
+example_producthunt_web:
+  id: producthunt-daily
+  type: web
+  base_url_or_domain: https://www.producthunt.com
+  access_mode: public-web-read
+  resource_approval_id: resource-004-producthunt-public-web
+  enabled: true
+  cursor_strategy: timestamp
+
+# 场景 B：Product Hunt API（需要 API token）
+# 这种情况不能使用 public-web-read，需要新的资源审批 proposal
+# 该 proposal 应说明：
+#   - 需要 API token（从 Product Hunt developer portal 获取）
+#   - token 存储在 gitignored config（不提交 repo）
+#   - token 权限范围：只读公开数据
+#   - 批准后在 rules/RESOURCE_APPROVALS.yaml 添加 resource-00X-producthunt-api
+# 示例（假设已批准）：
+example_producthunt_api:
+  id: producthunt-api
+  type: api
+  base_url_or_domain: https://api.producthunt.com/v2
+  access_mode: public-web-read  # 错误！API token 访问不能用 public-web-read
+  # 正确的 access_mode 需要在 schema 中添加新值，并走审批流程
+  # 当前 schema 只支持 public-web-read 作为能力边界
+  resource_approval_id: resource-005-producthunt-api-readonly
+  enabled: false  # 默认禁用直到审批完成
+  cursor_strategy: item_id
+
+# 关于 Product Hunt：
+# - 如果只抓取公开页面（无需登录），使用 example_producthunt_web
+# - 如果需要 API 访问（需要 token），必须提交新 proposal 说明：
+#   1. 为何需要 API 而非 web 抓取
+#   2. Token 获取和存储方案
+#   3. 访问权限范围（只读公开数据）
+#   4. Rate limit 策略
+# - 批准后在 rules/RESOURCE_APPROVALS.yaml 添加对应条目
+# - Scout runner 读取 rules/ 中的批准状态，只传递已批准的来源给 worker
+
+# 能力边界说明：
+# public-web-read 是当前唯一批准的能力 scope
+# 它涵盖：HTTP GET 公开资源、RSS feeds、无需身份验证的 API
+# 具体允许哪些域名/来源由 rules/RESOURCE_APPROVALS.yaml 定义（业务 allowlist）
+# 能力定义 scope（可以做什么），allowlist 定义具体来源（可以访问哪里）
+# 这种分层避免每个新来源都要扩展能力边界
+
+# 关于登录/token/付费访问：
+# 任何需要以下的访问方式，都需要新的资源审批 proposal：
+#   - 用户登录（OAuth、session cookie）
+#   - API token/key（即使是免费 tier）
+#   - 付费 API（需要 billing）
+#   - 写操作（POST、PUT、DELETE）
+#   - 私有资源（需要权限的 repo、文档）
+#   - 用户身份模拟（代表用户执行操作）
+#
+# Proposal 应包括：
+#   1. 访问方式和权限范围
+#   2. 凭证获取和存储方案（gitignored）
+#   3. 安全边界和审计需求
+#   4. 成本估算（如付费 API）
+#   5. 退出/撤销方案
+#
+# 批准后在 rules/RESOURCE_APPROVALS.yaml 添加对应条目
+# Scout runner 只读检查 rules/ 中的批准状态
