@@ -49,9 +49,9 @@ status: complete
 
 **Scout 垂直切片范围**：
 
-1. **批准资源注册表** (`rules/RESOURCE_APPROVALS.yaml`)
-   - 能力分层：`public-web-read` 作为 scope（HTTP GET 公开资源、遵守 robots.txt）
-   - 具体来源为业务 allowlist：GitHub/Hacker News/arXiv/Product Hunt 等
+1. **批准资源注册表**
+   - 能力 scope 定义：`rules/RESOURCE_APPROVALS.yaml`（`public-web-read`：HTTP GET 公开资源、遵守 robots.txt）
+   - 具体来源 allowlist：`data/exploration/scout-sources.yaml` 等 registry 实例（GitHub/Hacker News/arXiv/Product Hunt 等）
    - 登录/token/付费访问需新资源审批 proposal
    - Schema 定义：`data/exploration/scout-source-registry.schema.yaml`
 

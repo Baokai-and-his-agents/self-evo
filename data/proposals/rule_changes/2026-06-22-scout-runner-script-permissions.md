@@ -83,7 +83,7 @@ Agent 和 worker 在任何情况下不得直接修改：
 - `scripts/tests/test_*.py` — 受保护
 - `scripts/validate_*.py` — 受保护
 
-Agent 可编写辅助测试工具在 `scripts/workers/` 或 `scripts/utils/` 下，但不得修改主测试套件。
+Agent 可编写辅助测试工具在 `scripts/workers/` 下，但不得修改主测试套件。
 
 ---
 
