@@ -192,7 +192,7 @@ status: complete
 **Issue A.1**：Scout 源注册和手动触发
 - 在 `rules/RESOURCE_APPROVALS.yaml` 定义批准来源（GitHub/HN/arXiv；Product Hunt 门控在批准+API 可用）
 - Agent 不得直接修改 `rules/RESOURCE_APPROVALS.yaml` 或 `rules/EXPLORATION_POLICY.md`
-- 若需新来源（如 Product Hunt），Agent 写 `data/proposals/rule_changes/` proposal 和 GitHub 审批请求，由 jlcbk 修改/批准 rules
+- 仅当需要新能力 scope（登录、token、付费、写操作、私有资源）时，Agent 写 `data/proposals/resource_approvals/` proposal 提交审批。已有 scope 内新公开只读来源（如 Product Hunt web 页面）仅更新 data registry，无需 proposal
 - 构建 Scout runner wrapper（启动、强制执行限制、捕获输出）
 - 手动调用：用户运行 `python scripts/scout_runner.py`
 
@@ -434,7 +434,7 @@ status: complete
 
 9. **Ledger 可审阅性** — 原始 HTTP/API payload、下载缓存、cursor、dedupe cache、telemetry 保持 gitignored。精简 source/query/decision ledger（URL/ID、日期、标题/metadata、keep/reject、理由、来源类型）tracked 在 `data/exploration/raw/`。Daily report 链接到 tracked ledger。
 
-10. **治理边界** — Agent/worker 不得直接修改 `rules/RESOURCE_APPROVALS.yaml` 或 `rules/EXPLORATION_POLICY.md`。若需新来源，Agent 写 `data/proposals/rule_changes/` proposal 和 GitHub 审批请求，由 jlcbk 修改/批准 rules。Runner 使用只读规则。
+10. **治理边界** — Agent/worker 不得直接修改 `rules/RESOURCE_APPROVALS.yaml` 或 `rules/EXPLORATION_POLICY.md`。仅当需要新能力 scope（登录、token、付费、写操作、私有资源）时，Agent 写 `data/proposals/resource_approvals/` proposal 提交审批。已有 scope 内新公开只读来源（如 Product Hunt web 页面）仅更新 data registry，无需 proposal。Runner 使用只读规则。
 
 11. **人工反馈入口** — 人类主要通过 GitHub Issue/PR comment 或 review labels 给出反馈。Agent 将这些同步为 tracked `data/exploration/review_labels/` 记录。Agent 读评论/标签需明确 repo read 权限；写 GitHub 由 clawbie 身份且在批准 scope。
 

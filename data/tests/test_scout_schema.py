@@ -345,6 +345,11 @@ def test_documentation_consistency():
             print("FAIL: project_candidates 仍声称具体来源在 rules/RESOURCE_APPROVALS.yaml 中定义")
             return False
 
+        # 拒绝同义错误：若需新来源就写 rule_changes proposal 或修改 rules
+        if "若需新来源" in pc_content and ("rule_changes" in pc_content or "修改 rules" in pc_content or "修改/批准 rules" in pc_content):
+            print("FAIL: project_candidates 仍包含'若需新来源...写 rule_changes proposal 或修改 rules'的同义错误")
+            return False
+
         # 验证正确的架构描述存在
         if "data/exploration/scout-sources.yaml` 等 registry 实例定义具体来源" not in pc_content:
             print("FAIL: project_candidates 缺少正确的 registry 架构说明")
@@ -358,6 +363,11 @@ def test_documentation_consistency():
 
         if "具体允许来源在 `rules/RESOURCE_APPROVALS.yaml` 中定义" in dr_content:
             print("FAIL: daily_report 仍声称具体来源在 rules/RESOURCE_APPROVALS.yaml 中定义")
+            return False
+
+        # 拒绝同义错误：若需新来源就写 rule_changes proposal 或修改 rules
+        if "若需新来源" in dr_content and ("rule_changes" in dr_content or "修改 rules" in dr_content or "修改/批准 rules" in dr_content):
+            print("FAIL: daily_report 仍包含'若需新来源...写 rule_changes proposal 或修改 rules'的同义错误")
             return False
 
     # 检查 permission proposal 文档
