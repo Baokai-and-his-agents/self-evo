@@ -1,10 +1,11 @@
 {
-  "issue_number": 13,
+  "issue": 13,
   "worker": "scout-worker-fx-01",
-  "run_id": "2026-06-23-fx-phase-a-001",
+  "run_id": "2026-06-23-fx-phase-b-002",
   "branch": "agent/scout-worker-fx-01/13-fx-quant-research",
   "claimed_at": "2026-06-22T18:57:51Z",
-  "lease_until": "2026-06-23T02:57:51Z",
-  "status": "active",
-  "phase": "Phase A - FX Intraday Research"
+  "released_at": "2026-06-23T06:30:00Z",
+  "lease_until": null,
+  "status": "released",
+  "phase": "Phase B complete / review"
 }

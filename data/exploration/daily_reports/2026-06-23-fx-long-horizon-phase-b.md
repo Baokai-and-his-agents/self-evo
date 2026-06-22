@@ -47,7 +47,7 @@
 
 **3. Managed Futures / CTA**
 - 证据：Pedersen (2012) 详细拆解，24商品+9股指+13债券+12货币
-- 特点：跨资产 TSMOM，vol targeting 10%
+- 特点：跨资产 TSMOM，vol targeting 候选范围 5%-15% (Pedersen source: 10%)
 - 表现：分散组合 Sharpe 1.8，bear/bull 市场均表现良好
 
 ### 仓位管理方法
@@ -203,12 +203,12 @@ Phase B 交付：
 3. 多 regime 覆盖：至少 2 次货币危机、2 次股市崩盘
 
 ### 优先回测策略
-1. **Time-series momentum:** 1/3/12 月，vol targeting 10%
-2. **Carry trade:** 带 VIX hedge 或 drawdown cut
+1. **Time-series momentum:** 候选配置 1/3/6/12 月 (source: Moskowitz 1-12月，Pedersen 实验用1月)，vol targeting 5%-15% 网格
+2. **Carry trade:** 带 VIX hedge 或 drawdown cut (实验性)
 3. **Half-Kelly sizing:** 保守 edge/variance 估计
 
 ### 验证协议
-1. Walk-forward: 5 年训练，1 年测试，滚动
+1. Walk-forward 多窗口比较：候选配置包括 (train:test = 5:1, 4:1, 3:1 年)，滚动验证
 2. Parameter stability: 子时期、跨币对验证
 3. Portfolio attribution: signal, sizing, carry, vol target 分解
 4. Baseline 比较：固定仓位、无加仓、buy-and-hold

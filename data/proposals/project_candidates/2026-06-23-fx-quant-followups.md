@@ -13,14 +13,14 @@
 #### A1. Time-Series Momentum Baseline
 - **目标:** 实现并验证多参数 TSMOM
 - **数据:** 10+ 主要货币对，20+ 年日度数据
-- **方法:** Look-back 候选 (1/3/6/12月)，Vol targeting 候选 (5%/10%/15%)，Sizing 方法比较 (fractional Kelly/fixed fractional/vol targeting)，walk-forward 5+1
+- **方法:** Look-back 候选网格 (1/3/6/12月，source: Moskowitz 1-12月验证)，Vol targeting 候选范围 (5%/10%/15%，source: Pedersen 实验用10%)，Sizing 方法比较 (fractional Kelly/fixed fractional/vol targeting)，walk-forward 多窗口比较 (train:test = 5:1, 4:1, 3:1 年)
 - **预期时间:** 6-8 周
 - **成功标准:** Sharpe > 0.5，max DD < 30%，walk-forward 稳定
 
 #### A2. Carry Trade with Crash Protection
-- **目标:** 利差套利 + crash control 候选
+- **目标:** 利差套利 + crash control 实验候选
 - **数据:** 货币对 + swap rates + VIX 历史
-- **方法:** 做多高利差货币，测试多种 crash control (VIX 阈值候选、no hedge baseline、其他 risk control)
+- **方法:** 做多高利差货币，测试多种 crash control 实验候选 (VIX 阈值网格、no hedge baseline、其他 risk control)
 - **预期时间:** 4-6 周
 - **成功标准:** 正期望收益，2008 年回撤可控，比较各 hedge 成本
 

@@ -18,13 +18,13 @@
     },
     {
       "worker": "scout-worker-fx-01",
-      "run_id": "2026-06-23-fx-phase-a-001",
+      "run_id": "2026-06-23-fx-phase-b-002",
       "issue": 13,
       "branch": "agent/scout-worker-fx-01/13-fx-quant-research",
-      "status": "idle",
-      "phase": "Phase A completed, waiting for Phase B",
-      "last_seen": "2026-06-23T03:28:21+0800"
+      "status": "stopped",
+      "phase": "Phase A+B complete / review",
+      "last_seen": "2026-06-22T20:31:35Z"
     }
   ],
-  "updated_at": "2026-06-23T03:28:21+0800"
+  "updated_at": "2026-06-22T20:31:35Z"
 }

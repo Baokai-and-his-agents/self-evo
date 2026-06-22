@@ -10,7 +10,7 @@
 
 ### 1. Time-Series Momentum (Moskowitz et al. 2012)
 - **来源:** Journal of Financial Economics
-- **复用:** 1/3/12 月 look-back，vol targeting 10%
+- **复用:** 候选配置 1/3/6/12 月 look-back (source: 1-12月验证)，vol targeting 5%-15% 网格 (source: Pedersen 实验用10%)
 - **适用:** 货币、商品、股指、债券
 - **实现:** Pedersen "Demystifying Managed Futures" 完整描述
 
@@ -22,7 +22,7 @@
 
 ### 3. Carry Trade Crash Risk (UChicago 2008)
 - **来源:** Journal of Financial Economics
-- **复用:** VIX hedge, crash risk monitoring
+- **复用:** VIX hedge, crash risk monitoring (实验性候选)
 - **适用:** 高 carry 货币组合
 - **注意:** 负偏度，需止损
 
@@ -62,7 +62,7 @@
 
 ### 3. Walk-Forward Analysis
 - **来源:** 标准回测方法
-- **复用:** 5 年训练，1 年测试，滚动
+- **复用:** 多窗口比较候选 (train:test = 5:1, 4:1, 3:1 年)，滚动验证
 - **适配:** 根据数据频率调整窗口
 - **适用:** 所有策略验证
 
@@ -130,13 +130,13 @@
 3. 交易成本建模
 
 ### Phase 2: 基准策略（4-6 周）
-1. Time-series momentum (1/3/12月)
+1. Time-series momentum 候选配置网格 (1/3/6/12月 look-back)
 2. Half-Kelly sizing
-3. Vol targeting 10%
-4. Walk-forward 验证
+3. Vol targeting 候选范围 5%-15% (source: Pedersen 实验用10%)
+4. Walk-forward 多窗口比较 (train:test = 5:1, 4:1, 3:1 年)
 
 ### Phase 3: 扩展策略（6-8 周）
-1. Carry trade with VIX hedge
+1. Carry trade with VIX hedge (实验性候选)
 2. Cross-sectional momentum
 3. 组合优化
 
@@ -174,4 +174,4 @@
 
 ---
 
-**复用地图完成。建议从 Time-series momentum + Half-Kelly 开始。**
+**复用地图完成。建议从 Time-series momentum 候选配置网格 + Half-Kelly 开始。**
