@@ -548,4 +548,3 @@
 - **协整配对：** Bollinger Bands 策略（无 GARCH）最高利润因子（学术验证）
 
 下一步：继续 Order Flow/Microstructure, Volatility, Event-Driven，然后数据质量和风险文献。
-
