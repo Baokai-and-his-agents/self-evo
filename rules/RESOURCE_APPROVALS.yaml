@@ -73,10 +73,12 @@ resources:
     scope:
       - scrape_public_page
       - extract_public_page_markdown
+      - batch_scrape_public_pages
+      - search_public_web
     credential_ref: env:FIRECRAWL_API_KEY
-    cost_limit_usd_per_day: 1
+    cost_limit_usd_per_day: null
     runtime_limit_minutes_per_day: 30
     expires_at: null
     approved_by: user
     approved_at: 2026-06-23
-    notes: "Approved for low-volume, read-only Firecrawl v2 single-page scrape requests against public pages without login, cookies, forms, private data, or account sessions. The initial live verification used POST /v2/scrape on https://example.com and returned HTTP 200. This approval does not include search, crawl, map, batch scrape, browser actions, authenticated pages, private content, or bulk downloading. Keep the API key only in the Windows user environment variable FIRECRAWL_API_KEY and never print or commit it."
+    notes: "Approved for read-only Firecrawl v2 single-page scrape, batch scrape, public web search, and Markdown extraction against public content. No daily monetary limit is imposed by project policy, but the agent must still avoid wasteful or unbounded requests and record material usage in the run summary. The initial live verification used POST /v2/scrape on https://example.com and returned HTTP 200. This approval does not include crawl, map, browser actions, authenticated pages, cookies, forms, private content, account sessions, or write actions. Keep the API key only in the Windows user environment variable FIRECRAWL_API_KEY and never print or commit it."
