@@ -334,7 +334,7 @@ f* = (p × b - q) / b
 - **加仓回吐：** 2× 仓位反转 15% = 亏损 76%
 - **Gap：** 止损失效，实际亏损远超预期
 - **Whipsaw：** 震荡市场累积成本
-- **Martingale：** 亏损加仓保证破产
+- **Martingale：** 在有限资本、持续下注等条件下风险敞口指数增长
 
 ### 6.4 最终判断
 
@@ -361,7 +361,7 @@ f* = (p × b - q) / b
 
 ### 7.2 避免的陷阱
 
-1. **Martingale / Grid / Averaging Down:** 有限资本、持续下注下 ruin probability 可趋近 1
+1. **Martingale / Grid / Averaging Down:** 在有限资本、持续下注等条件下风险敞口指数增长
 2. **Over-leverage after wins:** 加仓后反转可能放大亏损（具体幅度取决于加仓规则）
 3. **Ignoring estimation error:** Full Kelly 在估计误差下表现极差
 4. **Ignoring transaction costs:** 高频调整迅速侵蚀收益

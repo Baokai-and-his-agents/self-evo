@@ -24,7 +24,7 @@
 
 ### 证据覆盖
 
-- **独立 Tier1 研究:** 8+ 个（momentum, carry, managed futures, Kelly, vol targeting, math foundations）
+- **独立 Tier1 研究:** 多个主题（momentum, carry, managed futures, Kelly, vol targeting, math foundations）
 - **Central Bank 文档:** ECB 金融稳定报告
 - **Practitioner consensus:** Kelly, volatility drag, fractional sizing
 - **数学事实:** AM-GM 不等式，几何 < 算术，multiplicative wealth process
@@ -174,10 +174,10 @@ Geometric Mean < Arithmetic Mean (除非零波动)
 - 2× position, 15% reversal = 76% loss
 - Mitigation: Tiered stops, max leverage, trailing stops
 
-### 5. Martingale / Grid（保证破产）
+### 5. Martingale / Grid（高风险）
 - 亏损加仓
-- 有限资本下 ruin probability 极高
-- Mitigation: **永不使用**
+- 在有限资本、存在最小仓位/杠杆或保证金约束、持续亏损序列且不断加倍等具体假设下，风险敞口指数增长并可能触及 ruin
+- Mitigation: **避免使用**
 
 ---
 

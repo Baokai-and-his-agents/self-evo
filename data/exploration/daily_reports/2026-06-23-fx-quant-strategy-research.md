@@ -388,7 +388,7 @@
 - Swap/roll cost 数据
 
 **验证:**
-- Walk-forward 5+1 年滚动
+- Walk-forward 多窗口比较：候选配置 train:test = 5:1 / 4:1 / 3:1 年，滚动验证
 - Crisis stress test (2008, 2015, 2020)
 - Transaction cost 完整建模
 - Baseline 比较（fixed position, no pyramiding）
@@ -440,9 +440,9 @@
 
 **Phase A（日内）:** 适合有开发能力、能接受高技术复杂度、偏好短周期的交易者。最强证据是 FX 日内时段效应（5 个独立研究），但交易成本建模和假突破率需要用实际 FX 数据验证。
 
-**Phase B（长期）:** 适合资本充足、能承受大回撤、偏好低频的交易者。Time-series momentum 和 carry trade 有充分长期实证，但必须严格执行 Half-Kelly 和风险控制。**"算术亏损、指数盈利"在数学上不成立**，财富过程本质是乘法的，不存在免费午餐。
+**Phase B（长期）:** 适合资本充足、能承受大回撤、偏好低频的交易者。Time-series momentum 和 carry trade 有充分长期实证，fractional Kelly 是常见 sizing 方法候选之一。**"算术亏损、指数盈利"在数学上不成立**，财富过程本质是乘法的，不存在免费午餐。
 
-**最大教训:** Kelly 估计误差是最危险的陷阱，martingale/grid 保证破产，vol targeting procyclicality 是系统性风险。严格的风险管理和现实预期是成功的基础。
+**最大教训:** Kelly 估计误差是最危险的陷阱，martingale/grid 在有限资本与持续下注等条件下风险敞口指数增长，vol targeting procyclicality 是系统性风险。严格的风险管理和现实预期是成功的基础。
 
 ---
 
