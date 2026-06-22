@@ -43,3 +43,25 @@ resources:
     approved_by: user
     approved_at: 2026-06-18
     notes: "Read-only public web access. Does not permit login, form submission, posting, messaging, purchases, downloads requiring confirmation, or use of private credentials."
+
+  - id: agent-reach-public-read
+    type: local_tool
+    provider: Agent-Reach
+    status: approved
+    scope:
+      - read_public_pages
+      - search_public_web
+      - read_public_docs
+      - read_public_github
+      - read_public_video_metadata
+      - read_public_video_transcripts
+      - read_public_rss
+      - read_public_v2ex
+      - search_public_bilibili
+    credential_ref: none
+    cost_limit_usd_per_day: 0
+    runtime_limit_minutes_per_day: null
+    expires_at: null
+    approved_by: user
+    approved_at: 2026-06-23
+    notes: "Agent-Reach v1.5.0 installed for the local Claude Code runtime. Approved channels are public, no-login, read-only access through Jina Reader, Exa via mcporter, GitHub public reads, YouTube metadata/transcripts, RSS/Atom, V2EX public API, and Bilibili public search. This approval excludes cookies, browser sessions, private accounts, Twitter/X, Reddit, XiaoHongShu, Xueqiu, LinkedIn authenticated access, posting, commenting, messaging, forking, purchases, and all other write actions."
