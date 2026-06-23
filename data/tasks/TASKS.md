@@ -14,10 +14,32 @@ No claimed tasks.
 
 ## Review
 
-### T-20260621-003 - Issue #7
+### T-20260623-002 - Issue #13
 
 - type: scout
 - status: review
+- risk: medium
+- permission: external-resource, repo-branch-write
+- goal: 外汇长期动态仓位管理研究 (Phase A: Intraday; Phase B: Long-term positioning)
+- source: https://github.com/Baokai-and-his-agents/self-evo/issues/13
+- branch: agent/scout-worker-fx-01/13-fx-quant-research
+- github_issue: 13
+- worker_identity: scout-worker-fx-01
+- run_id: 2026-06-23-fx-phase-b-002
+- claimed_at: 2026-06-22T18:57:51Z
+- released_at: 2026-06-23T06:30:00Z
+- claim: released (lease removed)
+- heartbeat: stopped
+- execution_strategy: strictly serial, Phase A+B sequential
+- delivery: Draft PR #14 opened by `clawbie`, awaiting review
+- pr: https://github.com/Baokai-and-his-agents/self-evo/pull/14
+
+## Done
+
+### T-20260621-003 - Issue #7
+
+- type: scout
+- status: done
 - risk: medium
 - permission: external-resource, repo-branch-write
 - goal: Survey the autonomous-agent ecosystem and propose evidence-backed next steps for self-evo
@@ -27,18 +49,20 @@ No claimed tasks.
 - worker_identity: scout-worker-01
 - run_id: 2026-06-21-run-003
 - claimed_at: 2026-06-21T08:20:56+0800
-- resumed_at: 2026-06-21T08:45:00+0800
 - released_at: 2026-06-21T11:41:16+0800
 - claim: released (lease removed)
 - heartbeat: stopped
 - execution_strategy: strictly serial Claude research roles
-- delivery: Draft PR #8 opened by `clawbie`, awaiting `jlcbk` review and merge
+- delivery: PR #8 merged by `jlcbk`
 - pr: https://github.com/Baokai-and-his-agents/self-evo/pull/8
+- merged_at: 2026-06-22T03:18:29Z
+- issue_state: closed
+- completed_at: 2026-06-22
 
 ### T-20260618-002 · Issue #5
 
 - type: build
-- status: review
+- status: done
 - risk: medium
 - permission: repo-branch-write
 - goal: 实现 MVP 1.5 — 只读 run validator + Claude Code PreToolUse/Stop 安全 hooks，默认 rollout 模式 audit
@@ -51,10 +75,11 @@ No claimed tasks.
 - released_at: 2026-06-18T17:36:35+0800
 - claim: released (lease removed)
 - heartbeat: stopped
-- delivery: Draft PR #6 opened by `clawbie`, linked to Issue #5, awaiting `jlcbk` review & merge
+- delivery: PR #6 merged by `jlcbk`
 - pr: https://github.com/Baokai-and-his-agents/self-evo/pull/6
-
-## Done
+- merged_at: 2026-06-20T13:37:21Z
+- issue_state: closed
+- completed_at: 2026-06-20
 
 ### T-20260618-001 · Issue #1
 
