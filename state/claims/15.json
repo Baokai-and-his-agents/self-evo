@@ -1,0 +1,10 @@
+{
+  "issue": 15,
+  "worker": "scout-worker-fx-sizing-01",
+  "run_id": "2026-06-23-fx-sizing-001",
+  "branch": "agent/scout-worker-fx-sizing-01/15-progressive-probe-sizing",
+  "claimed_at": "2026-06-23T02:11:30Z",
+  "lease_until": "2026-06-23T14:11:30Z",
+  "status": "active",
+  "phase": "initialization"
+}
