@@ -61,7 +61,7 @@ def test_cost_impact():
     result_zero = engine_zero.run(events, policy_zero)
 
     # With costs
-    cost_model = CostModel(spread_pips=2.0, commission_per_lot=5.0, pip_value=10.0)
+    cost_model = CostModel(spread_pips=2.0, commission_per_lot=5.0, slippage_pips=0.0)
     engine_cost = BacktestEngine(initial_equity=100000, cost_model=cost_model)
     policy_cost = FixedSizing(risk_pct=0.01)
     result_cost = engine_cost.run(events, policy_cost)
