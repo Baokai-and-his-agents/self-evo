@@ -33,7 +33,16 @@
       "status": "stopped",
       "phase": "complete / review",
       "last_seen": "2026-06-23T11:52:00Z"
+    },
+    {
+      "worker": "fx-backtest-worker-01",
+      "run_id": "2026-06-23-fx-backtest-001",
+      "issue": 18,
+      "branch": "agent/fx-backtest-worker-01/18-fx-backtest-mvp",
+      "status": "stopped",
+      "phase": "implementation complete / final review",
+      "last_seen": "2026-06-23T19:30:00+08:00"
     }
   ],
-  "updated_at": "2026-06-23T11:52:00Z"
+  "updated_at": "2026-06-23T19:30:00+08:00"
 }

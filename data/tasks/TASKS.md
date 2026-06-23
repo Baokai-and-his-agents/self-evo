@@ -8,9 +8,29 @@ This file is not the source of truth. GitHub Issues are the primary task state.
 
 No open tasks.
 
-## Claimed
+## Review
 
-No claimed tasks.
+### T-20260623-004 - Issue #18
+
+- type: build
+- status: review
+- risk: high
+- permission: data-write, sandbox, external-resource, repo-branch-write
+- goal: 外汇仓位管理对照回测 MVP：核心条件概率与 A/B/E/G
+- source: https://github.com/Baokai-and-his-agents/self-evo/issues/18
+- branch: agent/fx-backtest-worker-01/18-fx-backtest-mvp
+- github_issue: 18
+- worker_identity: fx-backtest-worker-01
+- run_id: 2026-06-23-fx-backtest-001
+- claimed_at: 2026-06-23T19:00:00Z
+- released_at: 2026-06-23T20:15:00Z
+- claim: released
+- heartbeat: stopped
+- execution_strategy: strictly serial, no subagent, no parallel model calls
+- dependencies: Issue #15 merged mathematical model and strategy specification
+- delivery: Draft PR #19 opened by clawbie, corrected implementation ready for final review
+- pr: https://github.com/Baokai-and-his-agents/self-evo/pull/19
+- status_update: 核心架构修正进行中，已完成事件模型、cycle管理、G置换逻辑、成本单位统一
 
 ## Review
 
