@@ -8,11 +8,12 @@
 
 ## 任务状态
 
-### Phase 1: 数据源调查与许可审核
-- [ ] 调查 Dukascopy Historical Data Export 使用条款
-- [ ] 记录数据字段定义和价格类型说明
-- [ ] 确认研究使用边界
-- [ ] 调查 ECB API 作为交叉校验源
+### Phase 1: 数据源调查与许可审核 ✅ COMPLETED
+- [x] 调查 Dukascopy Historical Data Export 使用条款 → DATA_LICENSE_BLOCKED
+- [x] 评估 ECB USD/EUR reference rate API → 适合作为主数据源
+- [x] 确认 ECB 许可条款 → 允许研究使用
+- [x] 确认数据字段 → 仅收盘价，需调整策略为 Close-based
+- [x] 创建数据源决策文档
 
 ### Phase 2: 下载器与 Adapter 实现
 - [ ] 实现 Dukascopy 数据下载器
