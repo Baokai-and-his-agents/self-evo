@@ -16,7 +16,7 @@ from datetime import datetime
 from fx_backtest.data import OHLCDataLoader, SyntheticDataGenerator
 from fx_backtest.signals import DonchianATRSignal
 from fx_backtest.engine import BacktestEngine, CostModel
-from fx_backtest.sizing import create_default_policies, create_multi_seed_placebo
+from fx_backtest.sizing import create_default_policies, create_multi_seed_placebo, ScheduledPermutationPlacebo
 from fx_backtest.analysis import compute_conditional_probabilities
 from fx_backtest.report import generate_markdown_report, save_json_results
 
@@ -181,6 +181,17 @@ def main():
             result = engine.run(trade_events, policy)
             scenario_results[name] = result
             print(f"  Final equity: ${result.final_equity:,.2f} ({result.total_return:+.2%})")
+
+        # Run ScheduledPermutationPlacebo based on B's actual schedule
+        if 'B' in scenario_results and scenario_results['B'].trades:
+            print(f"\nRunning ScheduledPermutationPlacebo (G2) based on B's schedule...")
+            b_schedule = [(t.event_id, t.risk_fraction) for t in scenario_results['B'].trades]
+            policy_g2 = ScheduledPermutationPlacebo(b_schedule=b_schedule, seed=42)
+            result_g2 = engine.run(trade_events, policy_g2)
+            scenario_results['G2'] = result_g2
+            print(f"  Final equity: ${result_g2.final_equity:,.2f} ({result_g2.total_return:+.2%})")
+        else:
+            print(f"\nWarning: B has no trades, skipping ScheduledPermutationPlacebo")
 
         all_results[scenario_name] = scenario_results
 

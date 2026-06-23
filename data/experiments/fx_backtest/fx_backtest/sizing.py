@@ -261,6 +261,76 @@ class PermutationPlacebo:
         return self.permuted_risk_values.copy()
 
 
+class ScheduledPermutationPlacebo:
+    """G2: Schedule-based placebo - permute B's actual schedule.
+
+    Takes B's realized schedule of (event_id, risk_fraction) pairs and
+    shuffles both the order and the risk values independently using a seed.
+
+    This creates a placebo that:
+    1. Trades on the same event IDs as B (same multiset)
+    2. Uses the same risk fractions as B (same multiset)
+    3. But with shuffled timing - different risk on different events
+
+    Used for post-hoc permutation test of B's actual realized trades.
+    """
+
+    def __init__(self, b_schedule: List[tuple], seed: int = 42):
+        """Initialize schedule-based permutation placebo.
+
+        Args:
+            b_schedule: List of (event_id, risk_fraction) from B's actual trades
+            seed: Random seed for permutation
+        """
+        if not b_schedule:
+            raise ValueError("b_schedule cannot be empty")
+
+        self.seed = seed
+        self.original_schedule = b_schedule.copy()
+
+        # Extract event IDs and risk fractions separately
+        event_ids = [event_id for event_id, _ in b_schedule]
+        risk_fractions = [risk for _, risk in b_schedule]
+
+        # Shuffle both independently using the same seed
+        rng = random.Random(seed)
+        shuffled_event_ids = event_ids.copy()
+        rng.shuffle(shuffled_event_ids)
+
+        rng = random.Random(seed)
+        shuffled_risks = risk_fractions.copy()
+        rng.shuffle(shuffled_risks)
+
+        # Create mapping from event_id to risk_fraction
+        self.risk_by_event_id = dict(zip(shuffled_event_ids, shuffled_risks))
+
+    def calculate_size(self, context: SizingContext) -> float:
+        """Return scheduled risk for this event_id.
+
+        Raises:
+            ValueError: If event_id not in schedule (should never happen if
+                        schedule was built from the same event stream)
+        """
+        if context.event_id not in self.risk_by_event_id:
+            raise ValueError(
+                f"Event ID {context.event_id} not found in schedule. "
+                f"This means the schedule was not built from the same event stream."
+            )
+
+        return self.risk_by_event_id[context.event_id]
+
+    def reset(self):
+        """No state to reset - schedule is pre-determined."""
+        pass
+
+    def get_name(self) -> str:
+        return f"G_ScheduledPlacebo_seed{self.seed}"
+
+    def get_risk_multiset(self) -> list:
+        """Return the multiset of risk values (for verification)."""
+        return sorted(self.risk_by_event_id.values())
+
+
 def create_default_policies() -> dict:
     """Create default A/B/E/G policies with MVP parameters.
 

@@ -9,7 +9,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from fx_backtest.data import SyntheticDataGenerator
 from fx_backtest.signals import DonchianATRSignal
 from fx_backtest.engine import BacktestEngine, CostModel
-from fx_backtest.sizing import FixedSizing, ArithmeticAfterLoss
+from fx_backtest.sizing import FixedSizing, ArithmeticAfterLoss, ScheduledPermutationPlacebo
 
 
 def test_zero_cost_backtest():
@@ -186,10 +186,59 @@ def test_equity_curve():
     print(f"[PASS] Equity curve: {len(result.equity_curve)} points")
 
 
+def test_scheduled_placebo_consistency():
+    """Test that ScheduledPermutationPlacebo sees same events and multiset as B."""
+    print("Testing scheduled placebo consistency...")
+
+    bars = SyntheticDataGenerator.generate_trend_and_consolidation(
+        start_date=datetime(2020, 1, 1),
+        num_days=200,
+        seed=42
+    )
+
+    signal = DonchianATRSignal()
+    events = signal.generate_trade_events(bars)
+
+    engine = BacktestEngine(initial_equity=100000)
+
+    # Run B policy first
+    policy_b = ArithmeticAfterLoss(r_0=0.01, d=0.005, K=5)
+    result_b = engine.run(events, policy_b)
+
+    # Extract B's schedule
+    b_schedule = [(t.event_id, t.risk_fraction) for t in result_b.trades]
+
+    # Create scheduled placebo with B's schedule
+    policy_g = ScheduledPermutationPlacebo(b_schedule=b_schedule, seed=42)
+    result_g = engine.run(events, policy_g)
+
+    # Verify: G trades on same event IDs as B
+    event_ids_b = [t.event_id for t in result_b.trades]
+    event_ids_g = [t.event_id for t in result_g.trades]
+
+    assert event_ids_g == event_ids_b, \
+        f"Event IDs mismatch: B={event_ids_b[:10]}..., G={event_ids_g[:10]}..."
+
+    # Verify: G uses same multiset of risk fractions as B (sorted)
+    risks_b = sorted([t.risk_fraction for t in result_b.trades])
+    risks_g = sorted([t.risk_fraction for t in result_g.trades])
+
+    assert len(risks_b) == len(risks_g), \
+        f"Number of trades mismatch: B={len(risks_b)}, G={len(risks_g)}"
+
+    # Check multiset equality (sorted values should match)
+    for i, (rb, rg) in enumerate(zip(risks_b, risks_g)):
+        assert abs(rb - rg) < 1e-10, \
+            f"Risk multiset mismatch at position {i}: B={rb}, G={rg}"
+
+    print(f"[PASS] Scheduled placebo: {len(result_g.trades)} trades, event IDs match, multiset match")
+
+
 if __name__ == '__main__':
     test_zero_cost_backtest()
     test_cost_impact()
     test_policy_event_consistency()
     test_stop_count_tracking()
     test_equity_curve()
+    test_scheduled_placebo_consistency()
     print("\n[PASS] All backtest engine tests passed")

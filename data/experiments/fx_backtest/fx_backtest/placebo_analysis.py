@@ -35,20 +35,40 @@ def analyze_placebo_distribution(
             "min_required": min_placebo_seeds
         }
 
+    # Check if B has sufficient trades
+    if not b_result.trades:
+        return {
+            "test": "INSUFFICIENT_DATA",
+            "reason": "B has no trades",
+            "num_seeds": len(placebo_results),
+            "min_required": min_placebo_seeds
+        }
+
     # Extract final equity from B and all G runs
     b_equity = b_result.final_equity
     placebo_equities = [r.final_equity for r in placebo_results]
 
     # Calculate percentile: what fraction of placebo runs did B beat?
     num_better = sum(1 for g_equity in placebo_equities if b_equity > g_equity)
+    num_equal = sum(1 for g_equity in placebo_equities if abs(b_equity - g_equity) < 1e-6)
+
+    # Monte Carlo +1 method for p-value (add B's result to the null distribution)
+    # This ensures p-value is never 0 and accounts for B being one sample from the null
+    all_equities = placebo_equities + [b_equity]
+    num_as_extreme_or_more = sum(1 for eq in all_equities if abs(eq - b_equity) >= abs(b_equity - sum(placebo_equities) / len(placebo_equities)))
+
+    # Two-tailed p-value using Monte Carlo method
+    # Count how many permutations are as extreme or more extreme than B
+    placebo_mean = sum(placebo_equities) / len(placebo_equities)
+    b_deviation = abs(b_equity - placebo_mean)
+
+    num_as_extreme = sum(1 for g_equity in all_equities if abs(g_equity - placebo_mean) >= b_deviation)
+    p_value = num_as_extreme / len(all_equities)
+
+    # Also compute traditional percentile for reference
     percentile = num_better / len(placebo_equities)
 
-    # Two-tailed p-value: how extreme is B's position?
-    # p-value = 2 * min(percentile, 1 - percentile)
-    p_value = 2 * min(percentile, 1 - percentile)
-
     # Distribution statistics
-    placebo_mean = sum(placebo_equities) / len(placebo_equities)
     placebo_sorted = sorted(placebo_equities)
     placebo_median = placebo_sorted[len(placebo_sorted) // 2]
     placebo_min = min(placebo_equities)
@@ -88,6 +108,7 @@ def analyze_placebo_distribution(
         "placebo_p95": p95,
         "percentile": percentile,
         "p_value": p_value,
+        "method": "monte_carlo_plus_one",
         "interpretation": interpretation,
         "significant_at_5pct": p_value < 0.05
     }

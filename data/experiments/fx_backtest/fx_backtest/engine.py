@@ -194,14 +194,33 @@ class BacktestResult:
         cvar_5pct = sum(worst_tail) / len(worst_tail) if worst_tail else 0.0
 
         # Turnover (total position size traded relative to equity)
-        total_position_value = sum(abs(t.position_size * t.entry_price) for t in self.trades)
+        # For E policy with two phases, use amplified position size
+        total_position_value = 0.0
+        for t in self.trades:
+            if t.amplified_units is not None:
+                # E policy: use amplified phase position size
+                total_position_value += abs(t.amplified_units * t.entry_price)
+            else:
+                # A/B/G: use standard position size
+                total_position_value += abs(t.position_size * t.entry_price)
+
         turnover = total_position_value / self.initial_equity if self.initial_equity > 0 else 0.0
 
         # Total transaction cost
         total_cost = sum(t.cost for t in self.trades)
 
         # Average and max exposure (as fraction of equity)
-        exposures = [abs(t.position_size * t.entry_price) / t.equity_before for t in self.trades if t.equity_before > 0]
+        exposures = []
+        for t in self.trades:
+            if t.equity_before > 0:
+                if t.amplified_units is not None:
+                    # E policy: use amplified position size
+                    exposure = abs(t.amplified_units * t.entry_price) / t.equity_before
+                else:
+                    # A/B/G: use standard position size
+                    exposure = abs(t.position_size * t.entry_price) / t.equity_before
+                exposures.append(exposure)
+
         avg_exposure = sum(exposures) / len(exposures) if exposures else 0.0
         max_exposure = max(exposures) if exposures else 0.0
 
