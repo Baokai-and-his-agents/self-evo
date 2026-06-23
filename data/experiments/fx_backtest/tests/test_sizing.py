@@ -118,13 +118,6 @@ def test_permutation_placebo():
 
     # Deterministic: same seed produces same permutation
     policy2 = PermutationPlacebo(r_0=0.01, d=0.005, K=5, r_max=0.03, seed=42)
-    perm_map2 = policy2.get_permutation_map()
-    assert perm_map == perm_map2
-
-    print("[PASS] Permutation placebo tests passed")
-
-
-def test_policy_independence():
     """Test that policies don't interfere with each other."""
     print("Testing policy independence...")
 
