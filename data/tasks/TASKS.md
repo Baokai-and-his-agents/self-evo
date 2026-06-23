@@ -19,13 +19,13 @@ This file is not the source of truth. GitHub Issues are the primary task state.
 - worker_identity: fx-backtest-worker-01
 - run_id: 2026-06-23-eurusd-baseline-001
 - claimed_at: 2026-06-23T00:00:00Z
-- heartbeat: 2026-06-23T15:01:00Z
+- heartbeat: 2026-06-23T23:30:00Z
 - claim: active
 - execution_strategy: strictly serial, no subagent, no parallel model calls
 - dependencies: Issue #18 / PR #19 merged (策略定义已冻结)
-- current_status: Weekend 数据分析完成，HistData 验证状态从 PILOT_REQUIRES_VALIDATION 进入最终验证阶段
+- current_status: ✅ VALIDATION COMPLETE - HistData 2005 pilot 已通过全部验证，包括周末数据分析、价格跳变验证、FX session 聚合策略实现。脚本开发完成（下载器、验证器、聚合器）。PR #21 准备进入最终审查。
 - pr: https://github.com/Baokai-and-his-agents/self-evo/pull/21
-- status_update: ✅ Weekend 数据分析完成 (15,924 bars verified)。90 pip spike 验证为真实市场事件。推荐使用 FX session day aggregation (17:00-16:59 EST)。准备进入 daily OHLC 生成阶段。
+- status_update: ✅ 完整验证已完成。15,924 周末 bars 解释清楚（合法市场活动）。90 pip spike 确认为真实市场事件。FX session day 聚合逻辑已实现。下载/验证脚本已完成，包含 CAPTCHA 处理。所有文档已更新，trailing whitespace 已修复。准备最终审查。
 
 ## Review
 

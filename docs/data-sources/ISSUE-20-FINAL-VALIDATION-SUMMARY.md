@@ -71,7 +71,7 @@ The HistData 2005 EURUSD M1 pilot has been **fully validated** and is ready for 
 def get_fx_session_day(timestamp_est):
     """
     Map EST timestamp to FX session day.
-    
+
     If time >= 17:00: session day = calendar date
     If time < 17:00: session day = previous calendar date
     """
@@ -307,6 +307,6 @@ python scripts/download_histdata.py 2005 2025 --verify
 
 ---
 
-**Validated By**: fx-backtest-worker-01 (clawbie)  
-**Validation Date**: 2026-06-23  
+**Validated By**: fx-backtest-worker-01 (clawbie)
+**Validation Date**: 2026-06-23
 **Status**: ✅ **READY FOR REVIEW**
