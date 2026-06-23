@@ -32,6 +32,15 @@ class Trade:
     equity_before: float
     equity_after: float
     cost: float = 0.0
+    # E policy two-phase tracking (None for A/B/G single-phase trades)
+    probe_risk: Optional[float] = None
+    probe_units: Optional[float] = None
+    probe_pnl: Optional[float] = None
+    probe_cost: Optional[float] = None
+    amplified_risk: Optional[float] = None
+    amplified_units: Optional[float] = None
+    amplified_pnl: Optional[float] = None
+    amplified_cost: Optional[float] = None
 
 
 @dataclass
@@ -310,6 +319,10 @@ class BacktestEngine:
                 equity += pnl_probe
 
                 # Phase 2: Confirmation -> Exit (amplified sizing)
+                # Recalculate risk_per_unit for amplified phase using confirmation_price as entry
+                amplified_stop_distance = event.confirmation_price - event.stop_price
+                amplified_risk_per_unit = amplified_stop_distance
+
                 context_amplified = SizingContext(
                     event_id=event.event_id,
                     stop_count=stop_count,
@@ -322,7 +335,7 @@ class BacktestEngine:
 
                 risk_fraction_amplified = sizing_policy.calculate_size(context_amplified)
                 initial_risk_amplified = equity * risk_fraction_amplified
-                position_size_amplified = initial_risk_amplified / risk_per_unit if risk_per_unit > 0 else 0.0
+                position_size_amplified = initial_risk_amplified / amplified_risk_per_unit if amplified_risk_per_unit > 0 else 0.0
 
                 # PnL for phase 2: confirmation -> exit
                 pnl_amplified_before_cost = position_size_amplified * (event.exit_price - event.confirmation_price)
@@ -360,22 +373,11 @@ class BacktestEngine:
                 # Get risk fraction from policy
                 risk_fraction = sizing_policy.calculate_size(context)
 
-                # If policy returns 0, check if it's K/budget failure
+                # If policy returns 0, budget is exhausted (terminal condition)
+                # K cycles are handled after trade execution, not here
                 if risk_fraction <= 0.0:
-                    policy_max_k = getattr(sizing_policy, 'K', None)
-                    if policy_max_k and stop_count >= policy_max_k:
-                        # Cycle failure: reset and continue with remaining events
-                        result.num_cycle_failures += 1
-                        stop_count = 0
-                        cumulative_loss = 0.0
-                        sizing_policy.reset()
-                        result.max_stop_count_reached = policy_max_k
-                        # Continue to next event instead of breaking
-                        continue
-                    else:
-                        # Budget exhausted: stop all trading
-                        result.max_stop_count_reached = stop_count
-                        break
+                    result.max_stop_count_reached = stop_count
+                    break
 
                 # Calculate position size
                 initial_risk = equity * risk_fraction
@@ -399,25 +401,55 @@ class BacktestEngine:
             # Calculate R-multiple
             r_multiple = pnl / initial_risk if initial_risk > 0 else 0.0
 
-            # Create trade record
-            trade = Trade(
-                event_id=event.event_id,
-                timestamp=event.timestamp,
-                entry_price=event.entry_price,
-                exit_price=event.exit_price,
-                stop_price=event.stop_price,
-                risk_fraction=risk_fraction,
-                position_size=position_size,
-                initial_risk=initial_risk,
-                pnl=pnl,
-                r_multiple=r_multiple,
-                hit_stop=event.hit_stop,
-                bars_held=event.bars_held,
-                stop_count_at_entry=stop_count,
-                equity_before=equity_before,
-                equity_after=equity_after,
-                cost=cost
-            )
+            # Create trade record with optional two-phase data for E policy
+            if event.has_confirmation() and sizing_policy.get_name().startswith("E_"):
+                # E policy with confirmation: record both phases
+                trade = Trade(
+                    event_id=event.event_id,
+                    timestamp=event.timestamp,
+                    entry_price=event.entry_price,
+                    exit_price=event.exit_price,
+                    stop_price=event.stop_price,
+                    risk_fraction=risk_fraction,
+                    position_size=position_size,
+                    initial_risk=initial_risk,
+                    pnl=pnl,
+                    r_multiple=r_multiple,
+                    hit_stop=event.hit_stop,
+                    bars_held=event.bars_held,
+                    stop_count_at_entry=stop_count,
+                    equity_before=equity_before,
+                    equity_after=equity_after,
+                    cost=cost,
+                    probe_risk=initial_risk_probe,
+                    probe_units=position_size_probe,
+                    probe_pnl=pnl_probe,
+                    probe_cost=cost_probe,
+                    amplified_risk=initial_risk_amplified,
+                    amplified_units=position_size_amplified,
+                    amplified_pnl=pnl_amplified,
+                    amplified_cost=cost_amplified
+                )
+            else:
+                # Single-phase trade (A/B/G or E without confirmation)
+                trade = Trade(
+                    event_id=event.event_id,
+                    timestamp=event.timestamp,
+                    entry_price=event.entry_price,
+                    exit_price=event.exit_price,
+                    stop_price=event.stop_price,
+                    risk_fraction=risk_fraction,
+                    position_size=position_size,
+                    initial_risk=initial_risk,
+                    pnl=pnl,
+                    r_multiple=r_multiple,
+                    hit_stop=event.hit_stop,
+                    bars_held=event.bars_held,
+                    stop_count_at_entry=stop_count,
+                    equity_before=equity_before,
+                    equity_after=equity_after,
+                    cost=cost
+                )
             result.trades.append(trade)
             result.equity_curve.append((event.timestamp, equity))
 

@@ -205,18 +205,9 @@ class DonchianATRSignal:
                 # In position: check for confirmation, exit or stop
                 bars_held = i - entry_bar_index
 
-                # Check for confirmation (independent of stop_count)
-                if detect_confirmation and confirmation_timestamp is None:
-                    stop_distance = entry_price - stop_price
-                    confirmation_target = entry_price + confirmation_r_threshold * stop_distance
-
-                    if bar.high >= confirmation_target:
-                        confirmation_timestamp = bar.timestamp
-                        confirmation_price = confirmation_target  # Use target price as confirmation price
-
-                # Check stop first (intrabar)
+                # Check stop first (intrabar priority)
                 if bar.low <= stop_price:
-                    # Hit stop
+                    # Hit stop - exit immediately, do not record confirmation for this bar
                     exit_price = stop_price
                     raw_r = (exit_price / entry_price) - 1.0
 
@@ -230,7 +221,7 @@ class DonchianATRSignal:
                         raw_r=raw_r,
                         hit_stop=True,
                         bars_held=bars_held,
-                        confirmation_timestamp=confirmation_timestamp,
+                        confirmation_timestamp=confirmation_timestamp,  # Keep existing confirmation if any
                         confirmation_price=confirmation_price
                     )
                     events.append(event)
@@ -238,6 +229,15 @@ class DonchianATRSignal:
 
                     in_position = False
                     continue
+
+                # Only check for confirmation if stop was not hit
+                if detect_confirmation and confirmation_timestamp is None:
+                    stop_distance = entry_price - stop_price
+                    confirmation_target = entry_price + confirmation_r_threshold * stop_distance
+
+                    if bar.high >= confirmation_target:
+                        confirmation_timestamp = bar.timestamp
+                        confirmation_price = confirmation_target  # Use target price as confirmation price
 
                 # Check exit signal
                 donchian_low = self.compute_donchian_low(bars, i, self.exit_period)

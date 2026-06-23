@@ -233,6 +233,7 @@ class PermutationPlacebo:
         """Calculate size using PERMUTED risk values.
 
         Budget check is same as B (terminal condition).
+        K cycles are handled by engine reset, not by returning 0.
         """
         n = context.stop_count
 
@@ -240,9 +241,10 @@ class PermutationPlacebo:
         if context.cumulative_loss >= self.total_budget * context.equity:
             return 0.0
 
-        # If stop_count >= K, engine will reset; we return 0 to signal cycle failure
+        # If n >= K, return r_max (same behavior as B)
+        # Engine will handle cycle reset
         if n >= self.K:
-            return 0.0
+            return self.r_max
 
         # Return permuted risk value for this stop_count
         return self.permuted_risk_values[n]
