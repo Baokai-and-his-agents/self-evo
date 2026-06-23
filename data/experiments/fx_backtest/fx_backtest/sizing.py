@@ -106,14 +106,18 @@ class ArithmeticAfterLoss:
         self.total_budget = total_budget
 
     def calculate_size(self, context: SizingContext) -> float:
-        """Calculate size based on stop count."""
+        """Calculate size based on stop count.
+
+        Returns 0 only when budget exhausted (terminal condition).
+        K cycles are handled by engine reset, not by returning 0.
+        """
         n = context.stop_count
 
-        # Reached max stops or budget exhausted
-        if n >= self.K or context.cumulative_loss >= self.total_budget * context.equity:
-            return 0.0  # Stop trading
+        # Budget exhausted (terminal)
+        if context.cumulative_loss >= self.total_budget * context.equity:
+            return 0.0
 
-        # Arithmetic progression
+        # Normal sizing (even if n >= K, engine will handle reset)
         risk = min(self.r_0 + n * self.d, self.r_max)
         return risk
 
@@ -174,13 +178,15 @@ class ConfirmThenAmplify:
 
 
 class PermutationPlacebo:
-    """G: Placebo control - permute stop_count -> size mapping.
+    """G: Placebo control - permute sizing values, not stop_count sequence.
 
-    Uses the same sizing function as B (arithmetic progression),
-    but with stop_count randomly shuffled.
+    Key insight: G must see the SAME events as B (same event IDs, same multiset of
+    risk fractions), but with the risk values shuffled across the valid event positions.
 
-    This tests whether the TIMING of size increases matters, or only
-    the DISTRIBUTION of sizes.
+    This tests whether the TIMING of size increases matters, or only the DISTRIBUTION.
+
+    CRITICAL: K (terminal condition) must NOT be permuted into position 0, which would
+    truncate the event stream. We only permute the sizing values, not the control flow.
     """
 
     def __init__(
@@ -189,6 +195,7 @@ class PermutationPlacebo:
         d: float = 0.005,
         K: int = 5,
         r_max: float = 0.03,
+        total_budget: float = 0.10,
         seed: int = 42
     ):
         """Initialize permutation placebo.
@@ -198,37 +205,47 @@ class PermutationPlacebo:
             d: Increment (same as B)
             K: Max stops (same as B)
             r_max: Max risk (same as B)
+            total_budget: Total risk budget (same as B)
             seed: Random seed for permutation
         """
         self.r_0 = r_0
         self.d = d
         self.K = K
         self.r_max = r_max
+        self.total_budget = total_budget
         self.seed = seed
 
-        # Create permutation map: actual stop_count -> permuted stop_count
-        self.permutation_map = self._create_permutation()
+        # Pre-compute sizing values for stop_count 0..K-1
+        # (K itself means cycle failure, handled by engine)
+        self.risk_values = [min(self.r_0 + i * self.d, self.r_max) for i in range(self.K)]
 
-    def _create_permutation(self) -> dict:
-        """Create deterministic permutation of stop_count values."""
+        # Create permutation of these values
+        self.permuted_risk_values = self._create_permutation()
+
+    def _create_permutation(self) -> list:
+        """Create deterministic permutation of risk values (not indices)."""
         random.seed(self.seed)
-        values = list(range(self.K + 1))
-        permuted = values.copy()
+        permuted = self.risk_values.copy()
         random.shuffle(permuted)
-
-        return {original: permuted[i] for i, original in enumerate(values)}
+        return permuted
 
     def calculate_size(self, context: SizingContext) -> float:
-        """Calculate size using PERMUTED stop_count."""
-        actual_n = context.stop_count
-        permuted_n = self.permutation_map.get(actual_n, actual_n)
+        """Calculate size using PERMUTED risk values.
 
-        # Use B's arithmetic sizing formula with permuted n
-        if permuted_n >= self.K:
+        Budget check is same as B (terminal condition).
+        """
+        n = context.stop_count
+
+        # Budget exhausted (terminal)
+        if context.cumulative_loss >= self.total_budget * context.equity:
             return 0.0
 
-        risk = min(self.r_0 + permuted_n * self.d, self.r_max)
-        return risk
+        # If stop_count >= K, engine will reset; we return 0 to signal cycle failure
+        if n >= self.K:
+            return 0.0
+
+        # Return permuted risk value for this stop_count
+        return self.permuted_risk_values[n]
 
     def reset(self):
         """No state to reset."""
@@ -237,9 +254,9 @@ class PermutationPlacebo:
     def get_name(self) -> str:
         return f"G_Placebo_seed{self.seed}"
 
-    def get_permutation_map(self) -> dict:
-        """Return the permutation map for inspection."""
-        return self.permutation_map.copy()
+    def get_risk_multiset(self) -> list:
+        """Return the multiset of risk values (for verification)."""
+        return self.permuted_risk_values.copy()
 
 
 def create_default_policies() -> dict:
@@ -252,11 +269,11 @@ def create_default_policies() -> dict:
         "A": FixedSizing(risk_pct=0.01),
         "B": ArithmeticAfterLoss(r_0=0.01, d=0.005, K=5, r_max=0.03, total_budget=0.10),
         "E": ConfirmThenAmplify(r_probe=0.005, r_confirmed=0.02, confirmation_r=3.0),
-        "G": PermutationPlacebo(r_0=0.01, d=0.005, K=5, r_max=0.03, seed=42)
+        "G": PermutationPlacebo(r_0=0.01, d=0.005, K=5, r_max=0.03, total_budget=0.10, seed=42)
     }
 
 
-def create_multi_seed_placebo(num_seeds: int = 10, base_seed: int = 42) -> List[PermutationPlacebo]:
+def create_multi_seed_placebo(num_seeds: int = 10, base_seed: int = 42, r_0: float = 0.01, d: float = 0.005, K: int = 5, r_max: float = 0.03, total_budget: float = 0.10) -> List[PermutationPlacebo]:
     """Create multiple placebo policies with different seeds.
 
     For permutation test: run B against multiple G instances to build
@@ -265,11 +282,16 @@ def create_multi_seed_placebo(num_seeds: int = 10, base_seed: int = 42) -> List[
     Args:
         num_seeds: Number of different seeds
         base_seed: Starting seed value
+        r_0: Base risk (same as B)
+        d: Increment (same as B)
+        K: Max stops (same as B)
+        r_max: Max risk (same as B)
+        total_budget: Total risk budget (same as B)
 
     Returns:
         List of placebo policies with different seeds
     """
     return [
-        PermutationPlacebo(r_0=0.01, d=0.005, K=5, r_max=0.03, seed=base_seed + i)
+        PermutationPlacebo(r_0=r_0, d=d, K=K, r_max=r_max, total_budget=total_budget, seed=base_seed + i)
         for i in range(num_seeds)
     ]

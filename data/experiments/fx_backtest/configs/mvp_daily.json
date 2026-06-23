@@ -1,0 +1,45 @@
+{
+  "_comment": "MVP Configuration - Pre-registered parameters for Issue #18 - FX Backtest MVP",
+  "data": {
+    "fixture": {
+      "start_date": "2020-01-01",
+      "num_days": 750,
+      "_comment_num_days": "~3 years of daily data"
+    },
+    "real_data_path": "state/download-cache/fx-backtest/EURUSD_daily.csv",
+    "source": "manual",
+    "pair": "EURUSD",
+    "timeframe": "daily",
+    "timestamp_format": "%Y-%m-%d"
+  },
+  "signal": {
+    "_comment": "Pre-registered Donchian breakout parameters - NOT optimized on this data",
+    "entry_period": 10,
+    "_comment_entry_period": "10-day high breakout (shorter for more signals)",
+    "exit_period": 5,
+    "_comment_exit_period": "5-day low exit",
+    "atr_period": 14,
+    "_comment_atr_period": "ATR(14) for stop",
+    "atr_stop_multiplier": 2.0,
+    "_comment_atr_stop_multiplier": "Stop at entry - 2*ATR"
+  },
+  "backtest": {
+    "initial_equity": 100000.0,
+    "cost_scenarios": {
+      "zero": {
+        "_comment": "Zero cost scenario (isolate sizing effect)",
+        "spread_pips": 0.0,
+        "commission_per_lot": 0.0,
+        "slippage_pips": 0.0
+      },
+      "conservative": {
+        "_comment": "Conservative retail cost estimate",
+        "spread_pips": 1.0,
+        "commission_per_lot": 7.0,
+        "slippage_pips": 0.5
+      }
+    }
+  },
+  "output_dir": "data/experiments/fx_backtest/output",
+  "_note": "These parameters are illustrative MVP configs, not recommendations. They are fixed before seeing results to avoid in-sample optimization."
+}

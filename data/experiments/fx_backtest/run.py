@@ -3,13 +3,13 @@
 Single-command execution of full backtest pipeline:
 1. Load data (synthetic fixture or real CSV)
 2. Generate trade events (position-independent)
-3. Run A/B/E/G sizing policies
+3. Run A/B/E/G sizing policies with zero + conservative cost scenarios
 4. Compute conditional probabilities
 5. Generate reports (JSON + Chinese markdown)
 """
 
 import argparse
-import yaml
+import json
 from pathlib import Path
 from datetime import datetime
 
@@ -22,14 +22,14 @@ from fx_backtest.report import generate_markdown_report, save_json_results
 
 
 def load_config(config_path: Path) -> dict:
-    """Load YAML configuration."""
+    """Load JSON configuration."""
     with open(config_path, 'r', encoding='utf-8') as f:
-        return yaml.safe_load(f)
+        return json.load(f)
 
 
 def main():
     parser = argparse.ArgumentParser(description="FX Position Sizing Backtest MVP")
-    parser.add_argument('--config', type=str, required=True, help='Path to config YAML')
+    parser.add_argument('--config', type=str, required=True, help='Path to config JSON')
     parser.add_argument('--real-data', action='store_true', help='Use real data instead of fixture')
     parser.add_argument('--output-dir', type=str, default=None, help='Override output directory')
 
@@ -136,56 +136,98 @@ def main():
         json.dump([e.to_dict() for e in trade_events], f, indent=2)
     print(f"Saved trade events to {events_path}")
 
-    # Step 3: Run A/B/E/G policies
-    print("\n=== Step 3: Running Sizing Policies ===")
+    # Step 3: Run A/B/E/G policies with multiple cost scenarios
+    print("\n=== Step 3: Running Sizing Policies (Zero + Conservative Costs) ===")
 
     backtest_config = config.get('backtest', {})
     initial_equity = backtest_config.get('initial_equity', 100000.0)
 
-    cost_config = backtest_config.get('cost', {})
-    cost_model = CostModel(
-        spread_pips=cost_config.get('spread_pips', 0.0),
-        commission_per_lot=cost_config.get('commission_per_lot', 0.0),
-        slippage_pips=cost_config.get('slippage_pips', 0.0),
-        pip_value=cost_config.get('pip_value', 10.0)
-    )
+    cost_scenarios = backtest_config.get('cost_scenarios', {})
 
-    engine = BacktestEngine(initial_equity=initial_equity, cost_model=cost_model)
+    # Ensure we have both scenarios
+    if 'zero' not in cost_scenarios:
+        cost_scenarios['zero'] = {
+            'spread_pips': 0.0,
+            'commission_per_lot': 0.0,
+            'slippage_pips': 0.0
+        }
 
-    policies = create_default_policies()
-    results = {}
+    if 'conservative' not in cost_scenarios:
+        cost_scenarios['conservative'] = {
+            'spread_pips': 1.0,
+            'commission_per_lot': 7.0,
+            'slippage_pips': 0.5
+        }
 
-    for name, policy in policies.items():
-        print(f"Running policy {name} ({policy.get_name()})...")
-        result = engine.run(trade_events, policy)
-        results[name] = result
-        print(f"  Final equity: ${result.final_equity:,.2f} ({result.total_return:+.2%})")
+    all_results = {}  # {scenario_name: {policy_name: result}}
+
+    for scenario_name, cost_config in cost_scenarios.items():
+        print(f"\n--- Cost Scenario: {scenario_name} ---")
+
+        cost_model = CostModel(
+            spread_pips=cost_config.get('spread_pips', 0.0),
+            commission_per_lot=cost_config.get('commission_per_lot', 0.0),
+            slippage_pips=cost_config.get('slippage_pips', 0.0)
+        )
+
+        engine = BacktestEngine(initial_equity=initial_equity, cost_model=cost_model)
+
+        policies = create_default_policies()
+        scenario_results = {}
+
+        for name, policy in policies.items():
+            print(f"Running policy {name} ({policy.get_name()})...")
+            result = engine.run(trade_events, policy)
+            scenario_results[name] = result
+            print(f"  Final equity: ${result.final_equity:,.2f} ({result.total_return:+.2%})")
+
+        all_results[scenario_name] = scenario_results
 
     # Step 4: Conditional probability analysis
     print("\n=== Step 4: Conditional Probability Analysis ===")
 
-    # Use policy A (fixed) trades for conditional analysis (unbiased by sizing)
-    conditional_stats = compute_conditional_probabilities(results['A'].trades, max_stop_count=10)
+    # Use policy A (fixed) trades from zero-cost scenario for conditional analysis (unbiased by sizing)
+    zero_results = all_results.get('zero', {})
+    if 'A' in zero_results:
+        conditional_stats = compute_conditional_probabilities(zero_results['A'].trades, max_stop_count=10)
 
-    print("P(win | stop_count=n):")
-    for stat in conditional_stats[:6]:
-        if stat.n > 0:
-            print(f"  n={stat.n}: {stat.n} samples, P(win)={stat.p_win:.3f} [{stat.p_win_ci_low:.3f}, {stat.p_win_ci_high:.3f}]")
+        print("P(win | stop_count=n):")
+        for stat in conditional_stats[:6]:
+            if stat.n > 0:
+                print(f"  n={stat.stop_count}: {stat.n} samples, P(win)={stat.p_win:.3f} [{stat.p_win_ci_low:.3f}, {stat.p_win_ci_high:.3f}]")
+    else:
+        print("Warning: No zero-cost results for policy A, skipping conditional analysis")
+        conditional_stats = []
 
     # Step 5: Generate reports
     print("\n=== Step 5: Generating Reports ===")
 
+    # Check for real data blockage
+    if not args.real_data:
+        print("\n警告: REAL_DATA_BLOCKED - 使用合成数据运行，非真实历史数据")
+        print("要使用真实数据，请使用 --real-data 标志并确保数据文件存在")
+
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
 
-    # JSON report
+    # JSON report with all scenarios
     json_path = output_dir / f'results_{timestamp}.json'
-    save_json_results(results, conditional_stats, manifest, json_path)
+    save_json_results(all_results, conditional_stats, manifest, json_path)
     print(f"Saved JSON results to {json_path}")
 
-    # Markdown report
-    markdown_path = output_dir / f'report_{timestamp}.md'
-    generate_markdown_report(results, conditional_stats, manifest, cost_model, config, markdown_path)
-    print(f"Saved markdown report to {markdown_path}")
+    # Markdown report for each scenario
+    for scenario_name, scenario_results in all_results.items():
+        markdown_path = output_dir / f'report_{scenario_name}_{timestamp}.md'
+
+        # Reconstruct cost_model for this scenario
+        cost_config = cost_scenarios[scenario_name]
+        cost_model = CostModel(
+            spread_pips=cost_config.get('spread_pips', 0.0),
+            commission_per_lot=cost_config.get('commission_per_lot', 0.0),
+            slippage_pips=cost_config.get('slippage_pips', 0.0)
+        )
+
+        generate_markdown_report(scenario_results, conditional_stats, manifest, cost_model, config, markdown_path, scenario_name=scenario_name)
+        print(f"Saved {scenario_name} report to {markdown_path}")
 
     print("\n=== Backtest Complete ===")
     print(f"Output directory: {output_dir.absolute()}")

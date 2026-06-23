@@ -22,9 +22,9 @@ class Trade:
     exit_price: float
     stop_price: float
     risk_fraction: float  # Fraction of equity at risk
-    position_size: float  # Actual position size (units)
+    position_size: float  # Actual position size in base currency units (EUR for EURUSD)
     initial_risk: float  # Dollar risk = risk_fraction * equity
-    pnl: float  # Dollar profit/loss
+    pnl: float  # Dollar profit/loss (after costs)
     r_multiple: float  # PnL / initial_risk
     hit_stop: bool
     bars_held: int
@@ -36,32 +36,45 @@ class Trade:
 
 @dataclass
 class CostModel:
-    """Transaction cost model."""
+    """Transaction cost model for EURUSD.
+
+    EURUSD specific:
+    - Base currency: EUR
+    - Quote currency: USD (also account currency)
+    - Contract size: 100,000 EUR per standard lot
+    - Pip size: 0.0001 (fourth decimal place)
+    - Pip value: $10 per pip per standard lot
+    """
 
     spread_pips: float = 0.0  # Bid-ask spread in pips
-    commission_per_lot: float = 0.0  # Commission per standard lot
-    slippage_pips: float = 0.0  # Average slippage
-    pip_value: float = 10.0  # Dollar value of 1 pip for 1 standard lot
+    commission_per_lot: float = 0.0  # Commission per standard lot (round-trip)
+    slippage_pips: float = 0.0  # Average slippage in pips
 
-    def calculate_cost(self, position_size: float, entry_price: float, exit_price: float) -> float:
-        """Calculate total transaction cost for round-trip trade.
+    def calculate_cost(self, position_units: float, entry_price: float, exit_price: float) -> float:
+        """Calculate total transaction cost for round-trip trade in USD.
 
         Args:
-            position_size: Position size in lots
-            entry_price: Entry price
-            exit_price: Exit price
+            position_units: Position size in base currency units (EUR for EURUSD)
+            entry_price: Entry price (USD per EUR)
+            exit_price: Exit price (USD per EUR)
 
         Returns:
-            Total cost in dollars
+            Total cost in USD (account currency)
         """
-        # Spread cost (entry + exit)
-        spread_cost = 2 * self.spread_pips * self.pip_value * abs(position_size)
+        # Convert units to standard lots (1 lot = 100,000 EUR)
+        standard_lots = abs(position_units) / 100000.0
 
-        # Commission (entry + exit)
-        commission_cost = 2 * self.commission_per_lot * abs(position_size)
+        # Pip value: $10 per pip per standard lot for EURUSD
+        pip_value_per_lot = 10.0
 
-        # Slippage
-        slippage_cost = 2 * self.slippage_pips * self.pip_value * abs(position_size)
+        # Spread cost (paid on entry + exit = 2x)
+        spread_cost = 2 * self.spread_pips * pip_value_per_lot * standard_lots
+
+        # Commission (round-trip)
+        commission_cost = self.commission_per_lot * standard_lots
+
+        # Slippage (entry + exit = 2x)
+        slippage_cost = 2 * self.slippage_pips * pip_value_per_lot * standard_lots
 
         return spread_cost + commission_cost + slippage_cost
 
@@ -193,53 +206,123 @@ class BacktestEngine:
         equity = self.initial_equity
         stop_count = 0
         cumulative_loss = 0.0
-        in_confirmed_trend = False
 
         result.equity_curve.append((trade_events[0].timestamp if trade_events else datetime.now(), equity))
 
         for event in trade_events:
-            # Build sizing context
-            stop_distance = event.entry_price - event.stop_price
-            risk_per_unit = stop_distance
+            # Handle E policy with confirmation: split into probe + amplified phases
+            if event.has_confirmation() and sizing_policy.get_name().startswith("E_"):
+                # Phase 1: Entry -> Confirmation (probe sizing)
+                stop_distance = event.entry_price - event.stop_price
+                risk_per_unit = stop_distance
 
-            context = SizingContext(
-                event_id=event.event_id,
-                stop_count=stop_count,
-                equity=equity,
-                entry_price=event.entry_price,
-                stop_price=event.stop_price,
-                cumulative_loss=cumulative_loss,
-                in_confirmed_trend=in_confirmed_trend
-            )
+                context_probe = SizingContext(
+                    event_id=event.event_id,
+                    stop_count=stop_count,
+                    equity=equity,
+                    entry_price=event.entry_price,
+                    stop_price=event.stop_price,
+                    cumulative_loss=cumulative_loss,
+                    in_confirmed_trend=False  # Not confirmed yet
+                )
 
-            # Get risk fraction from policy
-            risk_fraction = sizing_policy.calculate_size(context)
+                risk_fraction_probe = sizing_policy.calculate_size(context_probe)
+                initial_risk_probe = equity * risk_fraction_probe
+                position_size_probe = initial_risk_probe / risk_per_unit if risk_per_unit > 0 else 0.0
 
-            # If policy returns 0, stop trading (reached K or budget)
-            if risk_fraction <= 0.0:
-                result.max_stop_count_reached = stop_count
-                break
+                # PnL for phase 1: entry -> confirmation
+                pnl_probe_before_cost = position_size_probe * (event.confirmation_price - event.entry_price)
+                cost_probe = self.cost_model.calculate_cost(position_size_probe, event.entry_price, event.confirmation_price)
+                pnl_probe = pnl_probe_before_cost - cost_probe
 
-            # Calculate position size
-            initial_risk = equity * risk_fraction
-            position_size = initial_risk / risk_per_unit if risk_per_unit > 0 else 0.0
+                equity += pnl_probe
 
-            # Calculate PnL from event's raw_r
-            if event.raw_r is not None:
-                pnl_before_cost = initial_risk * (event.raw_r / abs(event.raw_r / ((event.exit_price / event.entry_price) - 1))) if event.raw_r != 0 else 0.0
-                # Simplified: PnL = position_size * (exit_price - entry_price)
-                pnl_before_cost = position_size * (event.exit_price - event.entry_price)
+                # Phase 2: Confirmation -> Exit (amplified sizing)
+                context_amplified = SizingContext(
+                    event_id=event.event_id,
+                    stop_count=stop_count,
+                    equity=equity,
+                    entry_price=event.confirmation_price,  # Re-entry at confirmation price
+                    stop_price=event.stop_price,
+                    cumulative_loss=cumulative_loss,
+                    in_confirmed_trend=True  # Confirmed
+                )
+
+                risk_fraction_amplified = sizing_policy.calculate_size(context_amplified)
+                initial_risk_amplified = equity * risk_fraction_amplified
+                position_size_amplified = initial_risk_amplified / risk_per_unit if risk_per_unit > 0 else 0.0
+
+                # PnL for phase 2: confirmation -> exit
+                pnl_amplified_before_cost = position_size_amplified * (event.exit_price - event.confirmation_price)
+                cost_amplified = self.cost_model.calculate_cost(position_size_amplified, event.confirmation_price, event.exit_price)
+                pnl_amplified = pnl_amplified_before_cost - cost_amplified
+
+                # Total PnL and cost
+                pnl = pnl_probe + pnl_amplified
+                cost = cost_probe + cost_amplified
+                initial_risk = initial_risk_probe + initial_risk_amplified
+
+                equity_before = equity - pnl_probe
+                equity += pnl_amplified
+                equity_after = equity
+
+                # Use amplified position size for recording (actual final exposure)
+                position_size = position_size_amplified
+                risk_fraction = risk_fraction_amplified
+
             else:
-                pnl_before_cost = 0.0
+                # Standard single-phase execution (A/B/G or E without confirmation)
+                stop_distance = event.entry_price - event.stop_price
+                risk_per_unit = stop_distance
 
-            # Apply transaction costs
-            cost = self.cost_model.calculate_cost(position_size, event.entry_price, event.exit_price)
-            pnl = pnl_before_cost - cost
+                context = SizingContext(
+                    event_id=event.event_id,
+                    stop_count=stop_count,
+                    equity=equity,
+                    entry_price=event.entry_price,
+                    stop_price=event.stop_price,
+                    cumulative_loss=cumulative_loss,
+                    in_confirmed_trend=False
+                )
 
-            # Update equity
-            equity_before = equity
-            equity += pnl
-            equity_after = equity
+                # Get risk fraction from policy
+                risk_fraction = sizing_policy.calculate_size(context)
+
+                # If policy returns 0, check if it's K/budget failure
+                if risk_fraction <= 0.0:
+                    policy_max_k = getattr(sizing_policy, 'K', None)
+                    if policy_max_k and stop_count >= policy_max_k:
+                        # Cycle failure: reset and continue with remaining events
+                        result.num_cycle_failures += 1
+                        stop_count = 0
+                        cumulative_loss = 0.0
+                        sizing_policy.reset()
+                        result.max_stop_count_reached = policy_max_k
+                        # Continue to next event instead of breaking
+                        continue
+                    else:
+                        # Budget exhausted: stop all trading
+                        result.max_stop_count_reached = stop_count
+                        break
+
+                # Calculate position size
+                initial_risk = equity * risk_fraction
+                position_size = initial_risk / risk_per_unit if risk_per_unit > 0 else 0.0
+
+                # Calculate PnL: position_size * (exit_price - entry_price)
+                if event.exit_price is not None:
+                    pnl_before_cost = position_size * (event.exit_price - event.entry_price)
+                else:
+                    pnl_before_cost = 0.0
+
+                # Apply transaction costs
+                cost = self.cost_model.calculate_cost(position_size, event.entry_price, event.exit_price)
+                pnl = pnl_before_cost - cost
+
+                # Update equity
+                equity_before = equity
+                equity += pnl
+                equity_after = equity
 
             # Calculate R-multiple
             r_multiple = pnl / initial_risk if initial_risk > 0 else 0.0
@@ -271,15 +354,10 @@ class BacktestEngine:
                 stop_count += 1
                 cumulative_loss += abs(pnl) if pnl < 0 else 0.0
             else:
-                # Win or breakeven: check for confirmation or reset
-                if r_multiple >= 3.0:  # Confirmation threshold for E policy
-                    in_confirmed_trend = True
-
-                # Reset after successful trade
+                # Win or breakeven: reset after successful trade
                 if pnl > 0:
                     stop_count = 0
                     cumulative_loss = 0.0
-                    in_confirmed_trend = False
                     sizing_policy.reset()
                     result.num_cycles += 1
 
