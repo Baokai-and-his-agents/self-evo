@@ -7,16 +7,21 @@
 
 ## 执行摘要
 
-**结论**: 🔴 **DATA_LICENSE_BLOCKED** - 有重大限制
+**结论**: ⚠️ **DATA_TERMS_UNCLEAR** - 需要进一步澄清
 
-Dukascopy Terms of Use 对数据使用施加了严格限制，特别是：
+当前调查基于 Dukascopy 网站通用 Terms of Use，发现以下限制：
 1. 仅允许个人非商业使用
-2. 明确禁止自动化下载（scraper, bot, spider 等）
-3. 禁止将数据存储在数据库中
+2. 明确禁止自动化下载网站内容（scraper, bot, spider 等）
+3. 禁止将网站内容存储在数据库中
 4. 禁止再分发或与他人共享数据
 5. 所有知识产权归 Dukascopy 所有
 
-这些限制使得 Dukascopy 数据不适合用于本项目的可复现研究。
+**重要限制**：尚未找到针对以下具体场景的明确条款：
+- Historical Data Export 导出的 CSV 文件是否受相同限制
+- JForex API 获取的数据是否有不同的许可条款
+- 开立账户后下载的历史数据是否有专项授权
+
+"禁止数据库"可能指复制网站本身，不一定适用于本地研究缓存。在没有数据专项条款或官方说明的情况下，无法给出确定性的法律结论。
 
 ---
 
@@ -96,27 +101,31 @@ Dukascopy Terms of Use 对数据使用施加了严格限制，特别是：
 
 ## 对 Issue #20 的具体影响
 
-### 明确违反的条款
+### 需要澄清的场景
 
 1. **数据库存储** (Section 3)
    - Issue #20 要求：将数据存储在 `state/download-cache/fx-backtest/`
-   - Terms of Use: **明确禁止存储在数据库中**
-   - 状态: ❌ **直接违反**
+   - Terms of Use: 禁止将"WEBSITE"存储在数据库中
+   - **不确定**: "WEBSITE"是否包括通过 Historical Data Export 导出的 CSV 文件？本地研究缓存是否属于"数据库"？
+   - 状态: ⚠️ **需要澄清**
 
 2. **自动化下载** (Section 3)
    - Issue #20 要求：实现可重复下载的 adapter
-   - Terms of Use: **禁止任何自动化工具**（除非获得明确书面同意）
-   - 状态: ❌ **直接违反**（除非获得书面授权）
+   - Terms of Use: 禁止自动化访问"WEBSITE"
+   - **不确定**: JForex API 是否有不同的条款？手动导出后的文件是否可以编程处理？
+   - 状态: ⚠️ **需要澄清**（Web scraping 明确禁止，但 API/Export 不明确）
 
 3. **数据共享与复现** (Section 3)
    - Issue #20 要求：可复现的实验，包括数据来源
    - Terms of Use: 禁止为他人利益使用，禁止转让
-   - 状态: ⚠️ **灰色地带**（如果其他研究者需要独立获取数据）
+   - **不确定**: 提供数据获取方法（让其他人自行下载）是否违反？
+   - 状态: ⚠️ **灰色地带**
 
 4. **派生作品** (Section 3)
    - Issue #20 要求：数据清洗、规范化、聚合
    - Terms of Use: 禁止创建衍生作品
-   - 状态: ⚠️ **可能违反**（取决于如何解释"衍生作品"）
+   - **不确定**: "衍生作品"是否包括数据清洗？
+   - 状态: ⚠️ **需要解释**
 
 ### 可能允许的使用
 
@@ -211,63 +220,89 @@ Dukascopy Terms of Use 对数据使用施加了严格限制，特别是：
 
 ## 建议
 
-### 立即行动
+### 需要进一步调查
 
-1. ❌ **不要使用 Dukascopy 作为主数据源**
-   - Terms of Use 限制太严格
-   - 无法满足 Issue #20 的可复现性要求
-   - 法律风险不可接受
+1. ⏳ **调查 Dukascopy 数据专项条款**
+   - Historical Data Export 功能的专项条款
+   - JForex API 的许可协议
+   - 账户内历史数据的使用边界
+   - 联系方式: https://www.dukascopy.com/swiss/english/about/
 
-2. ✅ **优先调查 ECB API**
-   - 作为主数据源候选
-   - 虽然只有 reference rate（无 OHLC），但许可明确
-   - 可以调整研究设计以适应这一限制
+2. ⏳ **寻找官方说明或案例**
+   - 学术论文中如何引用 Dukascopy 数据
+   - 是否有官方的研究使用指南
+   - 其他开源项目如何处理
 
-3. ✅ **调查其他替代数据源**
+3. ⏳ **调查替代 OHLC 数据源**
+   - OANDA v20 API
+   - QuantConnect Forex Data
    - Yahoo Finance (yfinance)
    - Quandl / Nasdaq Data Link
    - 学术数据提供商
 
-4. ✅ **如果必须使用 Dukascopy**
-   - 必须先获得明确书面许可
-   - 联系方式: https://www.dukascopy.com/swiss/english/about/
-   - 在获得授权前，不要开始下载
+### 当前阶段决策
+
+**状态**: ⚠️ **DATA_TERMS_UNCLEAR**
+
+**理由**：
+- 通用 Terms of Use 不能直接断言适用于导出数据或 API
+- "禁止数据库"可能指复制网站，不一定指本地研究缓存
+- 需要找到数据专项条款或官方说明
+
+**暂不采取行动**：
+- 暂不下载 Dukascopy 数据
+- 暂不实现 Dukascopy 下载器
+- 等待人类决策或更多证据
 
 ### 更新 Issue #20
 
-建议在 Issue #20 中添加：
+建议在 Issue #20 中标记：
 ```markdown
 ## 数据源调查更新
 
 ### Dukascopy 评估结果
-**状态**: ❌ DATA_LICENSE_BLOCKED
+**状态**: ⚠️ DATA_TERMS_UNCLEAR
 
-**原因**: Terms of Use 明确禁止：
-- 自动化下载（需书面授权）
-- 数据库存储
-- 数据共享/转让
+**已调查**: 网站通用 Terms of Use
+**未调查**: Historical Data Export 专项条款、JForex API 许可、账户数据使用边界
 
-**决策**: 不使用 Dukascopy 作为主数据源
+**发现的限制**（基于通用条款）：
+- 禁止自动化访问网站（scraper, bot）
+- 禁止将"WEBSITE"存储在数据库中
+- 仅限个人非商业使用
 
-### 新数据源策略
-1. 优先: ECB API (reference rate, 许可明确)
-2. 备选: Yahoo Finance (yfinance)
-3. 交叉验证: 保留 ECB 作为验证源
+**不确定的场景**：
+- 导出的 CSV 文件是否受相同限制
+- JForex API 是否有不同条款
+- 本地研究缓存是否属于"数据库"
+
+**下一步**: 需要调查数据专项条款或寻找替代 OHLC 数据源
 ```
 
 ---
 
-## 附录：关键条款原文
+## 附录：关键条款摘要
+
+**注意**: 以下为简短摘要，完整条款见官方页面
 
 ### 禁止数据库存储
-> "The WEBSITE and the information contained therein may not be used to construct a database of any kind. Nor may the WEBSITE be stored (in its entirety or in any part) in databases for access by you or any third party or to distribute any database WEBSITEs containing all or part of the WEBSITE."
+来源：Section 3, Restrictions on Use  
+摘要：禁止将"WEBSITE"及其内容用于构建任何类型的数据库或存储在数据库中  
+访问日期：2026-06-23  
+URL：https://www.dukascopy.com/swiss/english/legal-pages/terms-of-use/
 
 ### 禁止自动化
-> "You shall not use or attempt to use any 'scraper,' 'robot,' 'bot,' 'spider,' 'data mining,' 'computer code,' or any other automate device, program, tool, algorithm, process or methodology to access, acquire, copy, or monitor any portion of the WEBSITE, any data or content found on or accessed through the WEBSITE, or any other WEBSITE information without the prior express written consent of DUKASCOPY."
+来源：Section 3, Restrictions on Use  
+摘要：禁止使用 scraper、bot、spider 等自动化工具访问网站，除非获得 Dukascopy 明确书面同意  
+访问日期：2026-06-23  
+URL：https://www.dukascopy.com/swiss/english/legal-pages/terms-of-use/
 
 ### 仅限个人非商业使用
-> "you agree to use the WEBSITE solely for your own non-commercial use and benefit, and not for resale or other transfer or disposition to, or use by or for the benefit of, any other person or entity."
+来源：Section 3, Restrictions on Use  
+摘要：仅允许个人非商业使用，不得为他人利益使用或转让数据  
+访问日期：2026-06-23  
+URL：https://www.dukascopy.com/swiss/english/legal-pages/terms-of-use/
 
 ---
 
-**最终建议**: 报告 `DATA_LICENSE_BLOCKED`，转向调查 ECB 或其他替代数据源。
+**当前结论**: 标记为 `DATA_TERMS_UNCLEAR`，需要进一步调查数据专项条款或寻找替代 OHLC 数据源。

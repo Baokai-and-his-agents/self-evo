@@ -6,7 +6,26 @@ This file is not the source of truth. GitHub Issues are the primary task state.
 
 ## Open
 
-No open tasks.
+### T-20260623-005 - Issue #20
+
+- type: build
+- status: open
+- risk: high
+- permission: data-write, sandbox, external-resource, repo-branch-write
+- goal: EURUSD 历史数据基线与首次预注册 A/B/E/G 回测
+- source: https://github.com/Baokai-and-his-agents/self-evo/issues/20
+- branch: agent/fx-backtest-worker-01/20-eurusd-baseline
+- github_issue: 20
+- worker_identity: fx-backtest-worker-01
+- run_id: 2026-06-23-eurusd-baseline-001
+- claimed_at: 2026-06-23T00:00:00Z
+- heartbeat: 2026-06-23T00:00:00Z
+- claim: active
+- execution_strategy: strictly serial, no subagent, no parallel model calls
+- dependencies: Issue #18 / PR #19 merged (策略定义已冻结)
+- current_status: Phase 1 部分完成，暂停在数据源选择门
+- pr: https://github.com/Baokai-and-his-agents/self-evo/pull/21
+- status_update: 数据源调查完成 Dukascopy (DATA_TERMS_UNCLEAR) 和 ECB (仅用于交叉校验)，需要补充 OHLC 数据源调查
 
 ## Review
 

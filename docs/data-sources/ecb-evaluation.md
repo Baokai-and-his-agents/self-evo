@@ -6,16 +6,16 @@
 
 ## 执行摘要
 
-**结论**: ✅ **适合作为主数据源（但有重要限制）**
+**结论**: ✅ **适合用于 close 价格抽样交叉校验**
 
 ECB 提供的 USD/EUR 汇率数据具有以下优势：
 1. ✅ **许可明确且宽松** - 允许免费使用、复制、分发
 2. ✅ **官方权威数据源** - 欧洲央行官方发布
 3. ✅ **API 访问完善** - 支持程序化下载
 4. ✅ **历史覆盖良好** - 数据可追溯到 2005 年及更早
-5. ⚠️ **重要限制**: 仅提供 reference rate（单一收盘价），无 OHLC
+5. ⚠️ **关键限制**: 仅提供 reference rate（单一收盘价），无 OHLC
 
-**建议**: 接受这一限制，调整研究设计为基于日收盘价的策略回测。
+**定位**: 按照 Issue #20 原始协议，ECB 仅用于对主数据源的日线 close 进行抽样检查，不能作为主回测数据源。PR #19 的策略定义需要 OHLC（Donchian High/Low、ATR），单一参考价无法支持。
 
 ---
 
@@ -246,74 +246,40 @@ curl "https://data-api.ecb.europa.eu/service/data/EXR/D.USD.EUR.SP00.A?startPeri
 
 ### Issue #20 原始要求
 
-> "目标品种：EURUSD  
-> 目标频率：优先直接获得日线；若只适合从更低周期聚合，先说明下载规模、时区和聚合规则后再实施  
-> 价格类型：必须确认 bid/ask/mid 或 best bid/offer 的含义"
+Issue #20 明确要求：
+- 主数据源必须有 OHLC 数据（用于 Donchian High/Low、ATR）
+- ECB reference rate 仅用于交叉校验，不能作为主回测数据
+
+> "使用 ECB 官方日度 USD/EUR reference rate 对日线 close 做抽样检查：ECB reference rate 不是可交易 OHLC，不能作为主回测数据；只用于方向、数量级、日期覆盖和异常点抽查。"
 
 ### 匹配度分析
 
 | 要求 | ECB 数据 | 匹配度 |
 |------|---------|--------|
+| 主数据源需要 OHLC | ❌ 仅 Close | ❌ **不满足** |
+| 交叉校验用途 | ✅ Reference rate | ✅ 满足 |
 | 品种: EURUSD | USD/EUR (需转换) | ✅ 满足 |
 | 频率: 日线 | 日线 | ✅ 满足 |
 | 覆盖: 2005-2025 | 1999-至今 | ✅ 满足 |
 | 价格类型明确 | Reference rate (2:15pm CET) | ✅ 满足 |
-| OHLC 数据 | ❌ 仅 Close | ⚠️ **需调整** |
-| 可交易价格 | ❌ Reference rate | ⚠️ **需说明** |
 
-### 所需调整
+### ECB 数据的限制
 
-#### 策略调整
+#### ❌ 无法支持 PR #19 的策略定义
 
-**原计划**: Donchian + ATR
-- Donchian Channel: 使用过去 N 日的 High/Low
-- ATR: 使用 High/Low/Close 计算
+PR #19 已经冻结了策略定义：
+- **Donchian Channel**: 需要过去 N 日的 **High/Low**
+- **ATR volatility**: 需要 **High/Low/Close** 计算 True Range
+- **同柱止损**: 需要区分 entry bar 内的 **High/Low**
 
-**调整后**: Close-based Donchian + Close-range volatility
-- Donchian Channel: 使用过去 N 日的 Close
-- Volatility: 使用 Close-to-Close 标准差或差分
+单一收盘价无法复现这些交易语义。
 
-**实现方案**:
-```python
-# 原 Donchian (需要 High/Low)
-upper = max(high[-period:])
-lower = min(low[-period:])
+#### ⚠️ 不能更改策略定义
 
-# 调整为 Close-based
-upper = max(close[-period:])
-lower = min(close[-period:])
+Issue #20 明确禁止：
+> "本轮不得搜索 entry period、exit period、ATR period、ATR multiplier、confirmation R 或 sizing 参数。若发现配置存在实现错误，只能修复错误，并说明修复前后；不得因为收益不佳而调整。"
 
-# 原 ATR (需要 H/L/C)
-tr = max(high - low, abs(high - prev_close), abs(low - prev_close))
-atr = ema(tr, period)
-
-# 调整为 Close volatility
-returns = close / prev_close - 1
-volatility = rolling_std(returns, period) * sqrt(252)  # 年化
-```
-
-#### 实验协议调整
-
-在实验协议中添加：
-
-```markdown
-## 数据限制与调整
-
-### 数据源特征
-- 数据源: ECB USD/EUR reference rate
-- 价格类型: 单一参考价（2:15 pm CET）
-- 限制: 无 OHLC，仅日收盘价
-
-### 策略调整
-- Donchian Channel: 基于收盘价突破（而非传统的 High/Low）
-- Volatility 度量: Close-to-Close 标准差（而非 ATR）
-- 标记: REFERENCE_RATE_LIMITATION
-
-### 成本建模
-- Zero cost: 无交易成本
-- Conservative cost: 包含估计的 bid-ask spread (2 pips) + 滑点估计
-- 标记: ESTIMATED_COST（因无实际 bid/ask 数据）
-```
+将 Donchian + ATR 改为 Close breakout + Close volatility 属于**更换策略**，不是数据 adapter，违反预注册协议。
 
 ---
 
@@ -429,25 +395,42 @@ def normalize_ecb_to_daily_close(raw_csv_path, output_path):
 
 ### 决策
 
-✅ **使用 ECB USD/EUR reference rate 作为主数据源**
+✅ **使用 ECB USD/EUR reference rate 用于交叉校验**
+
+❌ **不能使用 ECB 作为主数据源**
 
 ### 理由
 
-1. **许可明确**: 无 Dukascopy 式的严格限制
-2. **权威性高**: 官方央行数据
-3. **可复现性强**: 任何人都可以从相同 API 获取
-4. **满足核心需求**: 覆盖时间范围、日线频率、明确价格定义
-5. **唯一限制可接受**: 无 OHLC 可通过策略调整解决
+1. **交叉校验用途** ✅
+   - 许可明确且宽松
+   - 官方权威数据
+   - 可用于 close 价格抽样检查
+   - 符合 Issue #20 原始协议
+
+2. **不能作为主数据源** ❌
+   - 仅有单一收盘价，无 OHLC
+   - 无法支持 PR #19 的 Donchian High/Low + ATR 定义
+   - 改为 Close-based 策略违反预注册协议（禁止调参/改定义）
+   - 将策略改为适应数据源属于反向工程，不是正向回测
 
 ### 下一步行动
 
-1. ✅ 更新 Issue #20 实验协议，说明数据源变更
-2. ✅ 更新策略定义为 Close-based
-3. ⏳ 实现 ECB 下载器
-4. ⏳ 实现数据规范化 adapter
-5. ⏳ 实现数据质量检查
-6. ⏳ 生成数据 manifest 和 SHA256
-7. ⏳ 继续 Phase 3-8
+1. ⏳ **继续调查 OHLC 数据源**
+   - Dukascopy（调查数据专项条款）
+   - OANDA v20 API
+   - QuantConnect Forex Data
+   - Yahoo Finance / Quandl
+   - 至少一个具有官方 API 和明确授权边界的候选
+
+2. ⏳ **实现 ECB 交叉校验工具**
+   - 下载 ECB reference rate
+   - 用于对主数据源的 close 进行抽样验证
+   - 检查方向、数量级、日期覆盖、异常点
+
+3. ⏳ **等待人类批准主数据源**
+   - Phase 1 暂停在数据源选择门
+   - 不下载、不回测
+   - 输出 OHLC 数据源调查矩阵供人类决策
 
 ### 归属要求
 

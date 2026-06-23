@@ -1,250 +1,218 @@
-# Issue #20 数据源决策摘要
+# Issue #20 数据源调查摘要
 
-**决策日期**: 2026-06-23  
-**决策人**: agent clawbie  
+**调查日期**: 2026-06-23  
+**调查人**: agent clawbie  
 **Issue**: https://github.com/Baokai-and-his-agents/self-evo/issues/20
 
-## 决策结果
+## 当前状态
 
-### 主数据源: ECB USD/EUR Reference Rate
+⚠️ **DATA_SOURCE_DECISION_REQUIRED**
 
-✅ **选定**: European Central Bank (ECB) USD/EUR daily reference rate
-
-**理由**:
-1. 许可明确且宽松（允许免费使用、复制、分发、修改）
-2. 官方权威数据源（欧洲央行）
-3. API 访问完善且稳定
-4. 历史覆盖完整（1999-至今，满足 2005-2025 要求）
-5. 无自动化下载限制
-6. 无数据库存储限制
-7. 无数据共享限制
-
-### 不使用的数据源: Dukascopy
-
-❌ **不采用**: Dukascopy Historical Data Export
-
-**原因**: `DATA_LICENSE_BLOCKED`
-- Terms of Use 明确禁止自动化下载（需书面授权）
-- 明确禁止数据库存储
-- 禁止数据共享/转让
-- 仅允许个人非商业手动下载单次使用
-- 不符合可复现研究的要求
+Phase 1 已完成初步调查，但尚未确定可用的 OHLC 主数据源。当前暂停在数据源选择门，等待人类批准主数据源或进一步调查指令。
 
 ---
 
-## ECB 数据特征
+## 调查结果摘要
 
-### 数据规格
+### 1. Dukascopy Historical Data Export
 
-| 属性 | 值 |
-|------|-----|
-| 数据源 | European Central Bank |
-| 系列代码 | EXR.D.USD.EUR.SP00.A |
-| 频率 | 日线 (Daily) |
-| 价格类型 | Reference rate (2:15 pm CET) |
-| 货币对 | USD/EUR (需转换为 EUR/USD) |
-| 历史范围 | 1999-01-04 至今 |
-| 数据点 | 仅收盘价 (Close) |
-| OHLC | ❌ 无 Open/High/Low |
-| 成交量 | ❌ 无 |
-| 精度 | 4 位小数 |
-| 格式 | CSV, JSON, XML |
-| API | RESTful HTTP API |
-| 许可 | ECB Copyright Policy - Free use with attribution |
+**状态**: ⚠️ **DATA_TERMS_UNCLEAR**
 
-### 关键限制
+**已调查**:
+- 网站通用 Terms of Use
+- 发现禁止自动化访问网站（scraper, bot）
+- 发现禁止将"WEBSITE"存储在数据库中
+- 仅限个人非商业使用
 
-1. **仅收盘价**: 无 OHLC 数据
-2. **参考价**: 非实际可交易价格（无 bid/ask spread）
-3. **货币对方向**: USD/EUR 需转换为 EUR/USD
+**未调查**:
+- Historical Data Export 功能的专项条款
+- JForex API 的许可协议
+- 开立账户后下载历史数据的使用边界
+
+**不确定的场景**:
+- "WEBSITE"是否包括导出的 CSV 文件？
+- "数据库"是否包括本地研究缓存？
+- 手动导出后的文件是否可以编程处理？
+
+**下一步**:
+- 需要调查数据专项条款
+- 或联系 Dukascopy 获取明确说明
+- 或寻找替代 OHLC 数据源
+
+**详见**: [dukascopy-terms-analysis.md](dukascopy-terms-analysis.md)
 
 ---
 
-## 对 Issue #20 的影响
+### 2. ECB USD/EUR Reference Rate
 
-### 必须调整的内容
+**状态**: ✅ **适合用于交叉校验**  
+**状态**: ❌ **不能作为主数据源**
 
-#### 1. 策略定义调整
+**许可评估**:
+- ✅ 许可明确且宽松（ECB Copyright Policy）
+- ✅ 允许免费使用、复制、分发、修改
+- ✅ 无自动化下载限制
+- ✅ 无数据库存储限制
+- ✅ 仅需引用来源
 
-**原计划** (mvp_daily.json):
-- Donchian Channel: 基于过去 N 日的 High/Low
-- ATR volatility: 基于 True Range (High, Low, Close)
+**数据特征**:
+- 来源: European Central Bank
+- 系列: EXR.D.USD.EUR.SP00.A
+- 频率: 日线（每交易日 2:15 pm CET）
+- 价格: Reference rate（单一收盘价）
+- 覆盖: 1999-至今（满足 2005-2025 要求）
 
-**调整后**:
-- Donchian Channel: 基于过去 N 日的 **Close**
-- Volatility: 基于 Close-to-Close **标准差**
+**关键限制**:
+- ❌ 仅有单一收盘价，无 OHLC
+- ❌ 无法支持 PR #19 的 Donchian High/Low + ATR 定义
+- ❌ 改为 Close-based 策略违反 Issue #20 预注册协议
 
-**实现差异**:
+**用途**:
+- ✅ 用于主数据源的 close 价格抽样交叉校验
+- ✅ 检查方向、数量级、日期覆盖、异常点
+- ❌ 不能作为主回测数据源
+
+**详见**: [ecb-evaluation.md](ecb-evaluation.md)
+
+---
+
+## Issue #20 协议约束
+
+### 策略定义已冻结
+
+PR #19 已冻结策略定义：
+- **Donchian Channel**: 基于过去 N 日的 **High/Low**
+- **ATR volatility**: 基于 **True Range** (High, Low, Close)
+- **同柱止损**: 需要区分 entry bar 内的 **High/Low**
+
+Issue #20 明确禁止：
+> "本轮不得搜索 entry period、exit period、ATR period、ATR multiplier、confirmation R 或 sizing 参数。若发现配置存在实现错误，只能修复错误，并说明修复前后；不得因为收益不佳而调整。"
+
+**结论**: 将策略改为 Close breakout + Close volatility 属于**更换策略**，不是数据 adapter，违反预注册协议。
+
+### 主数据源必须有 OHLC
+
+Issue #20 明确：
+> "ECB reference rate 不是可交易 OHLC，不能作为主回测数据；只用于方向、数量级、日期覆盖和异常点抽查。"
+
+**结论**: 必须找到有 OHLC 的数据源，ECB 仅用于交叉校验。
+
+---
+
+## 下一步行动
+
+### Phase 1 继续: 补充 OHLC 数据源调查
+
+需要调查以下候选数据源，并对每项列出：
+- OHLC / bid-ask 可用性
+- 历史覆盖期（2005-2025）
+- 日线 / 小时频率
+- 账户 / API key 要求
+- 费用（免费 / 付费）
+- 自动化下载支持
+- 本地缓存许可
+- 再分发限制
+- 可复现方式
+
+#### 候选数据源
+
+1. **Dukascopy**
+   - 需要调查数据专项条款
+   - Web Export / JForex API / 账户数据
+
+2. **OANDA v20 API**
+   - 官方文档: https://developer.oanda.com/
+   - 需要调查历史数据获取方式和许可
+
+3. **QuantConnect Forex Data**
+   - 官方文档: https://www.quantconnect.com/data
+   - 需要调查免费 tier 和许可
+
+4. **Yahoo Finance (yfinance)**
+   - Python 库: yfinance
+   - 需要确认 EURUSD 数据可用性和 OHLC
+
+5. **至少一个其他候选**
+   - Quandl / Nasdaq Data Link
+   - FRED (Federal Reserve)
+   - 学术数据提供商
+   - Interactive Brokers API
+
+### Phase 1 输出
+
+在完成 OHLC 数据源调查后，生成：
+- OHLC 数据源对比矩阵（Markdown 表格）
+- 每个数据源的详细评估文档
+- 推荐方案和理由
+- 提交给人类批准
+
+### Phase 2-8 暂停
+
+在人类批准主数据源前：
+- ❌ 不下载数据
+- ❌ 不实现下载器
+- ❌ 不运行历史回测
+- ❌ 不修改策略定义
+
+---
+
+## 交叉校验方案
+
+无论选择哪个 OHLC 主数据源，使用 ECB reference rate 进行交叉校验：
+
+### 校验内容
+- 重叠日期数量
+- Close 价格相关性
+- 绝对差异分布（主数据 close - ECB rate）
+- 相对差异分布（百分比）
+- 最大异常日期识别
+
+### 校验实施
 ```python
-# 原定义（需要 OHLC）
-donchian_upper = max(high[-period:])
-donchian_lower = min(low[-period:])
-atr = ema(true_range(high, low, close), period)
-
-# 调整后（仅需 Close）
-donchian_upper = max(close[-period:])
-donchian_lower = min(close[-period:])
-volatility = rolling_std(close_returns, period)
-```
-
-#### 2. 实验协议更新
-
-在 Issue #20 的实验协议中添加：
-
-```markdown
-## 数据限制声明
-
-### 数据源特征
-- **来源**: European Central Bank (ECB)
-- **系列**: USD/EUR daily reference rate (2:15 pm CET)
-- **价格类型**: 单一参考价，非可交易 bid/ask
-- **限制**: 无 OHLC，仅日收盘价
-
-### 策略调整
-- **Donchian Channel**: 基于收盘价突破（替代传统 High/Low 突破）
-- **Volatility**: Close-to-Close 标准差（替代 ATR）
-- **标记**: `REFERENCE_RATE_LIMITATION`
-
-### 成本建模
-- **Zero cost**: 无交易成本
-- **Conservative cost**: 
-  - 估计 bid-ask spread: 2 pips (0.0002)
-  - 估计滑点: 1 pip (0.0001)
-  - 总估计成本: 3 pips per round trip
-  - 标记: `ESTIMATED_COST` (因无实际 bid/ask 数据)
-
-### Rollover 建模
-- **状态**: `ROLLOVER_NOT_MODELED`
-- **理由**: ECB reference rate 不包含隔夜利息
-- **影响**: Conservative cost 场景未包含 swap/rollover 成本
-```
-
-#### 3. 配置文件调整
-
-`configs/mvp_daily.json` 需要更新：
-- 移除 ATR 相关参数
-- 添加 Close-based volatility 参数
-- 添加数据源元数据
-
-#### 4. 文档要求
-
-所有使用 ECB 数据的地方必须包含归属：
-
-```
-数据来源: European Central Bank (ECB)
-数据系列: EUR/USD daily reference exchange rate
-原始系列: EXR.D.USD.EUR.SP00.A (USD/EUR)
-API: https://data-api.ecb.europa.eu/service/
-访问日期: 2026-06-23
-许可: ECB Copyright Policy - Free use with attribution
-引用: European Central Bank. Euro foreign exchange reference rates.
+# data/adapters/ecb_cross_check.py
+def cross_check_with_ecb(main_data_close, ecb_rate):
+    """
+    使用 ECB reference rate 对主数据源的 close 进行抽样检查
+    
+    Args:
+        main_data_close: 主数据源的 close 价格
+        ecb_rate: ECB USD/EUR reference rate
+    
+    Returns:
+        cross_check_report: 包含相关性、差异分布、异常点
+    """
+    # 1. 对齐日期
+    # 2. 转换货币对方向（如需要）
+    # 3. 计算相关性
+    # 4. 计算差异
+    # 5. 识别异常点
 ```
 
 ---
 
-## 实施计划更新
-
-### Phase 1: 数据源调查 ✅ COMPLETED
-
-- ✅ 调查 Dukascopy → 结论: DATA_LICENSE_BLOCKED
-- ✅ 调查 ECB API → 结论: 适合作为主数据源
-- ✅ 评估许可条款 → 结论: 无阻碍
-- ✅ 确认数据字段 → 结论: 仅收盘价，需调整策略
-
-### Phase 2: 下载器与 Adapter 实现
-
-**更新后的任务**:
-
-1. **ECB 下载器**
-   - 实现 `data/sources/ecb/downloader.py`
-   - 从 ECB API 下载 USD/EUR 数据
-   - 支持日期范围参数
-   - 实现重试逻辑
-   - 生成下载 manifest (SHA256, 行数, 日期范围)
-
-2. **数据规范化 Adapter**
-   - 实现 `data/adapters/ecb_adapter.py`
-   - USD/EUR → EUR/USD 转换
-   - 提取 date, close 字段
-   - 验证时间排序
-   - 检查缺失和异常值
-   - 输出规范化 CSV
-
-3. **数据存储**
-   - 原始 CSV: `state/download-cache/fx-backtest/ecb/raw/`
-   - 规范化 CSV: `state/download-cache/fx-backtest/ecb/normalized/`
-   - Manifest: `state/download-cache/fx-backtest/ecb/manifest.json`
-   - ⚠️ 确保 `.gitignore` 排除 `state/download-cache/`
-
-### Phase 3: 数据质量检查
-
-**新增检查项**:
-- Close price 合理性（> 0, 日变动 < 5%）
-- 货币对转换正确性
-- 无需 OHLC 不变量检查（因无 OHLC）
-
-### Phase 4: 实验配置冻结
-
-**更新任务**:
-- 修改 `configs/mvp_daily.json` 为 Close-based 策略
-- 添加数据源元数据
-- 记录策略调整理由
-
-### Phase 5-8: 保持不变
-
-回测、分析、测试、PR 流程保持不变。
-
----
-
-## 风险与缓解
+## 风险与限制
 
 ### 已识别风险
 
 | 风险 | 影响 | 缓解措施 | 状态 |
 |------|------|---------|------|
-| 无 OHLC 数据 | 策略定义需调整 | 使用 Close-based 定义，明确记录 | ✅ 可接受 |
-| 非交易价格 | 回测结果是理论值 | 说明限制，保守成本增加 spread | ✅ 可接受 |
-| 货币对方向 | 需要转换 | Adapter 自动转换并测试 | ✅ 可控 |
-| API 可用性 | 下载可能中断 | 重试逻辑，本地缓存 | ✅ 可控 |
-
-### 不可接受风险
-
-❌ **无** - 所有已识别风险均已有缓解措施。
-
----
-
-## 验收标准更新
-
-### 原标准（Issue #20）
-
-- ✅ 单命令可以从已有缓存重现规范化、回测和报告
-- ✅ 下载步骤可独立执行并有重试、校验和清晰错误信息
-- ✅ 原始大文件未进入 Git
-- ✅ 时间切分与参数在结果生成前固定并写入配置
-- ✅ OOS 没有参与参数选择
-- ✅ A/B/E/G 使用相同完整事件流，G 实际风险多重集与 B 相同
-- ✅ 样本不足时拒绝强结论
-- ✅ 现有 fx_backtest 与仓库测试不回归
-- ✅ `git diff --check` 和 validator 无 WARN/BLOCK
-
-### 新增标准
-
-- ✅ ECB 数据来源明确归属
-- ✅ 策略调整（Close-based）在配置和报告中明确记录
-- ✅ `REFERENCE_RATE_LIMITATION` 标记存在于相关文档
-- ✅ USD/EUR → EUR/USD 转换正确性已测试
-- ✅ 货币对转换的单元测试通过
+| Dukascopy 许可不明 | 可能无法使用 | 调查专项条款或寻找替代 | ⏳ 进行中 |
+| ECB 无 OHLC | 不能作为主数据源 | 仅用于交叉校验 | ✅ 已接受 |
+| 策略定义已冻结 | 不能改为 Close-based | 必须找到 OHLC 数据源 | ⚠️ 约束 |
+| 可能需要付费数据 | 增加成本 | 优先免费/学术许可数据 | ⏳ 待定 |
 
 ---
 
 ## 相关文档
 
+- Issue: https://github.com/Baokai-and-his-agents/self-evo/issues/20
+- PR #19: https://github.com/Baokai-and-his-agents/self-evo/pull/19
 - [Dukascopy 调查报告](dukascopy-investigation.md)
 - [Dukascopy Terms 分析](dukascopy-terms-analysis.md)
 - [ECB 评估报告](ecb-evaluation.md)
-- [Issue #20](https://github.com/Baokai-and-his-agents/self-evo/issues/20)
 
 ---
 
-**状态**: Phase 1 完成，进入 Phase 2  
-**下一步**: 实现 ECB 下载器和 adapter
+**当前状态**: Phase 1 部分完成，需要补充 OHLC 数据源调查  
+**下一步**: 调查 OANDA v20、QuantConnect、Yahoo Finance 等 OHLC 数据源  
+**等待**: 人类批准主数据源或进一步调查指令
