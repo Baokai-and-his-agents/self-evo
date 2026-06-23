@@ -438,61 +438,361 @@ def use_tick_data_for_stop():
 
 ---
 
-## 5. 与经典策略的对比实现
+## 5. 对照实验设计（A-G Control Groups）
 
-### 5.1 对照组 A：固定仓位
-
-```python
-def fixed_position_baseline(market_data, equity, r_fixed=0.01):
-    """
-    基准：固定仓位重复试探
-    """
-    for bar in market_data:
-        if entry_signal(bar):
-            size = calculate_position_size(equity, r_fixed, bar.atr)
-            position = open_position(size, stop_loss, entry_price)
-            # 无递增，每次独立交易
-```
-
-### 5.2 对照组 B：Anti-Martingale（盈利后加仓）
+### 实验约束（所有组共享）
 
 ```python
-def anti_martingale(market_data, equity, r_0=0.01):
-    """
-    Anti-Martingale：盈利后递增
-    """
-    current_risk = r_0
-
-    for bar in market_data:
-        if previous_trade_won:
-            current_risk = min(current_risk * 1.5, r_max)  # 盈利后增加
-        elif previous_trade_lost:
-            current_risk = r_0  # 亏损后重置
-
-        size = calculate_position_size(equity, current_risk, bar.atr)
+# 共同参数
+ENTRY_SIGNAL = donchian_20_day_breakout  # 所有组使用相同入场信号
+EXIT_SIGNAL = donchian_10_day_exit       # 所有组使用相同退出信号
+STOP_LOSS = 2 * ATR                       # 所有组使用相同止损距离
+COST_MODEL = spread + commission + swap   # 所有组使用相同成本模型
+DATA_PERIOD = 2010-2024                   # 所有组使用相同数据
+MARKETS = ['EURUSD', 'GBPUSD', 'USDJPY']  # 所有组使用相同市场
+MAX_EQUITY_RISK = 0.10                    # 所有组最大权益风险 10%
+WALK_FORWARD = 5_year_train_1_year_test   # 所有组使用相同验证方法
 ```
 
-### 5.3 对照组 C：Turtle Pyramiding
+**关键原则**：
+- 唯一变化变量：sizing logic（仓位大小如何响应 stop-count/state）
+- 所有其他维度保持完全一致
+- 对照组 G（placebo）用于验证因果关系
+
+---
+
+### A. Fixed Position Repeated Probes（固定仓位重复试探）
+
+**目的**: 基准 - 每次独立交易，固定风险
+
+**状态变量**:
+```python
+state: {IDLE, IN_POSITION}
+n: int = 0  # 仅用于记录，不影响sizing
+```
+
+**Sizing 函数**:
+```python
+def size_A(equity, n, atr):
+    """固定仓位，不随 n 变化"""
+    r_fixed = 0.01  # 固定 1% 风险
+    return calculate_position_size(equity, r_fixed, atr)
+```
+
+**伪代码**:
+```python
+for bar in market_data:
+    if state == IDLE and entry_signal(bar):
+        size = size_A(equity, n=0, bar.atr)
+        position = open_position(size, stop=bar.price - 2*bar.atr)
+        state = IN_POSITION
+    
+    if state == IN_POSITION:
+        if bar.price <= position.stop:
+            close_position(position)
+            n += 1  # 仅记录
+            state = IDLE
+        elif exit_signal(bar):
+            close_position(position)
+            n = 0
+            state = IDLE
+```
+
+---
+
+### B. Bounded Arithmetic Sizing After Losses（亏损后有界算术递增）
+
+**目的**: 测试本 PR 提出的算术递增机制
+
+**状态变量**:
+```python
+state: {IDLE, PROBE, CONFIRMED}
+n: int = 0  # 连续止损次数
+cumulative_loss: float = 0.0
+```
+
+**Sizing 函数**:
+```python
+def size_B(equity, n, atr, r_0=0.01, d=0.005, K=5, r_max=0.03):
+    """算术递增：r_n = r_0 + n × d，上限 K 或 r_max"""
+    if n >= K:
+        return 0  # 达到最大档位，停止交易
+    r_n = min(r_0 + n * d, r_max)
+    return calculate_position_size(equity, r_n, atr)
+```
+
+**伪代码**:
+```python
+for bar in market_data:
+    if state == IDLE and entry_signal(bar):
+        size = size_B(equity, n=0, bar.atr)
+        position = open_position(size, stop=bar.price - 2*bar.atr)
+        state = PROBE
+    
+    if state == PROBE:
+        if bar.price <= position.stop:
+            cumulative_loss += position.risk
+            n += 1
+            close_position(position)
+            
+            if n >= K or cumulative_loss >= 0.10 * equity:
+                state = IDLE
+                n = 0
+                cumulative_loss = 0.0
+            else:
+                # 递增重试
+                size = size_B(equity, n, bar.atr)
+                position = open_position(size, stop=bar.price - 2*bar.atr)
+        
+        elif position.pnl >= 3.0 * position.risk:
+            state = CONFIRMED
+```
+
+---
+
+### C. Bounded Geometric Sizing After Losses（亏损后有界几何递增）
+
+**目的**: 测试几何递增变体
+
+**Sizing 函数**:
+```python
+def size_C(equity, n, atr, r_0=0.01, m=1.5, K=5, r_max=0.10):
+    """几何递增：r_n = r_0 × m^n"""
+    if n >= K:
+        return 0
+    r_n = min(r_0 * (m ** n), r_max)
+    return calculate_position_size(equity, r_n, atr)
+```
+
+**其他逻辑与 B 相同，仅 sizing 函数不同**
+
+---
+
+### D. Add After Wins / Anti-Martingale（盈利后加仓）
+
+**目的**: 对照 - 与 B/C 方向相反，盈利后递增
+
+**状态变量**:
+```python
+state: {IDLE, IN_POSITION}
+win_streak: int = 0  # 连续盈利次数
+```
+
+**Sizing 函数**:
+```python
+def size_D(equity, win_streak, atr, r_0=0.01, m=1.5, max_wins=3, r_max=0.03):
+    """盈利后几何递增"""
+    r_n = min(r_0 * (m ** win_streak), r_max)
+    return calculate_position_size(equity, r_n, atr)
+```
+
+**伪代码**:
+```python
+for bar in market_data:
+    if state == IDLE and entry_signal(bar):
+        size = size_D(equity, win_streak, bar.atr)
+        position = open_position(size, stop=bar.price - 2*bar.atr)
+        state = IN_POSITION
+    
+    if state == IN_POSITION:
+        if bar.price <= position.stop:
+            close_position(position)
+            win_streak = 0  # 重置
+            state = IDLE
+        elif exit_signal(bar) and position.pnl > 0:
+            close_position(position)
+            win_streak = min(win_streak + 1, max_wins)
+            state = IDLE
+        elif exit_signal(bar) and position.pnl <= 0:
+            close_position(position)
+            win_streak = 0
+            state = IDLE
+```
+
+---
+
+### E. Fixed Small Probe + One-Time Amplification（固定小仓 + 独立确认后单次放大）
+
+**目的**: 测试"小仓试探 + 趋势确认后放大"，但放大触发条件来自独立模型
+
+**状态变量**:
+```python
+state: {IDLE, PROBE, CONFIRMED}
+confirmation_model: IndependentTrendModel  # 只用过去数据
+```
+
+**Sizing 函数**:
+```python
+def size_E(equity, state, atr, r_probe=0.005, r_confirmed=0.02):
+    """固定小仓试探，独立确认后放大"""
+    if state == "PROBE":
+        return calculate_position_size(equity, r_probe, atr)
+    elif state == "CONFIRMED":
+        return calculate_position_size(equity, r_confirmed, atr)
+    else:
+        return 0
+```
+
+**伪代码**:
+```python
+confirmation_model = train_model(historical_data)  # 只用过去数据
+
+for bar in market_data:
+    if state == IDLE and entry_signal(bar):
+        size = size_E(equity, "PROBE", bar.atr)
+        position = open_position(size, stop=bar.price - 2*bar.atr)
+        state = PROBE
+    
+    if state == PROBE:
+        # 独立确认模型（非基于止损序列）
+        confidence = confirmation_model.predict(bar)
+        
+        if confidence > 0.70:  # 高置信度
+            # 放大仓位
+            close_position(position)
+            size = size_E(equity, "CONFIRMED", bar.atr)
+            position = open_position(size, stop=bar.price - 2*bar.atr)
+            state = CONFIRMED
+        elif bar.price <= position.stop:
+            close_position(position)
+            state = IDLE  # 不递增
+```
+
+---
+
+### F. Posterior/Confidence-Based Sizing（后验概率动态仓位）
+
+**目的**: 测试基于独立模型置信度的动态仓位
+
+**状态变量**:
+```python
+state: {IDLE, IN_POSITION}
+posterior_model: BayesianModel  # 贝叶斯更新模型，只用过去数据
+```
+
+**Sizing 函数**:
+```python
+def size_F(equity, posterior_p, atr, r_min=0.005, r_max=0.03):
+    """仓位 = Kelly × posterior_p"""
+    kelly = 2 * posterior_p - 1  # 简化 Kelly for p, R=1
+    kelly_clamped = max(0, min(kelly, 1))
+    r_n = r_min + (r_max - r_min) * kelly_clamped
+    return calculate_position_size(equity, r_n, atr)
+```
+
+**伪代码**:
+```python
+posterior_model = BayesianModel(prior_p=0.50)  # 初始先验
+
+for bar in market_data:
+    # 更新后验（只用过去观测）
+    posterior_p = posterior_model.update(historical_features)
+    
+    if state == IDLE and entry_signal(bar):
+        size = size_F(equity, posterior_p, bar.atr)
+        position = open_position(size, stop=bar.price - 2*bar.atr)
+        state = IN_POSITION
+    
+    if state == IN_POSITION:
+        if bar.price <= position.stop or exit_signal(bar):
+            close_position(position)
+            state = IDLE
+```
+
+**关键约束**: `posterior_model` 必须只用过去数据训练，不能使用当前交易的止损序列作为输入
+
+---
+
+### G. Placebo / Permutation（安慰剂/置换检验）
+
+**目的**: 验证因果关系 - 打乱 sizing-state 映射，检验是否路径依赖价值
+
+#### G1: Sizing-Label Permutation（仓位标签置换）
+
+**逻辑**: 保持 return 序列和 stop-count 序列不变，随机打乱 `n → size` 映射
 
 ```python
-def turtle_pyramiding(market_data, equity, r_0=0.01, max_units=4):
+def size_G1(equity, n, atr, permutation_map):
     """
-    Turtle：趋势确认后盈利加仓
+    permutation_map = {0: 3, 1: 1, 2: 4, 3: 0, ...}
+    实际 n=2 时，使用 n=4 对应的 size
     """
-    units = []
-
-    for bar in market_data:
-        if entry_signal(bar) and len(units) == 0:
-            unit = open_position(...)
-            units.append(unit)
-
-        # 盈利 0.5N 后加仓
-        if len(units) > 0 and len(units) < max_units:
-            last_unit = units[-1]
-            if bar.price > last_unit.entry + 0.5 * bar.atr:
-                new_unit = open_position(...)
-                units.append(new_unit)
+    permuted_n = permutation_map[n]
+    return size_B(equity, permuted_n, atr)  # 使用 B 的 sizing 函数
 ```
+
+**预期**: 若 B 优于 G1，说明 sizing 时机重要；若 B ≈ G1，说明只是 sizing 分布重要
+
+#### G2: Trade-Order Permutation（交易顺序置换）
+
+**逻辑**: 保持每笔交易的 (entry, exit, size) 不变，随机打乱交易发生的时间顺序
+
+```python
+trades = generate_all_trades()  # 记录所有交易
+shuffled_trades = random.shuffle(trades)
+replay_trades(shuffled_trades)
+```
+
+**预期**: 若 B 优于 G2，说明路径依赖（时机选择）有价值；若 B ≈ G2，说明只是 trade 质量分布重要
+
+---
+
+### 对照组比较矩阵
+
+| 组 | 唯一变化 | 预期结果 | 检验假设 |
+|----|---------|---------|---------|
+| **A** | 固定仓位（基准） | Sharpe ~0.5-1.0 | 基准表现 |
+| **B** | 止损后算术递增 | 若假设成立：优于 A；否则：≈A 或劣于 A | 核心假设：止损序列预测趋势 |
+| **C** | 止损后几何递增 | 类似 B，但波动更大 | 递增函数形式影响 |
+| **D** | 盈利后递增 | 已有实证支持（Turtle），预期优于 A | 方向相反对照 |
+| **E** | 独立确认后放大 | 若确认模型有效：优于 A | 独立信息 vs 止损序列 |
+| **F** | 后验概率动态 | 若模型有效：优于 A | Kelly + Bayesian |
+| **G1** | sizing 标签置换 | 应 ≈ B（若路径无关）或劣于 B（若路径重要）| 时机 vs 分布 |
+| **G2** | 交易顺序置换 | 应劣于 B（破坏时间结构）| 因果关系验证 |
+
+---
+
+### 统计检验协议
+
+```python
+# 对每组运行
+for group in [A, B, C, D, E, F, G1, G2]:
+    results = []
+    for currency_pair in ['EURUSD', 'GBPUSD', 'USDJPY']:
+        for walk_forward_window in range(2010, 2024, 1):
+            equity_curve = run_backtest(group, pair, window)
+            results.append({
+                'sharpe': calculate_sharpe(equity_curve),
+                'max_dd': calculate_max_drawdown(equity_curve),
+                'total_return': equity_curve[-1] / equity_curve[0] - 1,
+                'win_rate': calculate_win_rate(equity_curve),
+            })
+    
+    # 统计检验
+    # H0: B 的 Sharpe <= A 的 Sharpe
+    # H1: B 的 Sharpe > A 的 Sharpe
+    t_stat, p_value = ttest_ind(results_B['sharpe'], results_A['sharpe'])
+    
+    if p_value < 0.01:
+        print(f"B significantly outperforms A at p < 0.01")
+    else:
+        print(f"No significant evidence that B > A")
+```
+
+---
+
+### 验收标准
+
+**B 机制被认为有效，当且仅当**：
+1. B 的 Sharpe ratio 显著高于 A（p < 0.01，t-test）
+2. B 显著优于 G1（证明时机重要，非仅分布）
+3. B 显著优于 G2（证明因果关系，非巧合）
+4. B 的 max drawdown < 2× A 的 max drawdown（风险可控）
+5. B 在 out-of-sample 期表现稳定（walk-forward 验证）
+
+**若任一条件不满足**：
+- B 机制无增量价值或不可控风险
+- 不推荐实盘使用
 
 ---
 
