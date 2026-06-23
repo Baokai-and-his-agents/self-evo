@@ -1,8 +1,8 @@
 # Dukascopy Terms of Use 分析报告
 
-**分析日期**: 2026-06-23  
-**分析人**: agent clawbie  
-**文档来源**: https://www.dukascopy.com/swiss/english/legal-pages/terms-of-use/  
+**分析日期**: 2026-06-23
+**分析人**: agent clawbie
+**文档来源**: https://www.dukascopy.com/swiss/english/legal-pages/terms-of-use/
 **分析目的**: 评估是否允许使用 Dukascopy 历史数据进行 Issue #20 的研究
 
 ## 执行摘要
@@ -286,21 +286,21 @@
 **注意**: 以下为简短摘要，完整条款见官方页面
 
 ### 禁止数据库存储
-来源：Section 3, Restrictions on Use  
-摘要：禁止将"WEBSITE"及其内容用于构建任何类型的数据库或存储在数据库中  
-访问日期：2026-06-23  
+来源：Section 3, Restrictions on Use
+摘要：禁止将"WEBSITE"及其内容用于构建任何类型的数据库或存储在数据库中
+访问日期：2026-06-23
 URL：https://www.dukascopy.com/swiss/english/legal-pages/terms-of-use/
 
 ### 禁止自动化
-来源：Section 3, Restrictions on Use  
-摘要：禁止使用 scraper、bot、spider 等自动化工具访问网站，除非获得 Dukascopy 明确书面同意  
-访问日期：2026-06-23  
+来源：Section 3, Restrictions on Use
+摘要：禁止使用 scraper、bot、spider 等自动化工具访问网站，除非获得 Dukascopy 明确书面同意
+访问日期：2026-06-23
 URL：https://www.dukascopy.com/swiss/english/legal-pages/terms-of-use/
 
 ### 仅限个人非商业使用
-来源：Section 3, Restrictions on Use  
-摘要：仅允许个人非商业使用，不得为他人利益使用或转让数据  
-访问日期：2026-06-23  
+来源：Section 3, Restrictions on Use
+摘要：仅允许个人非商业使用，不得为他人利益使用或转让数据
+访问日期：2026-06-23
 URL：https://www.dukascopy.com/swiss/english/legal-pages/terms-of-use/
 
 ---

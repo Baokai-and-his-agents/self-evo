@@ -1,8 +1,8 @@
 # Issue #20 Phase 1 完成报告
 
-**报告日期**: 2026-06-23  
-**Agent**: clawbie  
-**Branch**: agent/fx-backtest-worker-01/20-eurusd-baseline  
+**报告日期**: 2026-06-23
+**Agent**: clawbie
+**Branch**: agent/fx-backtest-worker-01/20-eurusd-baseline
 **Issue**: https://github.com/Baokai-and-his-agents/self-evo/issues/20
 
 ---
@@ -11,7 +11,7 @@
 
 ⚠️ **Phase 1: 数据源调查** - 部分完成，暂停在数据源选择门
 
-**当前状态**: DATA_SOURCE_DECISION_REQUIRED  
+**当前状态**: DATA_SOURCE_DECISION_REQUIRED
 **原因**: 未找到可用的 OHLC 数据源，ECB 仅适合交叉校验
 
 ---
@@ -46,7 +46,7 @@
 
 ### 2. ECB USD/EUR Reference Rate
 
-**结论**: ✅ **适合用于交叉校验**  
+**结论**: ✅ **适合用于交叉校验**
 **结论**: ❌ **不能作为主数据源**
 
 **许可评估**:
@@ -198,6 +198,6 @@
 
 ---
 
-**当前状态**: Phase 1 部分完成，暂停在数据源选择门  
-**等待**: 人类批准主数据源或进一步调查指令  
+**当前状态**: Phase 1 部分完成，暂停在数据源选择门
+**等待**: 人类批准主数据源或进一步调查指令
 **下一步**: 补充 OANDA / QuantConnect / Yahoo Finance 调查，或等待决策

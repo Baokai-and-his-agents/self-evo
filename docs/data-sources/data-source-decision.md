@@ -1,7 +1,7 @@
 # Issue #20 数据源调查摘要
 
-**调查日期**: 2026-06-23  
-**调查人**: agent clawbie  
+**调查日期**: 2026-06-23
+**调查人**: agent clawbie
 **Issue**: https://github.com/Baokai-and-his-agents/self-evo/issues/20
 
 ## 当前状态
@@ -45,7 +45,7 @@ Phase 1 已完成初步调查，但尚未确定可用的 OHLC 主数据源。当
 
 ### 2. ECB USD/EUR Reference Rate
 
-**状态**: ✅ **适合用于交叉校验**  
+**状态**: ✅ **适合用于交叉校验**
 **状态**: ❌ **不能作为主数据源**
 
 **许可评估**:
@@ -173,11 +173,11 @@ Issue #20 明确：
 def cross_check_with_ecb(main_data_close, ecb_rate):
     """
     使用 ECB reference rate 对主数据源的 close 进行抽样检查
-    
+
     Args:
         main_data_close: 主数据源的 close 价格
         ecb_rate: ECB USD/EUR reference rate
-    
+
     Returns:
         cross_check_report: 包含相关性、差异分布、异常点
     """
@@ -213,6 +213,6 @@ def cross_check_with_ecb(main_data_close, ecb_rate):
 
 ---
 
-**当前状态**: Phase 1 部分完成，需要补充 OHLC 数据源调查  
-**下一步**: 调查 OANDA v20、QuantConnect、Yahoo Finance 等 OHLC 数据源  
+**当前状态**: Phase 1 部分完成，需要补充 OHLC 数据源调查
+**下一步**: 调查 OANDA v20、QuantConnect、Yahoo Finance 等 OHLC 数据源
 **等待**: 人类批准主数据源或进一步调查指令
