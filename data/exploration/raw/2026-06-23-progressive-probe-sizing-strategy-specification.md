@@ -1,7 +1,7 @@
 # Progressive Probe Position Sizing - Strategy Specification
 
-**Date:** 2026-06-23  
-**Worker:** scout-worker-fx-sizing-01  
+**Date:** 2026-06-23
+**Worker:** scout-worker-fx-sizing-01
 **Run ID:** 2026-06-23-fx-sizing-001
 
 ---
@@ -105,18 +105,18 @@ R_target: float = 5.0  # 总目标 R 倍数
 def run_progressive_probe_strategy(market_data, initial_equity):
     """
     Progressive Probe Position Sizing Strategy
-    
+
     WARNING: This strategy is experimental and carries high risk.
     Core assumption (stop-loss sequences predict trend) is NOT supported by evidence.
     """
-    
+
     # 初始化
     state = State.IDLE
     n = 0
     cumulative_loss = 0.0
     equity = initial_equity
     positions = []
-    
+
     for bar in market_data:
         # 状态机主逻辑
         if state == State.IDLE:
@@ -131,33 +131,33 @@ def run_progressive_probe_strategy(market_data, initial_equity):
                 )
                 positions.append(position)
                 log(f"IDLE -> PROBE: Open {position.size} at {bar.price}")
-        
+
         elif state == State.PROBE:
             # 检查现有仓位
             for pos in positions:
                 pnl = pos.calculate_pnl(bar.price)
-                
+
                 # 止损触发
                 if bar.price <= pos.stop_loss:
                     cumulative_loss += abs(pnl)
                     close_position(pos)
                     positions.remove(pos)
-                    
+
                     # 判断是否继续递增
                     if n >= K:
                         state = State.TERMINAL_FAILURE
                         log(f"PROBE -> TERMINAL_FAILURE: Reached max retries K={K}")
                         break
-                    
+
                     if cumulative_loss >= total_risk_budget * equity:
                         state = State.TERMINAL_FAILURE
                         log(f"PROBE -> TERMINAL_FAILURE: Budget exhausted")
                         break
-                    
+
                     # 递增仓位
                     n += 1
                     new_size = calculate_position_size(
-                        equity, 
+                        equity,
                         min(r_0 + n * d, r_max),  # 算术递增
                         bar.atr
                     )
@@ -168,17 +168,17 @@ def run_progressive_probe_strategy(market_data, initial_equity):
                     )
                     positions.append(new_position)
                     log(f"Stop loss #{n}: Open larger {new_size} at {bar.price}")
-                
+
                 # 趋势确认
                 elif pnl >= R_confirm * pos.initial_risk:
                     state = State.CONFIRMED
                     log(f"PROBE -> CONFIRMED: Profit {pnl:.2f}, R={pnl/pos.initial_risk:.2f}")
                     break
-        
+
         elif state == State.CONFIRMED:
             # 检查目标达成
             total_pnl = sum(pos.calculate_pnl(bar.price) for pos in positions)
-            
+
             if total_pnl >= R_target * r_0 * equity:
                 for pos in positions:
                     close_position(pos)
@@ -186,7 +186,7 @@ def run_progressive_probe_strategy(market_data, initial_equity):
                 equity += total_pnl
                 state = State.IDLE
                 log(f"CONFIRMED -> TERMINAL_SUCCESS: Total profit {total_pnl:.2f}")
-            
+
             # 检查反转（trailing stop）
             elif any(bar.price <= pos.trailing_stop for pos in positions):
                 for pos in positions:
@@ -196,7 +196,7 @@ def run_progressive_probe_strategy(market_data, initial_equity):
                 equity += total_pnl
                 state = State.IDLE
                 log(f"CONFIRMED -> IDLE: Trailing stop hit, profit {total_pnl:.2f}")
-        
+
         elif state == State.TERMINAL_FAILURE:
             # 清仓
             for pos in positions:
@@ -204,7 +204,7 @@ def run_progressive_probe_strategy(market_data, initial_equity):
             positions.clear()
             state = State.IDLE
             log(f"TERMINAL_FAILURE -> IDLE: Reset after failure")
-    
+
     return equity, positions
 ```
 
@@ -214,30 +214,30 @@ def run_progressive_probe_strategy(market_data, initial_equity):
 def calculate_position_size(equity, risk_pct, atr):
     """
     计算仓位大小（volatility-normalized）
-    
+
     Args:
         equity: 当前权益
         risk_pct: 风险百分比（如 0.01 = 1%）
         atr: Average True Range（波动率代理）
-    
+
     Returns:
         position_size: 仓位大小（单位：lots 或 contracts）
     """
     risk_amount = equity * risk_pct
     stop_distance = 2 * atr  # 2 ATR 止损
-    
+
     # Forex: position_size = risk_amount / (stop_distance * pip_value)
     # Futures: position_size = risk_amount / (stop_distance * point_value)
-    
+
     position_size = risk_amount / (stop_distance * pip_value)
-    
+
     return round_to_lot_size(position_size)
 
 
 def entry_signal(bar):
     """
     入场信号（示例：20-day breakout）
-    
+
     实际实现应基于具体策略，如：
     - Donchian channel breakout
     - Moving average crossover
@@ -334,20 +334,20 @@ cooldown_period_days = 5
 def calculate_total_cost(n_trades, spread, commission, swap_per_day):
     """
     完整成本模型
-    
+
     Args:
         n_trades: 交易次数
         spread: Bid-ask spread（pips）
         commission: 每 lot 佣金
         swap_per_day: 隔夜利息（per lot per day）
-    
+
     Returns:
         total_cost: 总成本
     """
     spread_cost = n_trades * spread * pip_value
     commission_cost = n_trades * commission
     swap_cost = holding_days * swap_per_day
-    
+
     return spread_cost + commission_cost + swap_cost
 ```
 
@@ -362,7 +362,7 @@ def calculate_total_cost(n_trades, spread, commission, swap_per_day):
 def apply_slippage(order_price, slippage_model):
     """
     滑点建模
-    
+
     - 正常市场：0.5-1 pip
     - 新闻事件：2-5 pips
     - 低流动性：3-10 pips
@@ -374,7 +374,7 @@ def apply_slippage(order_price, slippage_model):
         slippage = random.uniform(3, 10)
     else:
         slippage = random.uniform(0.5, 1)
-    
+
     executed_price = order_price + slippage  # Long 时
     return executed_price
 ```
@@ -390,18 +390,18 @@ def apply_slippage(order_price, slippage_model):
 def check_margin_requirement(position_size, leverage, equity):
     """
     检查保证金是否充足
-    
+
     Forex 典型杠杆：50:1, 100:1, 500:1
     保证金 = position_value / leverage
     """
     position_value = position_size * contract_size * current_price
     required_margin = position_value / leverage
-    
+
     if required_margin > equity * 0.80:  # 保留 20% 缓冲
         raise InsufficientMarginError(
             f"Required {required_margin}, available {equity * 0.80}"
         )
-    
+
     return True
 ```
 
@@ -462,13 +462,13 @@ def anti_martingale(market_data, equity, r_0=0.01):
     Anti-Martingale：盈利后递增
     """
     current_risk = r_0
-    
+
     for bar in market_data:
         if previous_trade_won:
             current_risk = min(current_risk * 1.5, r_max)  # 盈利后增加
         elif previous_trade_lost:
             current_risk = r_0  # 亏损后重置
-        
+
         size = calculate_position_size(equity, current_risk, bar.atr)
 ```
 
@@ -480,12 +480,12 @@ def turtle_pyramiding(market_data, equity, r_0=0.01, max_units=4):
     Turtle：趋势确认后盈利加仓
     """
     units = []
-    
+
     for bar in market_data:
         if entry_signal(bar) and len(units) == 0:
             unit = open_position(...)
             units.append(unit)
-        
+
         # 盈利 0.5N 后加仓
         if len(units) > 0 and len(units) < max_units:
             last_unit = units[-1]

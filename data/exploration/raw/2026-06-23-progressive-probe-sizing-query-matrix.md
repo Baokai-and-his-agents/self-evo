@@ -1,7 +1,7 @@
 # Progressive Probe Position Sizing - Query Matrix
 
-**Date:** 2026-06-23  
-**Worker:** scout-worker-fx-sizing-01  
+**Date:** 2026-06-23
+**Worker:** scout-worker-fx-sizing-01
 **Run ID:** 2026-06-23-fx-sizing-001
 
 ---
