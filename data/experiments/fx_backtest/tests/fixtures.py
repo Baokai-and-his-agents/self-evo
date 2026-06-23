@@ -131,6 +131,34 @@ def create_fixture_cycle_failure_and_continue(K: int = 5) -> List[TradeEvent]:
         bars_held=5
     )
     events.append(final_win)
+    event_id += 1
+
+    # A third cycle creates repeated stop-count states across the event stream.
+    for _ in range(3):
+        events.append(TradeEvent(
+            event_id=event_id,
+            timestamp=start_date + timedelta(days=event_id),
+            signal_type=SignalType.ENTRY_LONG,
+            entry_price=entry_price,
+            exit_price=entry_price - stop_distance,
+            stop_price=entry_price - stop_distance,
+            raw_r=-stop_distance / entry_price,
+            hit_stop=True,
+            bars_held=1
+        ))
+        event_id += 1
+
+    events.append(TradeEvent(
+        event_id=event_id,
+        timestamp=start_date + timedelta(days=event_id),
+        signal_type=SignalType.ENTRY_LONG,
+        entry_price=entry_price,
+        exit_price=entry_price + stop_distance * 2,
+        stop_price=entry_price - stop_distance,
+        raw_r=(stop_distance * 2) / entry_price,
+        hit_stop=False,
+        bars_held=4
+    ))
 
     return events
 

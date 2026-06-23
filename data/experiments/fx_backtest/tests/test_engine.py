@@ -10,6 +10,7 @@ from fx_backtest.data import SyntheticDataGenerator
 from fx_backtest.signals import DonchianATRSignal
 from fx_backtest.engine import BacktestEngine, CostModel
 from fx_backtest.sizing import FixedSizing, ArithmeticAfterLoss, ScheduledPermutationPlacebo
+from tests.fixtures import create_fixture_cycle_failure_and_continue
 
 
 def test_zero_cost_backtest():
@@ -97,19 +98,13 @@ def test_policy_event_consistency():
     result_a = engine.run(events, policy_a)
     result_b = engine.run(events, policy_b)
 
-    # Should have same number of trades (before B hits K limit)
-    # But B might stop early if it hits K
-    assert result_a.num_trades > 0
-    assert result_b.num_trades > 0
+    expected_ids = [event.event_id for event in events]
+    assert [trade.event_id for trade in result_a.trades] == expected_ids
+    assert [trade.event_id for trade in result_b.trades] == expected_ids
 
-    # Check that event_ids match for common trades
     trades_a_dict = {t.event_id: t for t in result_a.trades}
     trades_b_dict = {t.event_id: t for t in result_b.trades}
-
-    common_ids = set(trades_a_dict.keys()) & set(trades_b_dict.keys())
-    assert len(common_ids) > 0
-
-    for event_id in common_ids:
+    for event_id in expected_ids:
         ta = trades_a_dict[event_id]
         tb = trades_b_dict[event_id]
 
@@ -122,7 +117,7 @@ def test_policy_event_consistency():
         # A is always 0.01, B varies
         assert ta.risk_fraction == 0.01
 
-    print(f"[PASS] Policy consistency: {len(common_ids)} common trades verified")
+    print(f"[PASS] Policy consistency: {len(expected_ids)} events verified")
 
 
 def test_stop_count_tracking():
@@ -190,14 +185,7 @@ def test_scheduled_placebo_consistency():
     """Test that ScheduledPermutationPlacebo sees same events and multiset as B."""
     print("Testing scheduled placebo consistency...")
 
-    bars = SyntheticDataGenerator.generate_trend_and_consolidation(
-        start_date=datetime(2020, 1, 1),
-        num_days=200,
-        seed=42
-    )
-
-    signal = DonchianATRSignal()
-    events = signal.generate_trade_events(bars)
+    events = create_fixture_cycle_failure_and_continue(K=5)
 
     engine = BacktestEngine(initial_equity=100000)
 
@@ -208,30 +196,49 @@ def test_scheduled_placebo_consistency():
     # Extract B's schedule
     b_schedule = [(t.event_id, t.risk_fraction) for t in result_b.trades]
 
-    # Create scheduled placebo with B's schedule
-    policy_g = ScheduledPermutationPlacebo(b_schedule=b_schedule, seed=42)
-    result_g = engine.run(events, policy_g)
-
-    # Verify: G trades on same event IDs as B
+    expected_ids = [event.event_id for event in events]
     event_ids_b = [t.event_id for t in result_b.trades]
-    event_ids_g = [t.event_id for t in result_g.trades]
+    risks_b_ordered = [t.risk_fraction for t in result_b.trades]
+    assert event_ids_b == expected_ids
 
-    assert event_ids_g == event_ids_b, \
-        f"Event IDs mismatch: B={event_ids_b[:10]}..., G={event_ids_g[:10]}..."
+    sequences = []
+    for seed in range(42, 52):
+        result_g = engine.run(
+            events,
+            ScheduledPermutationPlacebo(b_schedule=b_schedule, seed=seed)
+        )
+        event_ids_g = [t.event_id for t in result_g.trades]
+        risks_g = [t.risk_fraction for t in result_g.trades]
+        assert event_ids_g == expected_ids
+        assert sorted(risks_g) == sorted(risks_b_ordered)
+        sequences.append(risks_g)
 
-    # Verify: G uses same multiset of risk fractions as B (sorted)
-    risks_b = sorted([t.risk_fraction for t in result_b.trades])
-    risks_g = sorted([t.risk_fraction for t in result_g.trades])
+    assert any(sequence != risks_b_ordered for sequence in sequences)
+    assert len({tuple(sequence) for sequence in sequences}) >= 2
+    repeat = engine.run(
+        events,
+        ScheduledPermutationPlacebo(b_schedule=b_schedule, seed=42)
+    )
+    assert [t.risk_fraction for t in repeat.trades] == sequences[0]
 
-    assert len(risks_b) == len(risks_g), \
-        f"Number of trades mismatch: B={len(risks_b)}, G={len(risks_g)}"
+    print(f"[PASS] Scheduled placebo: {len(events)} events across 10 seeds")
 
-    # Check multiset equality (sorted values should match)
-    for i, (rb, rg) in enumerate(zip(risks_b, risks_g)):
-        assert abs(rb - rg) < 1e-10, \
-            f"Risk multiset mismatch at position {i}: B={rb}, G={rg}"
 
-    print(f"[PASS] Scheduled placebo: {len(result_g.trades)} trades, event IDs match, multiset match")
+def test_budget_reset_keeps_complete_event_stream():
+    """Budget exhaustion resets the cycle before sizing the current event."""
+    events = create_fixture_cycle_failure_and_continue(K=5)
+    engine = BacktestEngine(initial_equity=100000)
+    policy = ArithmeticAfterLoss(
+        r_0=0.01,
+        d=0.005,
+        K=50,
+        r_max=0.03,
+        total_budget=0.015
+    )
+    result = engine.run(events, policy)
+
+    assert [t.event_id for t in result.trades] == [e.event_id for e in events]
+    assert result.num_cycle_failures > 0
 
 
 if __name__ == '__main__':
@@ -241,4 +248,5 @@ if __name__ == '__main__':
     test_stop_count_tracking()
     test_equity_curve()
     test_scheduled_placebo_consistency()
+    test_budget_reset_keeps_complete_event_stream()
     print("\n[PASS] All backtest engine tests passed")

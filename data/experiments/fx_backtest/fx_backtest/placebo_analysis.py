@@ -1,13 +1,14 @@
 """Permutation test: B vs multi-seed placebo distribution."""
 
-from typing import List, Optional
+from typing import List
 from .engine import BacktestResult
 
 
 def analyze_placebo_distribution(
     b_result: BacktestResult,
     placebo_results: List[BacktestResult],
-    min_placebo_seeds: int = 10
+    min_placebo_seeds: int = 10,
+    min_trades: int = 20
 ) -> dict:
     """Analyze B's position in the placebo distribution.
 
@@ -35,14 +36,19 @@ def analyze_placebo_distribution(
             "min_required": min_placebo_seeds
         }
 
-    # Check if B has sufficient trades
-    if not b_result.trades:
+    if len(b_result.trades) < min_trades:
         return {
             "test": "INSUFFICIENT_DATA",
-            "reason": "B has no trades",
+            "reason": (
+                f"B has {len(b_result.trades)} trades "
+                f"(need at least {min_trades})"
+            ),
             "num_seeds": len(placebo_results),
-            "min_required": min_placebo_seeds
+            "min_required": min_placebo_seeds,
+            "min_trades": min_trades
         }
+    if any(len(result.trades) != len(b_result.trades) for result in placebo_results):
+        raise ValueError("Placebo trade counts must match B")
 
     # Extract final equity from B and all G runs
     b_equity = b_result.final_equity
@@ -50,20 +56,14 @@ def analyze_placebo_distribution(
 
     # Calculate percentile: what fraction of placebo runs did B beat?
     num_better = sum(1 for g_equity in placebo_equities if b_equity > g_equity)
-    num_equal = sum(1 for g_equity in placebo_equities if abs(b_equity - g_equity) < 1e-6)
-
-    # Monte Carlo +1 method for p-value (add B's result to the null distribution)
-    # This ensures p-value is never 0 and accounts for B being one sample from the null
-    all_equities = placebo_equities + [b_equity]
-    num_as_extreme_or_more = sum(1 for eq in all_equities if abs(eq - b_equity) >= abs(b_equity - sum(placebo_equities) / len(placebo_equities)))
-
-    # Two-tailed p-value using Monte Carlo method
-    # Count how many permutations are as extreme or more extreme than B
     placebo_mean = sum(placebo_equities) / len(placebo_equities)
-    b_deviation = abs(b_equity - placebo_mean)
-
-    num_as_extreme = sum(1 for g_equity in all_equities if abs(g_equity - placebo_mean) >= b_deviation)
-    p_value = num_as_extreme / len(all_equities)
+    lower_tail = (
+        1 + sum(equity <= b_equity for equity in placebo_equities)
+    ) / (len(placebo_equities) + 1)
+    upper_tail = (
+        1 + sum(equity >= b_equity for equity in placebo_equities)
+    ) / (len(placebo_equities) + 1)
+    p_value = min(1.0, 2.0 * min(lower_tail, upper_tail))
 
     # Also compute traditional percentile for reference
     percentile = num_better / len(placebo_equities)
@@ -108,7 +108,7 @@ def analyze_placebo_distribution(
         "placebo_p95": p95,
         "percentile": percentile,
         "p_value": p_value,
-        "method": "monte_carlo_plus_one",
+        "method": "two_sided_monte_carlo_rank_plus_one",
         "interpretation": interpretation,
         "significant_at_5pct": p_value < 0.05
     }

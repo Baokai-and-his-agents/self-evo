@@ -35,12 +35,20 @@ class Trade:
     # E policy two-phase tracking (None for A/B/G single-phase trades)
     probe_risk: Optional[float] = None
     probe_units: Optional[float] = None
+    probe_notional: Optional[float] = None
     probe_pnl: Optional[float] = None
     probe_cost: Optional[float] = None
     amplified_risk: Optional[float] = None
     amplified_units: Optional[float] = None
+    amplified_notional: Optional[float] = None
     amplified_pnl: Optional[float] = None
     amplified_cost: Optional[float] = None
+
+    def to_dict(self) -> dict:
+        """Convert an executed trade to a JSON-safe dictionary."""
+        data = dict(self.__dict__)
+        data["timestamp"] = self.timestamp.isoformat()
+        return data
 
 
 @dataclass
@@ -193,15 +201,13 @@ class BacktestResult:
         worst_tail = sorted_returns[:tail_size]
         cvar_5pct = sum(worst_tail) / len(worst_tail) if worst_tail else 0.0
 
-        # Turnover (total position size traded relative to equity)
-        # For E policy with two phases, use amplified position size
+        # Turnover uses both E phases because each phase is separately traded.
         total_position_value = 0.0
         for t in self.trades:
-            if t.amplified_units is not None:
-                # E policy: use amplified phase position size
-                total_position_value += abs(t.amplified_units * t.entry_price)
+            if t.probe_notional is not None or t.amplified_notional is not None:
+                total_position_value += abs(t.probe_notional or 0.0)
+                total_position_value += abs(t.amplified_notional or 0.0)
             else:
-                # A/B/G: use standard position size
                 total_position_value += abs(t.position_size * t.entry_price)
 
         turnover = total_position_value / self.initial_equity if self.initial_equity > 0 else 0.0
@@ -209,17 +215,20 @@ class BacktestResult:
         # Total transaction cost
         total_cost = sum(t.cost for t in self.trades)
 
-        # Average and max exposure (as fraction of equity)
+        # E replaces the probe at confirmation, so phase exposures are sequential.
         exposures = []
         for t in self.trades:
             if t.equity_before > 0:
-                if t.amplified_units is not None:
-                    # E policy: use amplified position size
-                    exposure = abs(t.amplified_units * t.entry_price) / t.equity_before
+                if t.probe_notional is not None or t.amplified_notional is not None:
+                    probe_exposure = abs(t.probe_notional or 0.0)
+                    amplified_exposure = abs(t.amplified_notional or 0.0)
+                    exposures.extend([
+                        probe_exposure / t.equity_before,
+                        amplified_exposure / t.equity_before,
+                    ])
                 else:
-                    # A/B/G: use standard position size
                     exposure = abs(t.position_size * t.entry_price) / t.equity_before
-                exposures.append(exposure)
+                    exposures.append(exposure)
 
         avg_exposure = sum(exposures) / len(exposures) if exposures else 0.0
         max_exposure = max(exposures) if exposures else 0.0
@@ -262,7 +271,9 @@ class BacktestResult:
             "max_drawdown_pct": self.max_drawdown_pct,
             "num_cycles": self.num_cycles,
             "num_cycle_failures": self.num_cycle_failures,
-            "max_stop_count_reached": self.max_stop_count_reached
+            "max_stop_count_reached": self.max_stop_count_reached,
+            "additional_metrics": self.compute_additional_metrics(),
+            "trades": [trade.to_dict() for trade in self.trades]
         }
 
 
@@ -310,6 +321,23 @@ class BacktestEngine:
         result.equity_curve.append((trade_events[0].timestamp if trade_events else datetime.now(), equity))
 
         for event in trade_events:
+            policy_max_k = getattr(sizing_policy, 'K', None)
+            policy_budget = getattr(sizing_policy, 'total_budget', None)
+            reached_k = policy_max_k is not None and stop_count >= policy_max_k
+            reached_budget = (
+                policy_budget is not None
+                and cumulative_loss >= policy_budget * equity
+            )
+            if reached_k or reached_budget:
+                result.num_cycle_failures += 1
+                result.max_stop_count_reached = max(
+                    result.max_stop_count_reached,
+                    stop_count
+                )
+                stop_count = 0
+                cumulative_loss = 0.0
+                sizing_policy.reset()
+
             # Handle E policy with confirmation: split into probe + amplified phases
             if event.has_confirmation() and sizing_policy.get_name().startswith("E_"):
                 # Phase 1: Entry -> Confirmation (probe sizing)
@@ -392,11 +420,11 @@ class BacktestEngine:
                 # Get risk fraction from policy
                 risk_fraction = sizing_policy.calculate_size(context)
 
-                # If policy returns 0, budget is exhausted (terminal condition)
-                # K cycles are handled after trade execution, not here
                 if risk_fraction <= 0.0:
-                    result.max_stop_count_reached = stop_count
-                    break
+                    raise ValueError(
+                        f"{sizing_policy.get_name()} returned non-positive risk "
+                        f"for event {event.event_id}"
+                    )
 
                 # Calculate position size
                 initial_risk = equity * risk_fraction
@@ -442,10 +470,12 @@ class BacktestEngine:
                     cost=cost,
                     probe_risk=initial_risk_probe,
                     probe_units=position_size_probe,
+                    probe_notional=position_size_probe * event.entry_price,
                     probe_pnl=pnl_probe,
                     probe_cost=cost_probe,
                     amplified_risk=initial_risk_amplified,
                     amplified_units=position_size_amplified,
+                    amplified_notional=position_size_amplified * event.confirmation_price,
                     amplified_pnl=pnl_amplified,
                     amplified_cost=cost_amplified
                 )
@@ -483,14 +513,6 @@ class BacktestEngine:
                     cumulative_loss = 0.0
                     sizing_policy.reset()
                     result.num_cycles += 1
-
-            # Check if reached max stop count (cycle failure)
-            policy_max_k = getattr(sizing_policy, 'K', None)
-            if policy_max_k and stop_count >= policy_max_k:
-                result.num_cycle_failures += 1
-                stop_count = 0
-                cumulative_loss = 0.0
-                sizing_policy.reset()
 
         result.final_equity = equity
         result.compute_statistics()

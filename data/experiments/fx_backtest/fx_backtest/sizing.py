@@ -177,95 +177,11 @@ class ConfirmThenAmplify:
         return "E_ConfirmThenAmplify"
 
 
-class PermutationPlacebo:
-    """G: Placebo control - permute sizing values, not stop_count sequence.
-
-    Key insight: G must see the SAME events as B (same event IDs, same multiset of
-    risk fractions), but with the risk values shuffled across the valid event positions.
-
-    This tests whether the TIMING of size increases matters, or only the DISTRIBUTION.
-
-    CRITICAL: K (terminal condition) must NOT be permuted into position 0, which would
-    truncate the event stream. We only permute the sizing values, not the control flow.
-    """
-
-    def __init__(
-        self,
-        r_0: float = 0.01,
-        d: float = 0.005,
-        K: int = 5,
-        r_max: float = 0.03,
-        total_budget: float = 0.10,
-        seed: int = 42
-    ):
-        """Initialize permutation placebo.
-
-        Args:
-            r_0: Base risk (same as B)
-            d: Increment (same as B)
-            K: Max stops (same as B)
-            r_max: Max risk (same as B)
-            total_budget: Total risk budget (same as B)
-            seed: Random seed for permutation
-        """
-        self.r_0 = r_0
-        self.d = d
-        self.K = K
-        self.r_max = r_max
-        self.total_budget = total_budget
-        self.seed = seed
-
-        # Pre-compute sizing values for stop_count 0..K-1
-        # (K itself means cycle failure, handled by engine)
-        self.risk_values = [min(self.r_0 + i * self.d, self.r_max) for i in range(self.K)]
-
-        # Create permutation of these values
-        self.permuted_risk_values = self._create_permutation()
-
-    def _create_permutation(self) -> list:
-        """Create deterministic permutation of risk values (not indices)."""
-        random.seed(self.seed)
-        permuted = self.risk_values.copy()
-        random.shuffle(permuted)
-        return permuted
-
-    def calculate_size(self, context: SizingContext) -> float:
-        """Calculate size using PERMUTED risk values.
-
-        Budget check is same as B (terminal condition).
-        K cycles are handled by engine reset, not by returning 0.
-        """
-        n = context.stop_count
-
-        # Budget exhausted (terminal)
-        if context.cumulative_loss >= self.total_budget * context.equity:
-            return 0.0
-
-        # If n >= K, return r_max (same behavior as B)
-        # Engine will handle cycle reset
-        if n >= self.K:
-            return self.r_max
-
-        # Return permuted risk value for this stop_count
-        return self.permuted_risk_values[n]
-
-    def reset(self):
-        """No state to reset."""
-        pass
-
-    def get_name(self) -> str:
-        return f"G_Placebo_seed{self.seed}"
-
-    def get_risk_multiset(self) -> list:
-        """Return the multiset of risk values (for verification)."""
-        return self.permuted_risk_values.copy()
-
-
 class ScheduledPermutationPlacebo:
-    """G2: Schedule-based placebo - permute B's actual schedule.
+    """G: Permute B's realized risk labels across the same event IDs.
 
     Takes B's realized schedule of (event_id, risk_fraction) pairs and
-    shuffles both the order and the risk values independently using a seed.
+    shuffles only the risk labels using a deterministic seed.
 
     This creates a placebo that:
     1. Trades on the same event IDs as B (same multiset)
@@ -286,23 +202,20 @@ class ScheduledPermutationPlacebo:
             raise ValueError("b_schedule cannot be empty")
 
         self.seed = seed
-        self.original_schedule = b_schedule.copy()
+        self.original_schedule = list(b_schedule)
 
-        # Extract event IDs and risk fractions separately
         event_ids = [event_id for event_id, _ in b_schedule]
         risk_fractions = [risk for _, risk in b_schedule]
+        if len(event_ids) != len(set(event_ids)):
+            raise ValueError("b_schedule event IDs must be unique")
+        if any(risk <= 0.0 for risk in risk_fractions):
+            raise ValueError("b_schedule risk fractions must be positive")
 
-        # Shuffle both independently using the same seed
-        rng = random.Random(seed)
-        shuffled_event_ids = event_ids.copy()
-        rng.shuffle(shuffled_event_ids)
-
+        # Keep event IDs fixed. Only the realized B risk labels are permuted.
         rng = random.Random(seed)
         shuffled_risks = risk_fractions.copy()
         rng.shuffle(shuffled_risks)
-
-        # Create mapping from event_id to risk_fraction
-        self.risk_by_event_id = dict(zip(shuffled_event_ids, shuffled_risks))
+        self.risk_by_event_id = dict(zip(event_ids, shuffled_risks))
 
     def calculate_size(self, context: SizingContext) -> float:
         """Return scheduled risk for this event_id.
@@ -324,11 +237,11 @@ class ScheduledPermutationPlacebo:
         pass
 
     def get_name(self) -> str:
-        return f"G_ScheduledPlacebo_seed{self.seed}"
+        return f"G_Placebo_seed{self.seed}"
 
     def get_risk_multiset(self) -> list:
         """Return the multiset of risk values (for verification)."""
-        return sorted(self.risk_by_event_id.values())
+        return list(self.risk_by_event_id.values())
 
 
 def create_default_policies() -> dict:
@@ -340,30 +253,17 @@ def create_default_policies() -> dict:
     return {
         "A": FixedSizing(risk_pct=0.01),
         "B": ArithmeticAfterLoss(r_0=0.01, d=0.005, K=5, r_max=0.03, total_budget=0.10),
-        "E": ConfirmThenAmplify(r_probe=0.005, r_confirmed=0.02, confirmation_r=3.0),
-        "G": PermutationPlacebo(r_0=0.01, d=0.005, K=5, r_max=0.03, total_budget=0.10, seed=42)
+        "E": ConfirmThenAmplify(r_probe=0.005, r_confirmed=0.02, confirmation_r=3.0)
     }
 
 
-def create_multi_seed_placebo(num_seeds: int = 10, base_seed: int = 42, r_0: float = 0.01, d: float = 0.005, K: int = 5, r_max: float = 0.03, total_budget: float = 0.10) -> List[PermutationPlacebo]:
-    """Create multiple placebo policies with different seeds.
-
-    For permutation test: run B against multiple G instances to build
-    null distribution.
-
-    Args:
-        num_seeds: Number of different seeds
-        base_seed: Starting seed value
-        r_0: Base risk (same as B)
-        d: Increment (same as B)
-        K: Max stops (same as B)
-        r_max: Max risk (same as B)
-        total_budget: Total risk budget (same as B)
-
-    Returns:
-        List of placebo policies with different seeds
-    """
+def create_multi_seed_placebo(
+    b_schedule: List[tuple],
+    num_seeds: int = 10,
+    base_seed: int = 42
+) -> List[ScheduledPermutationPlacebo]:
+    """Create schedule-based placebo policies with different seeds."""
     return [
-        PermutationPlacebo(r_0=r_0, d=d, K=K, r_max=r_max, total_budget=total_budget, seed=base_seed + i)
+        ScheduledPermutationPlacebo(b_schedule=b_schedule, seed=base_seed + i)
         for i in range(num_seeds)
     ]

@@ -182,27 +182,51 @@ def main():
             scenario_results[name] = result
             print(f"  Final equity: ${result.final_equity:,.2f} ({result.total_return:+.2%})")
 
-        # Run ScheduledPermutationPlacebo based on B's actual schedule
-        if 'B' in scenario_results and scenario_results['B'].trades:
-            print(f"\nRunning ScheduledPermutationPlacebo (G2) based on B's schedule...")
-            b_schedule = [(t.event_id, t.risk_fraction) for t in scenario_results['B'].trades]
-            policy_g2 = ScheduledPermutationPlacebo(b_schedule=b_schedule, seed=42)
-            result_g2 = engine.run(trade_events, policy_g2)
-            scenario_results['G2'] = result_g2
-            print(f"  Final equity: ${result_g2.final_equity:,.2f} ({result_g2.total_return:+.2%})")
-        else:
-            print(f"\nWarning: B has no trades, skipping ScheduledPermutationPlacebo")
+        if not scenario_results['B'].trades:
+            raise RuntimeError("B produced no trades; cannot build placebo schedule")
+
+        expected_event_ids = [event.event_id for event in trade_events]
+        b_event_ids = [trade.event_id for trade in scenario_results['B'].trades]
+        if b_event_ids != expected_event_ids:
+            raise RuntimeError("B did not execute the complete trade event stream")
+
+        b_schedule = [
+            (trade.event_id, trade.risk_fraction)
+            for trade in scenario_results['B'].trades
+        ]
+
+        def validate_placebo(result):
+            g_event_ids = [trade.event_id for trade in result.trades]
+            if g_event_ids != b_event_ids:
+                raise RuntimeError("G event IDs differ from B")
+            b_risks = sorted(trade.risk_fraction for trade in scenario_results['B'].trades)
+            g_risks = sorted(trade.risk_fraction for trade in result.trades)
+            if g_risks != b_risks:
+                raise RuntimeError("G risk multiset differs from B")
+
+        print("\nRunning policy G (schedule permutation, seed=42)...")
+        result_g = engine.run(
+            trade_events,
+            ScheduledPermutationPlacebo(b_schedule=b_schedule, seed=42)
+        )
+        validate_placebo(result_g)
+        scenario_results['G'] = result_g
+        print(f"  Final equity: ${result_g.final_equity:,.2f} ({result_g.total_return:+.2%})")
 
         all_results[scenario_name] = scenario_results
 
         # Run multi-seed placebo distribution for permutation test
         print(f"\nGenerating multi-seed placebo distribution...")
         num_placebo_seeds = backtest_config.get('num_placebo_seeds', 100)
-        placebo_policies = create_multi_seed_placebo(num_seeds=num_placebo_seeds)
+        placebo_policies = create_multi_seed_placebo(
+            b_schedule=b_schedule,
+            num_seeds=num_placebo_seeds
+        )
 
         placebo_results = []
         for i, placebo_policy in enumerate(placebo_policies):
             result = engine.run(trade_events, placebo_policy)
+            validate_placebo(result)
             placebo_results.append(result)
             if (i + 1) % 20 == 0:
                 print(f"  Completed {i + 1}/{num_placebo_seeds} placebo runs...")

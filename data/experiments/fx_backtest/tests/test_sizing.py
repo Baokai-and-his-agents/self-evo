@@ -7,7 +7,8 @@ from datetime import datetime
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from fx_backtest.sizing import (
-    FixedSizing, ArithmeticAfterLoss, ConfirmThenAmplify, PermutationPlacebo,
+    FixedSizing, ArithmeticAfterLoss, ConfirmThenAmplify,
+    ScheduledPermutationPlacebo,
     SizingContext
 )
 
@@ -94,36 +95,31 @@ def test_confirm_then_amplify():
 
 
 def test_permutation_placebo():
-    """Test permutation placebo sizing."""
+    """Test event-scheduled permutation placebo sizing."""
     print("Testing permutation placebo...")
 
-    policy = PermutationPlacebo(r_0=0.01, d=0.005, K=5, r_max=0.03, seed=42)
+    schedule = [(i, risk) for i, risk in enumerate(
+        [0.01, 0.015, 0.02, 0.025, 0.03, 0.01, 0.015]
+    )]
+    policy = ScheduledPermutationPlacebo(schedule, seed=42)
+    policy2 = ScheduledPermutationPlacebo(schedule, seed=42)
 
-    # Get permutation map
-    risk_multiset = policy.get_risk_multiset()
-    assert len(risk_multiset) == 5  # 0 to K-1
+    actual = [
+        policy.calculate_size(SizingContext(
+            event_id=event_id,
+            stop_count=99,
+            equity=100000,
+            entry_price=1.1,
+            stop_price=1.09,
+            cumulative_loss=999999
+        ))
+        for event_id, _ in schedule
+    ]
+    actual2 = [policy2.risk_by_event_id[event_id] for event_id, _ in schedule]
 
-    # Verify multiset equality with B's risk values
-    b_policy = ArithmeticAfterLoss(r_0=0.01, d=0.005, K=5, r_max=0.03)
-    b_risk_values = [min(0.01 + i * 0.005, 0.03) for i in range(5)]
-
-    assert sorted(risk_multiset) == sorted(b_risk_values), \
-        f"G risk multiset {sorted(risk_multiset)} != B risk multiset {sorted(b_risk_values)}"
-
-    # Size should depend on permuted stop_count
-    ctx0 = SizingContext(event_id=0, stop_count=0, equity=100000, entry_price=1.1, stop_price=1.09, cumulative_loss=0.0)
-    ctx1 = SizingContext(event_id=1, stop_count=1, equity=100000, entry_price=1.1, stop_price=1.09, cumulative_loss=0.0)
-
-    size0 = policy.calculate_size(ctx0)
-    size1 = policy.calculate_size(ctx1)
-
-    # Sizes should be valid (within B's range)
-    assert 0.0 <= size0 <= 0.03
-    assert 0.0 <= size1 <= 0.03
-
-    # Deterministic: same seed produces same permutation
-    policy2 = PermutationPlacebo(r_0=0.01, d=0.005, K=5, r_max=0.03, seed=42)
-    assert policy2.get_risk_multiset() == risk_multiset
+    assert sorted(actual) == sorted(risk for _, risk in schedule)
+    assert actual == actual2
+    assert actual != [risk for _, risk in schedule]
 
     print("[PASS] Permutation placebo tests passed")
 
