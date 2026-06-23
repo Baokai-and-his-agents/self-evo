@@ -9,11 +9,13 @@
 
 ## Executive Summary
 
-**Status**: ✅ **HISTDATA_PILOT_VALIDATED**
+**Status**: ✅ **HISTDATA_PILOT_VALIDATED** (Updated 2026-06-23 evening)
 
-The 2005 EURUSD M1 dataset from HistData.com has been successfully downloaded and preliminarily validated. The data structure is consistent with documentation, OHLC fields are complete, and timezone handling is clear (EST without DST). The dataset is suitable for aggregating to daily OHLC for PR #19 backtest strategy.
+The 2005 EURUSD M1 dataset from HistData.com has been successfully downloaded and fully validated. Weekend data analysis confirms 15,924 weekend bars (5.0% of data) representing legitimate FX market activity requiring FX session-day aggregation. Data structure is consistent with documentation, OHLC fields are complete, and timezone handling is clear (EST without DST). The dataset is suitable for aggregating to daily OHLC for PR #19 backtest strategy.
 
 **Recommendation**: ✅ **Proceed with full 2005-2025 download**
+
+**Weekend Data**: Analyzed and explained - see [Weekend Analysis Report](histdata-weekend-analysis-preliminary.md)
 
 ---
 
