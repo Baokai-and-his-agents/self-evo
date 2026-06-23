@@ -19,13 +19,13 @@ This file is not the source of truth. GitHub Issues are the primary task state.
 - worker_identity: fx-backtest-worker-01
 - run_id: 2026-06-23-eurusd-baseline-001
 - claimed_at: 2026-06-23T00:00:00Z
-- heartbeat: 2026-06-23T00:00:00Z
+- heartbeat: 2026-06-23T15:01:00Z
 - claim: active
 - execution_strategy: strictly serial, no subagent, no parallel model calls
 - dependencies: Issue #18 / PR #19 merged (策略定义已冻结)
-- current_status: Phase 1 部分完成，暂停在数据源选择门
+- current_status: Weekend 数据分析完成，HistData 验证状态从 PILOT_REQUIRES_VALIDATION 进入最终验证阶段
 - pr: https://github.com/Baokai-and-his-agents/self-evo/pull/21
-- status_update: 数据源调查完成 Dukascopy (DATA_TERMS_UNCLEAR) 和 ECB (仅用于交叉校验)，需要补充 OHLC 数据源调查
+- status_update: ✅ Weekend 数据分析完成 (15,924 bars verified)。90 pip spike 验证为真实市场事件。推荐使用 FX session day aggregation (17:00-16:59 EST)。准备进入 daily OHLC 生成阶段。
 
 ## Review
 
