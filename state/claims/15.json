@@ -1,0 +1,21 @@
+{
+  "issue": 15,
+  "worker": "scout-worker-fx-sizing-01",
+  "run_id": "2026-06-23-fx-sizing-001",
+  "branch": "agent/scout-worker-fx-sizing-01/15-progressive-probe-sizing",
+  "claimed_at": "2026-06-23T02:11:30Z",
+  "completed_at": "2026-06-23T11:52:00Z",
+  "status": "released",
+  "pr_number": 16,
+  "deliverables": {
+    "mathematical_model": "data/exploration/raw/2026-06-23-progressive-probe-sizing-mathematical-model.md",
+    "evidence_log": "data/exploration/raw/2026-06-23-evidence-log.md",
+    "evidence_sources": "data/exploration/raw/2026-06-23-evidence-sources.md",
+    "strategy_specification": "data/exploration/raw/2026-06-23-progressive-probe-sizing-strategy-specification.md",
+    "failure_landscape": "data/exploration/raw/2026-06-23-progressive-probe-sizing-failure-landscape.md",
+    "pr14_recommendations": "data/exploration/raw/2026-06-23-pr14-revision-recommendations.md",
+    "final_report_zh": "data/exploration/raw/2026-06-23-progressive-probe-sizing-final-report-zh.md",
+    "run_summary": "data/runs/2026-06-23/2026-06-23-fx-sizing-001.summary.md",
+    "numerical_verification": "data/exploration/raw/2026-06-23-progressive-probe-sizing-numerical-verification.py"
+  }
+}

@@ -24,7 +24,16 @@
       "status": "stopped",
       "phase": "Phase A+B complete / review",
       "last_seen": "2026-06-22T21:11:49Z"
+    },
+    {
+      "worker": "scout-worker-fx-sizing-01",
+      "run_id": "2026-06-23-fx-sizing-001",
+      "issue": 15,
+      "branch": "agent/scout-worker-fx-sizing-01/15-progressive-probe-sizing",
+      "status": "stopped",
+      "phase": "complete / review",
+      "last_seen": "2026-06-23T11:52:00Z"
     }
   ],
-  "updated_at": "2026-06-22T21:11:49Z"
+  "updated_at": "2026-06-23T11:52:00Z"
 }

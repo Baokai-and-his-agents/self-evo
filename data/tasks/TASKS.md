@@ -14,6 +14,28 @@ No claimed tasks.
 
 ## Review
 
+### T-20260623-003 - Issue #15
+
+- type: scout
+- status: review
+- risk: high
+- permission: external-resource, repo-branch-write
+- goal: 外汇有限递增试探仓位与趋势大盈亏比专项研究
+- source: https://github.com/Baokai-and-his-agents/self-evo/issues/15
+- branch: agent/scout-worker-fx-sizing-01/15-progressive-probe-sizing
+- github_issue: 15
+- worker_identity: scout-worker-fx-sizing-01
+- run_id: 2026-06-23-fx-sizing-001
+- claimed_at: 2026-06-23T02:11:30Z
+- released_at: 2026-06-23T11:52:00Z
+- claim: released (lease removed)
+- heartbeat: stopped
+- execution_strategy: strictly serial, no subagent, no parallel upstream calls
+- base: PR #14 HEAD (b17c1e2)
+- dependencies: conceptually follows Issue #13 / PR #14
+- delivery: Draft PR #16 opened by `clawbie`, awaiting review
+- pr: https://github.com/Baokai-and-his-agents/self-evo/pull/16
+
 ### T-20260623-002 - Issue #13
 
 - type: scout
