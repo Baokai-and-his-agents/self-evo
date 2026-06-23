@@ -190,21 +190,39 @@ def compute_conditional_probabilities(trades: List[Trade], max_stop_count: int =
     return results
 
 
-def analyze_conditional_hypothesis(stats: List[ConditionalStats]) -> dict:
+def analyze_conditional_hypothesis(stats: List[ConditionalStats], min_total_trades: int = 20, min_bucket_size: int = 5) -> dict:
     """Analyze whether stop_count predicts outcome.
 
     Core hypothesis: P(win|n=k) increases with k (hazard rate hypothesis)
 
+    Args:
+        stats: Conditional statistics by stop_count
+        min_total_trades: Minimum total trades required
+        min_bucket_size: Minimum samples per bucket to consider valid
+
     Returns:
         Dictionary with hypothesis test results and interpretation
     """
+    # Check total sample size
+    total_trades = sum(s.n for s in stats)
+    if total_trades < min_total_trades:
+        return {
+            "test": "INSUFFICIENT_DATA",
+            "total_trades": total_trades,
+            "min_required": min_total_trades,
+            "result": f"Cannot test hypothesis: only {total_trades} trades (need {min_total_trades})",
+            "recommendation": "Collect more data before drawing conclusions"
+        }
+
     # Filter out buckets with insufficient sample size
-    valid_buckets = [s for s in stats if s.n >= 5]
+    valid_buckets = [s for s in stats if s.n >= min_bucket_size]
 
     if len(valid_buckets) < 2:
         return {
-            "test": "insufficient_data",
-            "result": "Cannot test hypothesis: fewer than 2 buckets with n >= 5",
+            "test": "INSUFFICIENT_DATA",
+            "valid_buckets": len(valid_buckets),
+            "min_required": 2,
+            "result": f"Cannot test hypothesis: fewer than 2 buckets with n >= {min_bucket_size}",
             "recommendation": "Null hypothesis (no predictive value) cannot be rejected"
         }
 
@@ -220,7 +238,7 @@ def analyze_conditional_hypothesis(stats: List[ConditionalStats]) -> dict:
     baseline = stats[0] if stats[0].n > 0 else None
 
     overlaps = []
-    if baseline and baseline.n >= 5:
+    if baseline and baseline.n >= min_bucket_size:
         for s in valid_buckets[1:]:
             # Do CIs overlap?
             overlap = not (s.p_win_ci_high < baseline.p_win_ci_low or s.p_win_ci_low > baseline.p_win_ci_high)
@@ -229,6 +247,8 @@ def analyze_conditional_hypothesis(stats: List[ConditionalStats]) -> dict:
     all_overlap = all(overlaps) if overlaps else True
 
     return {
+        "test": "conditional_trend",
+        "total_trades": total_trades,
         "valid_buckets": len(valid_buckets),
         "increases": increases,
         "decreases": decreases,
@@ -308,8 +328,54 @@ def compare_policies_paired(result_a: BacktestResult, result_b: BacktestResult) 
 def _interpret_paired_comparison(mean_diff: float, ci_low: float, ci_high: float, name_a: str, name_b: str) -> str:
     """Interpret paired comparison results."""
     if ci_low > 0:
-        return f"{name_b} consistently outperforms {name_a} (95% CI does not include 0)"
+        return f"{name_b} shows positive mean difference vs {name_a} (95% CI excludes 0)"
     elif ci_high < 0:
-        return f"{name_a} consistently outperforms {name_b} (95% CI does not include 0)"
+        return f"{name_a} shows positive mean difference vs {name_b} (95% CI excludes 0)"
     else:
-        return f"No consistent difference between {name_a} and {name_b} (95% CI includes 0)"
+        return f"No statistically significant difference between {name_a} and {name_b} (95% CI includes 0)"
+
+
+def check_sample_adequacy(all_results: dict, min_total_trades: int = 20, min_placebo_seeds: int = 10) -> dict:
+    """Check if sample size is adequate for statistical conclusions.
+
+    Args:
+        all_results: Dictionary of {scenario_name: {policy_name: BacktestResult}}
+        min_total_trades: Minimum total trades required
+        min_placebo_seeds: Minimum placebo seeds for G distribution
+
+    Returns:
+        Dictionary with adequacy check results
+    """
+    checks = {}
+
+    for scenario_name, results in all_results.items():
+        scenario_checks = {}
+
+        # Check total trades
+        if 'A' in results:
+            total_trades = results['A'].num_trades
+            scenario_checks['total_trades'] = {
+                'value': total_trades,
+                'adequate': total_trades >= min_total_trades,
+                'threshold': min_total_trades
+            }
+
+        # Check placebo distribution (would need multiple G seeds)
+        scenario_checks['placebo_distribution'] = {
+            'implemented': False,
+            'note': 'Single seed G used; multi-seed distribution not yet implemented',
+            'threshold': min_placebo_seeds
+        }
+
+        # Overall adequacy for this scenario
+        adequate = scenario_checks.get('total_trades', {}).get('adequate', False)
+        scenario_checks['adequate'] = adequate
+        scenario_checks['recommendation'] = (
+            "Sample size adequate for preliminary analysis"
+            if adequate else
+            f"INSUFFICIENT_DATA: need at least {min_total_trades} trades for statistical conclusions"
+        )
+
+        checks[scenario_name] = scenario_checks
+
+    return checks

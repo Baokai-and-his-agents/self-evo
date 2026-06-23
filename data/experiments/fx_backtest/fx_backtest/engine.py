@@ -144,6 +144,78 @@ class BacktestResult:
         self.max_drawdown = max_dd
         self.max_drawdown_pct = max_dd_pct
 
+    def compute_additional_metrics(self):
+        """Compute additional metrics: log wealth, volatility, CVaR, turnover, etc."""
+        if not self.trades:
+            return {}
+
+        import math
+
+        # Terminal log wealth and mean log increment
+        terminal_log_wealth = math.log(self.final_equity / self.initial_equity) if self.final_equity > 0 else -float('inf')
+        mean_log_increment = terminal_log_wealth / self.num_trades if self.num_trades > 0 else 0.0
+
+        # Arithmetic expectancy (mean PnL per trade)
+        arithmetic_expectancy = sum(t.pnl for t in self.trades) / self.num_trades if self.num_trades > 0 else 0.0
+
+        # Returns per trade (as fraction of equity at entry)
+        returns = [t.pnl / t.equity_before for t in self.trades if t.equity_before > 0]
+
+        # Volatility (standard deviation of returns)
+        if len(returns) > 1:
+            mean_return = sum(returns) / len(returns)
+            variance = sum((r - mean_return) ** 2 for r in returns) / (len(returns) - 1)
+            volatility = math.sqrt(variance)
+        else:
+            volatility = 0.0
+
+        # Downside deviation (only negative returns)
+        negative_returns = [r for r in returns if r < 0]
+        if len(negative_returns) > 1:
+            mean_negative = sum(negative_returns) / len(negative_returns)
+            downside_variance = sum((r - mean_negative) ** 2 for r in negative_returns) / (len(negative_returns) - 1)
+            downside_deviation = math.sqrt(downside_variance)
+        else:
+            downside_deviation = 0.0
+
+        # CVaR (Conditional Value at Risk) - 5% worst tail
+        sorted_returns = sorted(returns)
+        tail_size = max(1, int(len(sorted_returns) * 0.05))
+        worst_tail = sorted_returns[:tail_size]
+        cvar_5pct = sum(worst_tail) / len(worst_tail) if worst_tail else 0.0
+
+        # Turnover (total position size traded relative to equity)
+        total_position_value = sum(abs(t.position_size * t.entry_price) for t in self.trades)
+        turnover = total_position_value / self.initial_equity if self.initial_equity > 0 else 0.0
+
+        # Total transaction cost
+        total_cost = sum(t.cost for t in self.trades)
+
+        # Average and max exposure (as fraction of equity)
+        exposures = [abs(t.position_size * t.entry_price) / t.equity_before for t in self.trades if t.equity_before > 0]
+        avg_exposure = sum(exposures) / len(exposures) if exposures else 0.0
+        max_exposure = max(exposures) if exposures else 0.0
+
+        # Risk budget utilization (total initial risk / initial equity)
+        total_initial_risk = sum(t.initial_risk for t in self.trades)
+        risk_budget_utilization = total_initial_risk / self.initial_equity if self.initial_equity > 0 else 0.0
+
+        return {
+            "terminal_log_wealth": terminal_log_wealth,
+            "mean_log_increment": mean_log_increment,
+            "arithmetic_expectancy": arithmetic_expectancy,
+            "volatility": volatility,
+            "downside_deviation": downside_deviation,
+            "cvar_5pct": cvar_5pct,
+            "turnover": turnover,
+            "total_cost": total_cost,
+            "avg_exposure": avg_exposure,
+            "max_exposure": max_exposure,
+            "risk_budget_utilization": risk_budget_utilization,
+            "num_cycles": self.num_cycles,
+            "num_cycle_failures": self.num_cycle_failures
+        }
+
     def to_dict(self) -> dict:
         """Convert to dictionary for serialization."""
         return {
