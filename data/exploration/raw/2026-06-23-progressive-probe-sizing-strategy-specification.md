@@ -486,7 +486,7 @@ for bar in market_data:
         size = size_A(equity, n=0, bar.atr)
         position = open_position(size, stop=bar.price - 2*bar.atr)
         state = IN_POSITION
-    
+
     if state == IN_POSITION:
         if bar.price <= position.stop:
             close_position(position)
@@ -528,13 +528,13 @@ for bar in market_data:
         size = size_B(equity, n=0, bar.atr)
         position = open_position(size, stop=bar.price - 2*bar.atr)
         state = PROBE
-    
+
     if state == PROBE:
         if bar.price <= position.stop:
             cumulative_loss += position.risk
             n += 1
             close_position(position)
-            
+
             if n >= K or cumulative_loss >= 0.10 * equity:
                 state = IDLE
                 n = 0
@@ -543,7 +543,7 @@ for bar in market_data:
                 # 递增重试
                 size = size_B(equity, n, bar.atr)
                 position = open_position(size, stop=bar.price - 2*bar.atr)
-        
+
         elif position.pnl >= 3.0 * position.risk:
             state = CONFIRMED
 ```
@@ -593,7 +593,7 @@ for bar in market_data:
         size = size_D(equity, win_streak, bar.atr)
         position = open_position(size, stop=bar.price - 2*bar.atr)
         state = IN_POSITION
-    
+
     if state == IN_POSITION:
         if bar.price <= position.stop:
             close_position(position)
@@ -642,11 +642,11 @@ for bar in market_data:
         size = size_E(equity, "PROBE", bar.atr)
         position = open_position(size, stop=bar.price - 2*bar.atr)
         state = PROBE
-    
+
     if state == PROBE:
         # 独立确认模型（非基于止损序列）
         confidence = confirmation_model.predict(bar)
-        
+
         if confidence > 0.70:  # 高置信度
             # 放大仓位
             close_position(position)
@@ -687,12 +687,12 @@ posterior_model = BayesianModel(prior_p=0.50)  # 初始先验
 for bar in market_data:
     # 更新后验（只用过去观测）
     posterior_p = posterior_model.update(historical_features)
-    
+
     if state == IDLE and entry_signal(bar):
         size = size_F(equity, posterior_p, bar.atr)
         position = open_position(size, stop=bar.price - 2*bar.atr)
         state = IN_POSITION
-    
+
     if state == IN_POSITION:
         if bar.price <= position.stop or exit_signal(bar):
             close_position(position)
@@ -767,12 +767,12 @@ for group in [A, B, C, D, E, F, G1, G2]:
                 'total_return': equity_curve[-1] / equity_curve[0] - 1,
                 'win_rate': calculate_win_rate(equity_curve),
             })
-    
+
     # 统计检验
     # H0: B 的 Sharpe <= A 的 Sharpe
     # H1: B 的 Sharpe > A 的 Sharpe
     t_stat, p_value = ttest_ind(results_B['sharpe'], results_A['sharpe'])
-    
+
     if p_value < 0.01:
         print(f"B significantly outperforms A at p < 0.01")
     else:
