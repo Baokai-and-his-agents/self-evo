@@ -1,9 +1,9 @@
 # Progressive Probe Position Sizing - Exploration Brief
 
-**Date:** 2026-06-23  
-**Worker:** scout-worker-fx-sizing-01  
-**Run ID:** 2026-06-23-fx-sizing-001  
-**Issue:** #15  
+**Date:** 2026-06-23
+**Worker:** scout-worker-fx-sizing-01
+**Run ID:** 2026-06-23-fx-sizing-001
+**Issue:** #15
 **Base:** PR #14 HEAD (b17c1e2)
 
 ---
@@ -200,35 +200,35 @@ E[G_{n+1} | n losses] = p_{n+1} × r_{n+1} × R_{n+1} - (1 - p_{n+1}) × r_{n+1}
 
 **对照组（至少 7 组）：**
 
-A. **固定仓位重复试探**  
-   - r = r0，每次相同  
+A. **固定仓位重复试探**
+   - r = r0，每次相同
    - 基准：无 sizing 优化
 
-B. **止损后算术递增（有上限）**  
-   - r_n = r0 + n × d，max K 次  
+B. **止损后算术递增（有上限）**
+   - r_n = r0 + n × d，max K 次
    - 本机制核心
 
-C. **止损后几何递增（有上限）**  
-   - r_n = r0 × m^n，max K 次  
+C. **止损后几何递增（有上限）**
+   - r_n = r0 × m^n，max K 次
    - 类 Martingale，但有限
 
-D. **盈利后加仓（anti-Martingale）**  
-   - 止损保持 r0，盈利后递增  
+D. **盈利后加仓（anti-Martingale）**
+   - 止损保持 r0，盈利后递增
    - 对照：递增方向相反
 
-E. **固定小仓试探 + 趋势确认后一次性放大**  
-   - 试探期固定 r0  
-   - 确认后直接跳到 r_large  
+E. **固定小仓试探 + 趋势确认后一次性放大**
+   - 试探期固定 r0
+   - 确认后直接跳到 r_large
    - 对照：无逐级递增
 
-F. **根据 regime posterior 调整仓位**  
-   - HMM / change-point 模型输出置信度  
-   - 仓位 = f(置信度)  
+F. **根据 regime posterior 调整仓位**
+   - HMM / change-point 模型输出置信度
+   - 仓位 = f(置信度)
    - 对照：显式 regime 推断
 
-G. **随机置换基线**  
-   - 信号不变，随机打乱仓位序列  
-   - 或随机打乱交易顺序  
+G. **随机置换基线**
+   - 信号不变，随机打乱仓位序列
+   - 或随机打乱交易顺序
    - 对照：检验路径依赖是否真实创造价值
 
 **参数网格（实验用，非推荐）：**
@@ -269,57 +269,57 @@ G. **随机置换基线**
 
 ### 优先级 1：直接证据（最需要但可能不存在）
 
-1. **有限递增试探仓位的学术研究**  
+1. **有限递增试探仓位的学术研究**
    - "progressive position sizing after losses"
    - "adaptive sizing based on drawdown"
    - "limited martingale in trend following"
 
-2. **止损序列的信息价值**  
+2. **止损序列的信息价值**
    - "information content of stop losses"
    - "predictive power of false breakouts"
    - "whipsaw clustering before trends"
 
 ### 优先级 2：相邻理论
 
-3. **Sequential testing & change-point**  
+3. **Sequential testing & change-point**
    - Sequential probability ratio test (SPRT)
    - Bayesian change-point detection
    - Online change-point detection algorithms
 
-4. **Regime switching**  
+4. **Regime switching**
    - Hidden Markov Models in FX
    - Markov-switching GARCH
    - Regime-dependent position sizing
 
-5. **Optimal stopping**  
+5. **Optimal stopping**
    - Optimal stopping in trading
    - Secretary problem analogues
    - Time-to-trend estimation
 
-6. **Martingale 理论与实证**  
+6. **Martingale 理论与实证**
    - Finite martingale vs infinite
    - Martingale in FX empirical tests
    - Anti-martingale vs martingale performance
 
-7. **Trend following sizing**  
+7. **Trend following sizing**
    - Turtle trading units
    - Van Tharp position sizing
    - ATR-based position sizing
    - Volatility-adjusted entry
 
-8. **Campaign trading**  
+8. **Campaign trading**
    - Multiple entries in same direction
    - Layered entries
    - Building positions
 
 ### 优先级 3：实践文献
 
-9. **Professional risk management**  
+9. **Professional risk management**
    - CTA / managed futures position management
    - Professional trader position sizing rules
    - Proprietary trading desk rules
 
-10. **历史案例**  
+10. **历史案例**
     - Turtle traders documentation
     - Seykota, Dunn, trend followers
     - Academic case studies
@@ -371,17 +371,17 @@ G. **随机置换基线**
 
 ## 交付文件结构
 
-1. **本文件：exploration brief**  
-2. **query_matrix.md:** 查询矩阵，覆盖边界  
-3. **source_decisions.md:** 证据账本  
-4. **mathematical_model.md:** 完整数学推导  
-5. **strategy_specification.md:** 状态机与伪代码  
-6. **failure_landscape.md:** 失败模式  
-7. **evidence_map.md:** 证据强度分布  
-8. **backtest_protocol.md:** 完整实验规格  
-9. **pr14_revision_recommendations.md:** PR #14 结论修订建议  
-10. **daily_report.md:** 研究综合报告（中文）  
-11. **project_candidate.md:** 代码实现项目规格  
+1. **本文件：exploration brief**
+2. **query_matrix.md:** 查询矩阵，覆盖边界
+3. **source_decisions.md:** 证据账本
+4. **mathematical_model.md:** 完整数学推导
+5. **strategy_specification.md:** 状态机与伪代码
+6. **failure_landscape.md:** 失败模式
+7. **evidence_map.md:** 证据强度分布
+8. **backtest_protocol.md:** 完整实验规格
+9. **pr14_revision_recommendations.md:** PR #14 结论修订建议
+10. **daily_report.md:** 研究综合报告（中文）
+11. **project_candidate.md:** 代码实现项目规格
 12. **run_summary.md:** 运行总结
 
 ---
@@ -390,28 +390,28 @@ G. **随机置换基线**
 
 需要**修正或补充**的结论（待完成研究后确认）：
 
-1. **"算术亏损、指数盈利是营销口号"**  
-   - 过于绝对，未充分理解用户机制  
+1. **"算术亏损、指数盈利是营销口号"**
+   - 过于绝对，未充分理解用户机制
    - 应修正为：区分字面不可能 vs 合理解释空间
 
-2. **财富过程乘法性质**  
-   - 数学正确，但未区分"财富累积乘法" vs "单期仓位序列可递增"  
+2. **财富过程乘法性质**
+   - 数学正确，但未区分"财富累积乘法" vs "单期仓位序列可递增"
    - 应补充：仓位路径可优化收益分布
 
-3. **Martingale 结论**  
-   - 正确指出无限 Martingale 在有限资本下风险极高  
-   - 但未讨论有限、有预算的递增与 Martingale 的区别  
+3. **Martingale 结论**
+   - 正确指出无限 Martingale 在有限资本下风险极高
+   - 但未讨论有限、有预算的递增与 Martingale 的区别
    - 应补充：有限递增的连续谱位置
 
-4. **Kelly 估计误差**  
-   - 正确指出 over-betting 风险  
-   - 但未讨论递增 sizing 的 Kelly 应用  
+4. **Kelly 估计误差**
+   - 正确指出 over-betting 风险
+   - 但未讨论递增 sizing 的 Kelly 应用
    - 应补充：动态 Kelly 或 fractional Kelly 在递增中的角色
 
-5. **缺失讨论**  
-   - 止损序列的信息价值（regime 推断）  
-   - Sequential testing 理论  
-   - 两阶段策略（试探 + 趋势）  
+5. **缺失讨论**
+   - 止损序列的信息价值（regime 推断）
+   - Sequential testing 理论
+   - 两阶段策略（试探 + 趋势）
    - Campaign trading / layered entries
 
 ---

@@ -1,7 +1,7 @@
 # Progressive Probe Position Sizing - Failure Landscape
 
-**Date:** 2026-06-23  
-**Worker:** scout-worker-fx-sizing-01  
+**Date:** 2026-06-23
+**Worker:** scout-worker-fx-sizing-01
 **Run ID:** 2026-06-23-fx-sizing-001
 
 ---
@@ -25,16 +25,16 @@ def test_stop_loss_predictive_power(historical_data):
     测试止损序列是否预测趋势
     """
     sequences = extract_stop_loss_sequences(historical_data)
-    
+
     for seq in sequences:
         n_stops = len(seq.stops)
         next_trade_result = seq.next_trade_outcome
-        
+
         # H0: P(win | n stops) = P(win)（无预测性）
         # H1: P(win | n stops) > P(win)（有预测性）
-        
+
     p_value = chi_square_test(sequences)
-    
+
     if p_value > 0.05:
         print("WARNING: Stop-loss sequences do NOT predict trend")
         print("Strategy degenerates to limited Martingale")
@@ -90,7 +90,7 @@ def test_autocorrelation(trade_results):
     测试交易结果自相关性
     """
     acf = autocorrelation(trade_results, lag=1)
-    
+
     if acf > 0.1:
         print("WARNING: Positive autocorrelation detected")
         print("Losing streaks tend to cluster")
@@ -284,9 +284,9 @@ def test_autocorrelation(trade_results):
 def check_kelly_violation(position_size, equity, p, R):
     kelly_full = (p * R - (1 - p)) / R
     kelly_half = 0.5 * kelly_full
-    
+
     position_pct = position_size / equity
-    
+
     if position_pct > kelly_half:
         print(f"WARNING: Over-betting Kelly")
         print(f"Position {position_pct:.2%} > Kelly-half {kelly_half:.2%}")
@@ -479,7 +479,7 @@ def check_kelly_violation(position_size, equity, p, R):
 if cumulative_equity_drawdown > 0.20:
     stop_all_trading()
     enter_review_period(30_days)
-    
+
 if consecutive_failed_cycles > 3:
     stop_all_trading()
     re_evaluate_assumptions()

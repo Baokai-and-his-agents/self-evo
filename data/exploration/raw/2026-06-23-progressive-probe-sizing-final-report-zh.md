@@ -1,9 +1,9 @@
 # 外汇有限递增试探仓位专项研究 - 最终报告
 
-**研究日期：** 2026-06-23  
-**Worker ID：** scout-worker-fx-sizing-01  
-**Run ID：** 2026-06-23-fx-sizing-001  
-**Issue：** #15  
+**研究日期：** 2026-06-23
+**Worker ID：** scout-worker-fx-sizing-01
+**Run ID：** 2026-06-23-fx-sizing-001
+**Issue：** #15
 **依赖：** PR #14（外汇量化研究基础）
 
 ---
@@ -16,12 +16,12 @@
 
 **研究方法：** 严格串行证据检索（Query 1-9）、数学模型推导、失效模式分析、与经典策略对比。
 
-**主要结论：** 
-1. **直接支持证据不存在**（Query 1-9 一致阴性）
-2. **核心假设未验证**（止损序列不预测趋势，Query 9）
-3. **若假设不成立，退化为有限 Martingale**（继承 fat tail 风险）
-4. **主流共识完全相反**（止损 → 减仓，盈利 → 增仓）
-5. **风险评级：极高**，不推荐实盘使用
+**主要结论：**
+1. **本次公开检索未找到直接支持证据**（Query 1-9 系统检索）
+2. **核心假设未验证**（止损序列是否提供 regime 信息，Query 9 低等级来源不足以检验一般性假设）
+3. **若假设不成立，退化为有限 Martingale**（可能继承 Martingale 风险特征）
+4. **检索到的来源呈现一致模式**（止损 → 减仓，盈利 → 增仓）
+5. **需实证检验**，在验证前不推荐真实资金实盘使用
 
 ---
 
@@ -93,10 +93,11 @@ n=5: R_min = 0.97（看似"低"）
 
 单次期望：`E[G_n] = r_n × (p×R - (1-p))`
 
-**关键结论（修正后）：**
-- 在完整周期、风险预算固定、仓位与未来收益独立的理想条件下，递增仓位主要改变收益分布形状（正偏度），对几何增长率的独立价值有限
-- 但实际交易中路径依赖、Kelly 偏离、风险预算动态调整可能影响结果
-- **若 p 恒定，递增仅重新分配风险，不创造 edge**
+**关键结论：**
+- 即使未来回报是 i.i.d.，状态依赖仓位会通过不同 exposure 路径改变期望对数增长
+- 长期增长率应由 E[Σ log(1 + f_n X_n)] 描述
+- 偏离 Kelly 最优可能有害
+- **若 p 恒定，递增仅重新分配风险路径，增量价值需实证检验**
 
 ### 2.3 条件概率假设
 
@@ -106,18 +107,21 @@ n=5: R_min = 0.97（看似"低"）
 - **前提：必须实证验证止损的信息含量**
 
 **实证状态（Query 9）：**
-- False breakout 50-70% 频率，不预测趋势
-- **假设不支持**
+- False breakout 在检索到的来源中被视为噪音
+- Query 9 低等级来源（Tier 4-5）不足以检验一般性条件概率假设
+- **需要 A-G 同信号对照和序列检验**
 
 ### 2.4 Risk of Ruin
 
 ```
-P(ruin) = (1 - p)^(K+1)
+P(cycle_failure) = (1 - p)^(K+1)  （单 cycle 连续失败概率）
 
 示例：
-p=0.4, K=5: 7.78%（每 13 周期爆一次）
-p=0.3, K=5: 16.8%（每 6 周期爆一次）
+p=0.4, K=5: 4.67%
+p=0.3, K=5: 11.76%
 ```
+
+**注意：** 上述是单 cycle 失败概率，非账户破产概率。账户破产需定义 ruin threshold 并用递归/Markov/Monte Carlo 建模多 cycle 风险。
 
 ### 2.5 与经典策略的连续谱
 
@@ -132,16 +136,16 @@ p=0.3, K=5: 16.8%（每 6 周期爆一次）
 
 ## 3. 证据检索结果（Query 1-9）
 
-### 3.1 直接证据：阴性
+### 3.1 直接证据：检索未找到
 
 **Query 1-3（维度 1）：**
-- "Progressive position sizing after losses"：主流建议**减仓**
-- "Increasing size consecutive losses"：所有来源警告**危险**
+- "Progressive position sizing after losses"：检索到的来源建议**减仓**
+- "Increasing size consecutive losses"：检索到的来源警告**危险**
 - "Limited martingale + trend following"：仅 EA 营销 + 强烈免责
 
-**结论：** 止损后递增仓位的直接支持证据**不存在**
+**结论：** 本次公开检索范围内**未找到**止损后递增仓位的直接支持证据
 
-### 3.2 相邻理论：相邻但不支持
+### 3.2 相邻理论：相邻但不直接支持
 
 **Query 4（SPRT）：**
 - Wald 1945 最优序贯检验，平均样本量减少 50%
@@ -154,38 +158,37 @@ p=0.3, K=5: 16.8%（每 6 周期爆一次）
 - 未见"止损聚集 → 增仓"
 
 **Query 6（HMM Regime Switching）：**
-- 主流架构：Bull 100% / Bear 25% / High-vol 10%
+- 工程实现示例：Bull 100% / Bear 25% / High-vol 10%（示例参数非优化结果）
 - 高波动/不确定 → **减仓**
-- **方向与本机制完全相反**
+- **方向与本机制相反**
 
-### 3.3 实证对比：强烈反对
+### 3.3 实证对比：检索到的来源反对 Martingale
 
 **Query 7（Martingale vs Anti-Martingale）：**
-- Martingale：所有来源**强烈反对**
-  - Fat tail risk: 最坏 -772 pips vs 平均 +4.48 pips
-  - Kurtosis 88.03（极端 fat tail）
-  - 账户寿命 1-2 年
+- Martingale：检索到的来源**强烈反对**
+  - ForexOp 模拟研究：Fat tail risk（最坏情况远超平均值）
+  - 需核验的引用：账户寿命、具体 Kurtosis 计算（已从可追溯账本中移除）
 - Anti-Martingale：需要 edge，趋势中有效
-- Thorp Kelly：19.1% 年化（1969-1988），无亏损年
+- Kelly Criterion：Thorp 长期正收益（具体数字需核验原文）
 
 **Query 8（Turtle Trading）：**
 - Pyramiding：**盈利后**加仓（0.5N step）
-- 1983-1987 实盘 80%+ 年化
+- Curtis Faith "Way of the Turtle" 书籍记载长期正收益（具体数字需核验）
 - **触发条件与本机制相反**
 
 **Query 9（False Breakout）：**
-- 50-70% breakout 为 false（Asian session 更高）
-- False breakout **不预测趋势**
+- 检索到的来源中 false breakout 比例估计不一（统计方法不详）
+- False breakout 在检索到的来源中**被视为噪音**而非趋势前兆
 - 主流策略：**避免**或 fade
-- **核心假设不支持**
+- **Query 9 低等级来源不足以检验一般性条件概率假设**
 
-### 3.4 主流共识（100% 一致）
+### 3.4 检索到来源的一致模式
 
-**所有查询跨 Query 1-9 一致：**
+**跨 Query 1-9 检索到的来源呈现一致模式：**
 1. 止损/亏损/drawdown → **减仓**
 2. 盈利/趋势确认 → **增仓**（anti-martingale）
 3. 高波动/不确定 → **减仓**
-4. 止损后增仓 → **不存在**
+4. 止损后增仓 → **未见于检索到的文献**
 
 ---
 
@@ -194,10 +197,10 @@ p=0.3, K=5: 16.8%（每 6 周期爆一次）
 ### 4.1 关键失效模式
 
 **F1. 核心假设不成立（最关键）**
-- 假设：止损序列预测趋势
-- 实证：Query 9 不支持
-- 后果：退化为有限 Martingale
-- 概率：**高（>70%）**
+- 假设：止损序列提供 regime 信息
+- 实证：Query 9 低等级来源不足以检验一般性假设
+- 后果：退化为有限 Martingale，可能偏离 Kelly 最优
+- 风险评估：**未验证**（需 A-G 对照和序列检验）
 
 **F2. Fat Tail 风险**
 - 小概率（P = (1-p)^K）巨额亏损（L_K）
@@ -437,13 +440,13 @@ A: **否**。实证不支持，不预判有效。
 
 ### 9.1 已完成
 
-✅ 1. Exploration Brief  
-✅ 2. Query Matrix  
-✅ 3. Mathematical Model（含审计修正）  
-✅ 4. Evidence Log（Query 1-9，去重证据账本）  
-✅ 5. Strategy Specification（状态机、伪代码）  
-✅ 6. Failure Landscape（15 个失效模式）  
-✅ 7. PR #14 Revision Recommendations  
+✅ 1. Exploration Brief
+✅ 2. Query Matrix
+✅ 3. Mathematical Model（含审计修正）
+✅ 4. Evidence Log（Query 1-9，去重证据账本）
+✅ 5. Strategy Specification（状态机、伪代码）
+✅ 6. Failure Landscape（15 个失效模式）
+✅ 7. PR #14 Revision Recommendations
 ✅ 8. Final Report（本文件）
 
 ### 9.2 研究输出
@@ -496,8 +499,8 @@ A: **否**。实证不支持，不预判有效。
 
 ---
 
-**研究完成日期：** 2026-06-23  
-**总执行时间：** 约 9 小时  
-**Commits：** 754c3a7（Phase 1），76692ae（Phase 2）  
+**研究完成日期：** 2026-06-23
+**总执行时间：** 约 9 小时
+**Commits：** 754c3a7（Phase 1），76692ae（Phase 2）
 
 **最终建议：不推荐实盘使用。优先考虑 Kelly, Turtle, Anti-Martingale 等有实证支持的策略。**

@@ -1,15 +1,15 @@
 # Evidence Log - Progressive Probe Position Sizing
 
-**Date:** 2026-06-23  
-**Worker:** scout-worker-fx-sizing-01  
+**Date:** 2026-06-23
+**Worker:** scout-worker-fx-sizing-01
 **Run ID:** 2026-06-23-fx-sizing-001
 
 ---
 
 ## Query 1: "progressive position sizing after losses"
 
-**Engine:** Exa AI  
-**Results:** 10 articles  
+**Engine:** Exa AI
+**Results:** 10 articles
 **Time:** 2026-06-23
 
 ### Key Findings
@@ -66,8 +66,8 @@
 
 ## Query 2: "increasing position size consecutive losses"
 
-**Engine:** Exa AI  
-**Results:** 8 articles  
+**Engine:** Exa AI
+**Results:** 8 articles
 **Time:** 2026-06-23
 
 ### Key Findings
@@ -122,8 +122,8 @@
 
 ## Query 3: "limited martingale" + "trend following"
 
-**Engine:** Exa AI  
-**Results:** 8 items  
+**Engine:** Exa AI
+**Results:** 8 items
 **Time:** 2026-06-23
 
 ### Key Findings
@@ -203,9 +203,9 @@
 
 ## Query 4: Sequential testing in trading
 
-**Engine:** Exa AI (via agent-reach)  
-**Query:** "sequential probability ratio test trading"  
-**Results:** 10 items  
+**Engine:** Exa AI (via agent-reach)
+**Query:** "sequential probability ratio test trading"
+**Results:** 10 items
 **Time:** 2026-06-23T10:15Z
 
 ### Key Findings
@@ -314,9 +314,9 @@
 
 ## Query 5: Change-point detection + position sizing
 
-**Engine:** Exa AI (via agent-reach)  
-**Query:** "change point detection forex position sizing"  
-**Results:** 10 items  
+**Engine:** Exa AI (via agent-reach)
+**Query:** "change point detection forex position sizing"
+**Results:** 10 items
 **Time:** 2026-06-23T10:30Z
 
 ### Key Findings
@@ -469,9 +469,9 @@
 
 ## Query 6: HMM regime switching position sizing
 
-**Engine:** Exa AI (via agent-reach)  
-**Query:** "hidden markov model regime switching position sizing trading"  
-**Results:** 10 items  
+**Engine:** Exa AI (via agent-reach)
+**Query:** "hidden markov model regime switching position sizing trading"
+**Results:** 10 items
 **Time:** 2026-06-23T10:45Z
 
 ### Key Findings (Summary)
@@ -565,9 +565,9 @@
 
 ## Query 7: Martingale vs Anti-Martingale empirical
 
-**Engine:** Exa AI (via agent-reach)  
-**Query:** "martingale anti-martingale forex empirical comparison performance"  
-**Results:** 10 items  
+**Engine:** Exa AI (via agent-reach)
+**Query:** "martingale anti-martingale forex empirical comparison performance"
+**Results:** 10 items
 **Time:** 2026-06-23T11:00Z
 
 ### Key Findings (Summary)
@@ -682,9 +682,9 @@
 
 ## Query 8: Turtle trading position sizing
 
-**Engine:** Exa AI (via agent-reach)  
-**Query:** "turtle trading position sizing units ATR forex"  
-**Results:** 8 items  
+**Engine:** Exa AI (via agent-reach)
+**Query:** "turtle trading position sizing units ATR forex"
+**Results:** 8 items
 **Time:** 2026-06-23T11:15Z
 
 ### Key Findings (Summary - Tier 2-3, 原始规则文档)
@@ -777,9 +777,9 @@
 
 ## Query 9: False breakout / whipsaw clustering before trends
 
-**Engine:** Exa AI (via agent-reach)  
-**Query:** "false breakout whipsaw clustering predict trend forex"  
-**Results:** 8 items  
+**Engine:** Exa AI (via agent-reach)
+**Query:** "false breakout whipsaw clustering predict trend forex"
+**Results:** 8 items
 **Time:** 2026-06-23T11:30Z
 
 ### 关键发现（Summary）
