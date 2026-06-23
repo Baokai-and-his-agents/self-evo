@@ -1,27 +1,44 @@
 # Issue #20: EURUSD Baseline Data Source
 
-**状态**: Phase 1 完成 - ✅ **HistData 验证通过**
-**日期**: 2026-06-23
+**状态**: Phase 1 部分完成 - ⚠️ **HistData Pilot 需要验证**
+**日期**: 2026-06-23（更新：晚间复核）
 **Agent**: fx-backtest-worker-01 (clawbie)
 **Branch**: `agent/fx-backtest-worker-01/20-eurusd-baseline`
 
 ---
 
-## 执行摘要
+## ⚠️ 重要更正 (2026-06-23 晚间)
 
-✅ **HistData.com 已确认为 Issue #20 的主数据源**
+**原报告错误**: 本文档之前声称"验证通过"并批准全量下载，但该结论基于错误的数据分析。
 
-经过完整的条款调查和 2005 年度 pilot 下载验证，HistData.com 提供符合 PR #19 策略需求的免费 OHLC 数据，无使用限制条款，适合作为学术研究和回测的主数据源。
+**实际状态**: ⚠️ **PILOT_REQUIRES_VALIDATION**
 
-**关键发现**:
-- ✅ **无使用限制条款** — 与 Dukascopy 不同，未发现禁止自动化、数据库存储或编程处理的条款
-- ✅ 提供完整的 Bid OHLC（M1 频率）
-- ✅ 覆盖 2000-2026（满足 2005-2025 要求）
-- ✅ 时区明确：EST (UTC-5) 无夏令时
-- ✅ 2005 pilot 验证通过：315 天，315,635 个 M1 bars
-- ✅ 完全兼容 PR #19 策略（Donchian High/Low + ATR）
+经人类复核发现以下严重数据质量问题：
 
-**下一步**: ✅ **批准进行 2005-2025 全量下载**
+1. **周末数据**: 315 个日期包含 **50 个周日 + 7 个周六**（不是 315 个交易日）
+2. **周末 bars**: 数据集包含约 **15,924 个周末 M1 bars**
+3. **价格异常**: 2005-01-03 01:53 的 ~90 pip 跳变需要 ECB 交叉验证
+4. **许可状态错误**: 应保持 **DATA_TERMS_UNCLEAR**（未找到限制 ≠ 获得许可）
+5. **缓存文件**: 存在 31KB 损坏的 ZIP 文件
+
+**决策**: ❌ **全量下载未批准** - 必须先完成 pilot 数据验证
+
+详见: [histdata-2005-validation-correction.md](../../docs/data-sources/histdata-2005-validation-correction.md)
+
+---
+
+## 执行摘要（已作废）
+
+~~✅ **HistData.com 已确认为 Issue #20 的主数据源**~~ ❌ **此结论作废**
+
+**实际情况**:
+- ⚠️ HistData 2005 pilot 已下载，但数据质量验证未完成
+- ⚠️ 周末数据性质不明（57 个周末日期，~15,924 bars）
+- ⚠️ 价格异常未经第二来源验证
+- ⚠️ 日线聚合边界未定义（Calendar day vs FX session）
+- ⚠️ 许可条款状态应为 DATA_TERMS_UNCLEAR
+
+**下一步**: ❌ ~~批准进行 2005-2025 全量下载~~ → ✅ **完成 pilot 数据验证**
 
 ---
 
