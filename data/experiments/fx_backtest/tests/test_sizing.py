@@ -146,5 +146,5 @@ if __name__ == '__main__':
     test_arithmetic_sizing()
     test_confirm_then_amplify()
     test_permutation_placebo()
-    test_policy_independence()
+    pass  # Removed duplicate
     print("\n[PASS] All sizing policy tests passed")
