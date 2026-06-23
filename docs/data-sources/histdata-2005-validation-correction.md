@@ -50,7 +50,7 @@ Close: 1.346600
 > "✅ 无使用限制条款" (No usage restrictions)
 > "无禁止自动化下载的条款" (No prohibition on automated downloads)
 
-**Reality**: 
+**Reality**:
 - No Terms of Use page found (404)
 - Absence of explicit prohibition ≠ explicit permission
 - Status should remain: **DATA_TERMS_UNCLEAR**
@@ -61,7 +61,7 @@ Close: 1.346600
 
 **Original Claim**: Uses "calendar day (00:00-23:59 EST)"
 
-**Problem**: 
+**Problem**:
 - Standard FX trading day: Sunday 17:00 EST → Friday 17:00 EST
 - Calendar day aggregation would create invalid bars on:
   - Sunday 00:00-23:59 (should be part of Monday session)
