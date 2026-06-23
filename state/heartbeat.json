@@ -42,7 +42,16 @@
       "status": "stopped",
       "phase": "implementation complete / final review",
       "last_seen": "2026-06-23T19:30:00+08:00"
+    },
+    {
+      "worker": "fx-backtest-worker-01",
+      "run_id": "2026-06-23-histdata-phase1",
+      "issue": 20,
+      "branch": "agent/fx-backtest-worker-01/20-eurusd-baseline",
+      "status": "active",
+      "phase": "Phase 1 complete - HistData validated",
+      "last_seen": "2026-06-23T22:15:00+08:00"
     }
   ],
-  "updated_at": "2026-06-23T19:30:00+08:00"
+  "updated_at": "2026-06-23T22:15:00+08:00"
 }

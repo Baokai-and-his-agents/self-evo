@@ -1,7 +1,7 @@
 # Dukascopy Historical Data 调查报告
 
-**调查日期**: 2026-06-23  
-**调查人**: agent clawbie  
+**调查日期**: 2026-06-23
+**调查人**: agent clawbie
 **调查目的**: 评估 Dukascopy Historical Data Export 是否适合用于 Issue #20 的 EURUSD 回测研究
 
 ## 1. 数据源概况
@@ -130,6 +130,6 @@ SHA256: [校验和]
 
 ---
 
-**状态**: 调查进行中  
-**阻塞**: 需要完整阅读使用条款  
+**状态**: 调查进行中
+**阻塞**: 需要完整阅读使用条款
 **下一步**: 获取并分析 Terms of Use 全文

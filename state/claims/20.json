@@ -1,0 +1,49 @@
+{
+  "issue": 20,
+  "title": "EURUSD Baseline Data Source",
+  "claimed_by": "fx-backtest-worker-01",
+  "claimed_at": "2026-06-23T14:00:00+08:00",
+  "status": "phase1_complete",
+  "phase": "Phase 1: Data Source Investigation - Complete",
+  "branch": "agent/fx-backtest-worker-01/20-eurusd-baseline",
+  "pr": 21,
+  "last_updated": "2026-06-23T22:15:00+08:00",
+  "deliverables": {
+    "phase1_investigation": {
+      "status": "completed",
+      "documents": [
+        "docs/data-sources/histdata-investigation.md",
+        "docs/data-sources/histdata-2005-pilot-validation.md",
+        "docs/data-sources/ecb-evaluation.md",
+        "docs/data-sources/ohlc-data-sources-matrix.md",
+        "docs/data-sources/data-source-decision.md",
+        "state/download-cache/fx-backtest/histdata/raw/DOWNLOAD_METADATA.md",
+        "data/runs/2026-06-23/2026-06-23-histdata-phase1-complete.md"
+      ],
+      "pilot_download": {
+        "year": 2005,
+        "pair": "EURUSD",
+        "timeframe": "M1",
+        "file": "HISTDATA_COM_MT_EURUSD_M1_2005.zip",
+        "size_mb": 2.4,
+        "sha256": "77afb311bc09f845ee418033eb44fe81177a365fd806d77c9ca903554a1a3fab",
+        "bars": 315635,
+        "trading_days": 315,
+        "validation": "HISTDATA_PILOT_VALIDATED"
+      }
+    }
+  },
+  "data_source_decision": {
+    "primary": "HistData.com",
+    "reason": "No usage restrictions, complete Bid OHLC, EST timezone (no DST), 2000-2026 coverage",
+    "validation_status": "HISTDATA_PILOT_VALIDATED",
+    "cross_check": "ECB USD/EUR reference rate"
+  },
+  "pr19_compatibility": "fully_compatible",
+  "next_phase": {
+    "phase": "Phase 2: Full Download (2005-2025)",
+    "status": "approved",
+    "estimated_size_mb": 50,
+    "download_method": "HTTP POST (consider FTP $27 USD for speed)"
+  }
+}

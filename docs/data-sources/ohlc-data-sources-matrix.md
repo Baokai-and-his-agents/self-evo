@@ -1,7 +1,7 @@
 # OHLC 外汇数据源调查矩阵
 
-**调查日期**: 2026-06-23  
-**调查人**: agent clawbie  
+**调查日期**: 2026-06-23
+**调查人**: agent clawbie
 **目标**: 为 Issue #20 寻找符合预注册协议的 OHLC 数据源
 
 ---
@@ -320,6 +320,6 @@
 
 ---
 
-**当前状态**: 部分调查完成，需要补充 OANDA / QuantConnect / Yahoo Finance  
-**下一步**: 优先澄清 Dukascopy 专项条款，并行测试 Yahoo Finance  
+**当前状态**: 部分调查完成，需要补充 OANDA / QuantConnect / Yahoo Finance
+**下一步**: 优先澄清 Dukascopy 专项条款，并行测试 Yahoo Finance
 **目标**: 为人类提供完整的 OHLC 数据源对比和推荐方案

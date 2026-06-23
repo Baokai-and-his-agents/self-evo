@@ -1,7 +1,7 @@
 # ECB Exchange Rate Data 评估报告
 
-**评估日期**: 2026-06-23  
-**评估人**: agent clawbie  
+**评估日期**: 2026-06-23
+**评估人**: agent clawbie
 **评估目的**: 评估 ECB USD/EUR reference rate 是否适合作为 Issue #20 的主数据源
 
 ## 执行摘要
@@ -302,12 +302,12 @@ Issue #20 明确禁止：
 def download_usdeur_daily(start_date, end_date, output_path):
     """
     从 ECB API 下载 USD/EUR 日线数据
-    
+
     Args:
         start_date: 'YYYY-MM-DD'
         end_date: 'YYYY-MM-DD'
         output_path: 输出文件路径
-    
+
     Returns:
         manifest: 包含 SHA256、行数、日期范围等元数据
     """
@@ -327,13 +327,13 @@ def download_usdeur_daily(start_date, end_date, output_path):
 def normalize_ecb_to_daily_close(raw_csv_path, output_path):
     """
     将 ECB 原始 CSV 转换为规范化格式
-    
+
     转换内容:
     1. USD/EUR → EUR/USD (取倒数)
     2. 提取 date, close 字段
     3. 验证时间排序
     4. 检查缺失和异常值
-    
+
     输出格式:
     date,close,source
     2005-01-03,0.7404,ECB
@@ -345,7 +345,7 @@ def normalize_ecb_to_daily_close(raw_csv_path, output_path):
 
 虽然 ECB 数据本身具有权威性，但仍然建议：
 
-1. **内部一致性检查**: 
+1. **内部一致性检查**:
    - 价格变动合理性（日变动 < 5%）
    - 无重复日期
    - 无缺失工作日（对照节假日）
@@ -442,7 +442,7 @@ def normalize_ecb_to_daily_close(raw_csv_path, output_path):
 API: https://data.ecb.europa.eu/
 访问日期: 2026-06-23
 许可: ECB Copyright Policy - Free use with attribution
-引用: European Central Bank. Euro foreign exchange reference rates. 
+引用: European Central Bank. Euro foreign exchange reference rates.
       https://data.ecb.europa.eu/data/datasets/EXR/EXR.D.USD.EUR.SP00.A
 ```
 
