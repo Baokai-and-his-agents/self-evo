@@ -1,7 +1,7 @@
 # FX Position Sizing Backtest MVP - Implementation Notes
 
-**Date:** 2026-06-23  
-**Worker:** fx-backtest-worker-01  
+**Date:** 2026-06-23
+**Worker:** fx-backtest-worker-01
 **Issue:** #18
 
 ## Implementation Status
@@ -33,7 +33,7 @@
 
 With the single trade, the system correctly:
 - Generated position-independent trade events ✓
-- Applied A/B/E/G sizing policies ✓  
+- Applied A/B/E/G sizing policies ✓
 - Computed conditional statistics (n=1 sample) ✓
 - Generated paired comparisons ✓
 - Produced JSON and markdown reports ✓

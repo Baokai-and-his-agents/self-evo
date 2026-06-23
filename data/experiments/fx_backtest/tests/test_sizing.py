@@ -101,13 +101,18 @@ def test_permutation_placebo():
 
     # Get permutation map
     risk_multiset = policy.get_risk_multiset()
-    assert len(risk_multiset) == 5  # 0 to K inclusive
+    assert len(risk_multiset) == 5  # 0 to K-1
 
-    # Verify it's a permutation (bijection)
+    # Verify multiset equality with B's risk values
+    b_policy = ArithmeticAfterLoss(r_0=0.01, d=0.005, K=5, r_max=0.03)
+    b_risk_values = [min(0.01 + i * 0.005, 0.03) for i in range(5)]
+
+    assert sorted(risk_multiset) == sorted(b_risk_values), \
+        f"G risk multiset {sorted(risk_multiset)} != B risk multiset {sorted(b_risk_values)}"
 
     # Size should depend on permuted stop_count
-    ctx0 = SizingContext(event_id=0, stop_count=0, equity=100000, entry_price=1.1, stop_price=1.09)
-    ctx1 = SizingContext(event_id=1, stop_count=1, equity=100000, entry_price=1.1, stop_price=1.09)
+    ctx0 = SizingContext(event_id=0, stop_count=0, equity=100000, entry_price=1.1, stop_price=1.09, cumulative_loss=0.0)
+    ctx1 = SizingContext(event_id=1, stop_count=1, equity=100000, entry_price=1.1, stop_price=1.09, cumulative_loss=0.0)
 
     size0 = policy.calculate_size(ctx0)
     size1 = policy.calculate_size(ctx1)
@@ -118,6 +123,12 @@ def test_permutation_placebo():
 
     # Deterministic: same seed produces same permutation
     policy2 = PermutationPlacebo(r_0=0.01, d=0.005, K=5, r_max=0.03, seed=42)
+    assert policy2.get_risk_multiset() == risk_multiset
+
+    print("[PASS] Permutation placebo tests passed")
+
+
+def test_policy_independence():
     """Test that policies don't interfere with each other."""
     print("Testing policy independence...")
 
@@ -146,5 +157,5 @@ if __name__ == '__main__':
     test_arithmetic_sizing()
     test_confirm_then_amplify()
     test_permutation_placebo()
-    pass  # Removed duplicate
+    test_policy_independence()
     print("\n[PASS] All sizing policy tests passed")

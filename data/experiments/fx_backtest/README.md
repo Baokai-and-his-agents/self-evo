@@ -1,8 +1,8 @@
 # FX Position Sizing Backtest MVP
 
-**Issue:** #18  
-**Worker:** fx-backtest-worker-01  
-**Run ID:** 2026-06-23-fx-backtest-001  
+**Issue:** #18
+**Worker:** fx-backtest-worker-01
+**Run ID:** 2026-06-23-fx-backtest-001
 **Branch:** agent/fx-backtest-worker-01/18-fx-backtest-mvp
 
 ## 目的

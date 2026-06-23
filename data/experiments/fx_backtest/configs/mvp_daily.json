@@ -25,6 +25,8 @@
   },
   "backtest": {
     "initial_equity": 100000.0,
+    "num_placebo_seeds": 100,
+    "_comment_num_placebo_seeds": "Number of placebo seeds for permutation test (default 100)",
     "cost_scenarios": {
       "zero": {
         "_comment": "Zero cost scenario (isolate sizing effect)",

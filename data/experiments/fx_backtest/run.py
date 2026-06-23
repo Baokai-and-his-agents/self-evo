@@ -160,6 +160,7 @@ def main():
         }
 
     all_results = {}  # {scenario_name: {policy_name: result}}
+    placebo_distributions = {}  # {scenario_name: [G_results]}
 
     for scenario_name, cost_config in cost_scenarios.items():
         print(f"\n--- Cost Scenario: {scenario_name} ---")
@@ -182,6 +183,21 @@ def main():
             print(f"  Final equity: ${result.final_equity:,.2f} ({result.total_return:+.2%})")
 
         all_results[scenario_name] = scenario_results
+
+        # Run multi-seed placebo distribution for permutation test
+        print(f"\nGenerating multi-seed placebo distribution...")
+        num_placebo_seeds = backtest_config.get('num_placebo_seeds', 100)
+        placebo_policies = create_multi_seed_placebo(num_seeds=num_placebo_seeds)
+
+        placebo_results = []
+        for i, placebo_policy in enumerate(placebo_policies):
+            result = engine.run(trade_events, placebo_policy)
+            placebo_results.append(result)
+            if (i + 1) % 20 == 0:
+                print(f"  Completed {i + 1}/{num_placebo_seeds} placebo runs...")
+
+        placebo_distributions[scenario_name] = placebo_results
+        print(f"  Generated {len(placebo_results)} placebo samples")
 
     # Step 4: Conditional probability analysis
     print("\n=== Step 4: Conditional Probability Analysis ===")
@@ -211,7 +227,7 @@ def main():
 
     # JSON report with all scenarios
     json_path = output_dir / f'results_{timestamp}.json'
-    save_json_results(all_results, conditional_stats, manifest, json_path)
+    save_json_results(all_results, conditional_stats, manifest, json_path, placebo_distributions)
     print(f"Saved JSON results to {json_path}")
 
     # Markdown report for each scenario
@@ -226,7 +242,8 @@ def main():
             slippage_pips=cost_config.get('slippage_pips', 0.0)
         )
 
-        generate_markdown_report(scenario_results, conditional_stats, manifest, cost_model, config, markdown_path, scenario_name=scenario_name)
+        placebo_dist = placebo_distributions.get(scenario_name, [])
+        generate_markdown_report(scenario_results, conditional_stats, manifest, cost_model, config, markdown_path, scenario_name=scenario_name, placebo_distribution=placebo_dist)
         print(f"Saved {scenario_name} report to {markdown_path}")
 
     print("\n=== Backtest Complete ===")

@@ -1,7 +1,7 @@
 # FX Data Sources Survey
 
-**Date:** 2026-06-23  
-**Worker:** fx-backtest-worker-01  
+**Date:** 2026-06-23
+**Worker:** fx-backtest-worker-01
 **Purpose:** Identify public, license-compliant FX OHLC data sources for Issue #18
 
 ## Requirements
@@ -18,12 +18,12 @@
 
 ### 1. Dukascopy
 
-**URL:** https://www.dukascopy.com/swiss/english/marketwatch/historical/  
-**License:** XML datafeed requires registration, approval, and web attribution (https://www.dukascopy.com/plugins/cont.php?ref_id=1273)  
-**Format:** Tick data and aggregated OHLC via Historical Data Export tool  
-**Pairs:** Major FX pairs available  
-**Coverage:** Multi-year historical data  
-**Access:** Free Historical Data Export tool, CSV download  
+**URL:** https://www.dukascopy.com/swiss/english/marketwatch/historical/
+**License:** XML datafeed requires registration, approval, and web attribution (https://www.dukascopy.com/plugins/cont.php?ref_id=1273)
+**Format:** Tick data and aggregated OHLC via Historical Data Export tool
+**Pairs:** Major FX pairs available
+**Coverage:** Multi-year historical data
+**Access:** Free Historical Data Export tool, CSV download
 **Status:** LICENSE UNCERTAIN for offline research backtest
 - XML datafeed license is for "non-commercial, temporary use" with web display and attribution
 - Historical Data Export tool terms not explicitly stated for research use
@@ -33,47 +33,47 @@
 
 ### 2. Stooq
 
-**URL:** https://stooq.com/  
-**License:** Not yet verified  
-**Format:** CSV OHLC  
-**Pairs:** Multiple FX pairs  
-**Coverage:** Multi-year history  
-**Access:** Web download  
+**URL:** https://stooq.com/
+**License:** Not yet verified
+**Format:** CSV OHLC
+**Pairs:** Multiple FX pairs
+**Coverage:** Multi-year history
+**Access:** Web download
 **Status:** NEEDS VERIFICATION
 
 ### 3. FRED (Federal Reserve Economic Data)
 
-**URL:** https://fred.stlouisfed.org/  
-**License:** Public domain US government data  
-**Format:** Daily exchange rates  
-**Pairs:** Major pairs available  
-**Coverage:** Decades of history  
-**Access:** CSV download, API available  
-**Limitations:** May be end-of-day rates, not OHLC; not tick/intrabar data  
+**URL:** https://fred.stlouisfed.org/
+**License:** Public domain US government data
+**Format:** Daily exchange rates
+**Pairs:** Major pairs available
+**Coverage:** Decades of history
+**Access:** CSV download, API available
+**Limitations:** May be end-of-day rates, not OHLC; not tick/intrabar data
 **Status:** LICENSE APPROVED for research, but may lack OHLC structure
 
 ### 4. Yahoo Finance (via yfinance)
 
-**URL:** https://finance.yahoo.com/  
-**License:** Unclear for programmatic bulk download  
-**Format:** OHLC  
-**Pairs:** FX pairs as currency pairs (e.g., EURUSD=X)  
-**Coverage:** Multi-year  
-**Access:** Python library `yfinance` (external dependency)  
+**URL:** https://finance.yahoo.com/
+**License:** Unclear for programmatic bulk download
+**Format:** OHLC
+**Pairs:** FX pairs as currency pairs (e.g., EURUSD=X)
+**Coverage:** Multi-year
+**Access:** Python library `yfinance` (external dependency)
 **Status:** BLOCKED - requires external installation, license uncertain for bulk backtest
 
 ### 5. OANDA
 
-**URL:** https://www.oanda.com/  
-**License:** May require account  
-**Format:** API access  
+**URL:** https://www.oanda.com/
+**License:** May require account
+**Format:** API access
 **Status:** BLOCKED - likely requires authentication
 
 ### 6. AlphaVantage
 
-**URL:** https://www.alphavantage.co/  
-**License:** Free tier with API key  
-**Format:** JSON API  
+**URL:** https://www.alphavantage.co/
+**License:** Free tier with API key
+**Format:** JSON API
 **Status:** BLOCKED - requires API key registration, rate limits
 
 ## Initial Decision: Fallback to Synthetic Fixture

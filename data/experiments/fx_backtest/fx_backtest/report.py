@@ -8,6 +8,7 @@ import json
 from .engine import BacktestResult, CostModel
 from .analysis import ConditionalStats, analyze_conditional_hypothesis, compare_policies_paired
 from .data import DataManifest
+from .placebo_analysis import analyze_placebo_distribution, verify_risk_multiset_equality
 
 
 def generate_markdown_report(
@@ -16,7 +17,9 @@ def generate_markdown_report(
     manifest: DataManifest,
     cost_model: CostModel,
     config: dict,
-    output_path: Path
+    output_path: Path,
+    scenario_name: str = "default",
+    placebo_distribution: List[BacktestResult] = None
 ):
     """Generate Chinese markdown report.
 
@@ -104,6 +107,27 @@ def generate_markdown_report(
 
     report_lines.append("")
 
+    # Additional metrics
+    report_lines.append("### 补充指标")
+    report_lines.append("")
+    report_lines.append("| 策略 | Avg Exposure | Max Exposure | Turnover | CVaR 5% | Cycle Failures |")
+    report_lines.append("|------|--------------|--------------|----------|---------|----------------|")
+
+    for policy_name in ['A', 'B', 'E', 'G']:
+        if policy_name not in results:
+            continue
+        r = results[policy_name]
+        additional = r.compute_additional_metrics()
+        report_lines.append(
+            f"| {policy_name} | {additional.get('avg_exposure', 0):.2%} | "
+            f"{additional.get('max_exposure', 0):.2%} | "
+            f"{additional.get('turnover', 0):.2f} | "
+            f"{additional.get('cvar_5pct', 0):.2%} | "
+            f"{additional.get('num_cycle_failures', 0)} |"
+        )
+
+    report_lines.append("")
+
     # Conditional probability
     report_lines.append("## 核心问题：条件概率分析")
     report_lines.append("")
@@ -174,6 +198,45 @@ def generate_markdown_report(
         report_lines.append(f"- **解释:** {comparison_b_g.get('interpretation', 'N/A')}")
         report_lines.append("")
 
+        # Verify risk multiset equality
+        risk_verification = verify_risk_multiset_equality(results['B'], results['G'])
+        report_lines.append("#### 风险值多重集验证")
+        report_lines.append("")
+        if risk_verification['equal']:
+            report_lines.append("✅ **验证通过:** B 和 G 使用完全相同的风险值多重集")
+        else:
+            report_lines.append(f"❌ **验证失败:** B 和 G 的风险值多重集不同")
+            report_lines.append(f"- B 交易数: {risk_verification['b_num_trades']}")
+            report_lines.append(f"- G 交易数: {risk_verification['g_num_trades']}")
+        report_lines.append("")
+
+    # Multi-seed placebo distribution analysis
+    if placebo_distribution and 'B' in results:
+        report_lines.append("### 多 Seed 置换检验")
+        report_lines.append("")
+
+        placebo_analysis = analyze_placebo_distribution(
+            results['B'],
+            placebo_distribution,
+            min_placebo_seeds=10
+        )
+
+        if placebo_analysis['test'] == 'INSUFFICIENT_DATA':
+            report_lines.append(f"**状态:** {placebo_analysis['test']}")
+            report_lines.append(f"**原因:** {placebo_analysis['reason']}")
+            report_lines.append("")
+        else:
+            report_lines.append(f"**样本数:** {placebo_analysis['num_seeds']} 个不同 seed")
+            report_lines.append(f"**B 终值权益:** ${placebo_analysis['b_equity']:,.2f}")
+            report_lines.append(f"**Placebo 均值:** ${placebo_analysis['placebo_mean']:,.2f}")
+            report_lines.append(f"**Placebo 中位数:** ${placebo_analysis['placebo_median']:,.2f}")
+            report_lines.append(f"**Placebo 5%/95% 分位:** ${placebo_analysis['placebo_p05']:,.2f} / ${placebo_analysis['placebo_p95']:,.2f}")
+            report_lines.append(f"**B 百分位:** {placebo_analysis['percentile']:.2%}")
+            report_lines.append(f"**双尾 p 值:** {placebo_analysis['p_value']:.4f}")
+            report_lines.append("")
+            report_lines.append(f"**解释:** {placebo_analysis['interpretation']}")
+            report_lines.append("")
+
     # Conclusions
     report_lines.append("## 结论与限制")
     report_lines.append("")
@@ -216,23 +279,56 @@ def generate_markdown_report(
 
 
 def save_json_results(
-    results: Dict[str, BacktestResult],
+    all_results: Dict[str, Dict[str, BacktestResult]],
     conditional_stats: List[ConditionalStats],
     manifest: DataManifest,
-    output_path: Path
+    output_path: Path,
+    placebo_distributions: Dict[str, List[BacktestResult]] = None
 ):
     """Save machine-readable JSON results.
 
     Args:
-        results: Policy results
+        all_results: {scenario_name: {policy_name: BacktestResult}}
         conditional_stats: Conditional statistics
         manifest: Data manifest
         output_path: Output JSON path
+        placebo_distributions: {scenario_name: [placebo_results]}
     """
+    # Convert results to dict with additional metrics
+    results_dict = {}
+    for scenario_name, scenario_results in all_results.items():
+        results_dict[scenario_name] = {}
+        for policy_name, result in scenario_results.items():
+            result_dict = result.to_dict()
+            result_dict['additional_metrics'] = result.compute_additional_metrics()
+            results_dict[scenario_name][policy_name] = result_dict
+
+    # Add placebo analysis
+    placebo_analysis_dict = {}
+    if placebo_distributions:
+        for scenario_name, placebo_results in placebo_distributions.items():
+            if scenario_name in all_results and 'B' in all_results[scenario_name]:
+                placebo_analysis_dict[scenario_name] = analyze_placebo_distribution(
+                    all_results[scenario_name]['B'],
+                    placebo_results,
+                    min_placebo_seeds=10
+                )
+
+            # Also add risk multiset verification
+            if scenario_name in all_results and 'B' in all_results[scenario_name] and 'G' in all_results[scenario_name]:
+                risk_verification = verify_risk_multiset_equality(
+                    all_results[scenario_name]['B'],
+                    all_results[scenario_name]['G']
+                )
+                if scenario_name not in placebo_analysis_dict:
+                    placebo_analysis_dict[scenario_name] = {}
+                placebo_analysis_dict[scenario_name]['risk_multiset_verification'] = risk_verification
+
     data = {
         "manifest": manifest.to_dict(),
-        "results": {name: result.to_dict() for name, result in results.items()},
+        "results": results_dict,
         "conditional_stats": [stat.to_dict() for stat in conditional_stats],
+        "placebo_analysis": placebo_analysis_dict,
         "generated_at": datetime.now().isoformat()
     }
 
