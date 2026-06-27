@@ -165,6 +165,16 @@ The tick fails fast unless `.self-evo/runtime/` is ignored by Git. If a selected
 issue produces an empty or non-applicable `proposed.patch`, the runtime review
 marks the run `needs_revision`; it does not apply the patch.
 
+Multiple `--label` flags are combined with GitHub CLI's AND semantics: an issue
+must carry every requested label to be returned by `gh issue list`.
+
+Exit codes:
+
+- `0`: the tick completed and wrote a success or no-op result
+- `1`: the tick wrote runtime artifacts, but `result.json.status` is `error`
+  such as `fetch_failed`
+- `2`: the tick hit a runtime boundary violation before normal completion
+
 ## Running the tests
 
 ```bash
