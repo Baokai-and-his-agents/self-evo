@@ -7,6 +7,7 @@ holds:
 - a **PreToolUse** hook (`hooks/pretooluse.py` / `pretool-use.ps1`)
 - a **Stop** hook (`hooks/stop.py` / `stop.ps1`)
 - the **shared guardrail contract** (`policy.json`) and pure logic (`_policy.py`)
+- a **Stage R runtime-confined no-op tick** (`loop_runtime_tick.py`)
 - an **offline deterministic test matrix** (`tests/test_matrix.py`)
 - **real-git / subprocess integration tests** (`tests/test_integration.py`)
 
@@ -125,11 +126,35 @@ computed as the committed branch diff vs the resolved base ref **unioned with**
 staged/unstaged/untracked/renamed/deleted working-tree files — so a clean
 committed PR branch no longer looks like "zero changes".
 
+## Running the Stage R no-op tick
+
+Stage R PR 1 adds only the runtime boundary skeleton. It writes one gitignored
+run directory under `.self-evo/runtime/runs/<run_id>/` and produces:
+
+```text
+input.json
+decision.md
+result.json
+```
+
+Manual invocation:
+
+```bash
+python scripts/loop_runtime_tick.py
+python scripts/loop_runtime_tick.py --json
+python scripts/loop_runtime_tick.py --run-id 2026-06-28T00-00-00Z --json
+```
+
+The tick fails fast unless `.self-evo/runtime/` is ignored by Git. This PR 1
+entrypoint does not fetch GitHub issues, select work, run a worker, run the
+Runtime Review Agent, promote files, create branches, commit, push, or open PRs.
+
 ## Running the tests
 
 ```bash
 python scripts/tests/test_matrix.py         # offline deterministic matrix (pure classifier + faked state)
 python scripts/tests/test_integration.py    # real-git + real-subprocess integration tests
+python scripts/tests/test_loop_runtime_tick.py  # Stage R runtime boundary + no-op contract
 ```
 
 The matrix never executes destructive commands. The integration tests create
