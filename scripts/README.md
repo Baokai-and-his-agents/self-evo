@@ -126,10 +126,15 @@ computed as the committed branch diff vs the resolved base ref **unioned with**
 staged/unstaged/untracked/renamed/deleted working-tree files — so a clean
 committed PR branch no longer looks like "zero changes".
 
-## Running the Stage R no-op tick
+## Running the Stage R tick
 
-Stage R PR 1 adds only the runtime boundary skeleton. It writes one gitignored
-run directory under `.self-evo/runtime/runs/<run_id>/` and produces:
+Stage R writes one gitignored run directory under
+`.self-evo/runtime/runs/<run_id>/`. In normal mode it reads open GitHub Issues
+through `gh issue list`, selects zero or one issue, and writes runtime-only
+candidate artifacts. It never writes GitHub state, applies patches, promotes
+files, creates branches, commits, pushes, or opens PRs.
+
+Required artifacts:
 
 ```text
 input.json
@@ -137,17 +142,38 @@ decision.md
 result.json
 ```
 
+Conditional artifacts:
+
+```text
+work.md
+evidence.md
+proposed.patch
+review.md
+```
+
 Manual invocation:
 
 ```bash
 python scripts/loop_runtime_tick.py
 python scripts/loop_runtime_tick.py --json
+python scripts/loop_runtime_tick.py --label risk:low --limit 10 --json
 python scripts/loop_runtime_tick.py --run-id 2026-06-28T00-00-00Z --json
+python scripts/loop_runtime_tick.py --offline-noop --json
 ```
 
-The tick fails fast unless `.self-evo/runtime/` is ignored by Git. This PR 1
-entrypoint does not fetch GitHub issues, select work, run a worker, run the
-Runtime Review Agent, promote files, create branches, commit, push, or open PRs.
+The tick fails fast unless `.self-evo/runtime/` is ignored by Git. If a selected
+issue produces an empty or non-applicable `proposed.patch`, the runtime review
+marks the run `needs_revision`; it does not apply the patch.
+
+Multiple `--label` flags are combined with GitHub CLI's AND semantics: an issue
+must carry every requested label to be returned by `gh issue list`.
+
+Exit codes:
+
+- `0`: the tick completed and wrote a success or no-op result
+- `1`: the tick wrote runtime artifacts, but `result.json.status` is `error`
+  such as `fetch_failed`
+- `2`: the tick hit a runtime boundary violation before normal completion
 
 ## Running the tests
 
