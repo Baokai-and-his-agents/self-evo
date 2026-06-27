@@ -4,7 +4,6 @@
 from __future__ import annotations
 
 import json
-import os
 from pathlib import Path
 import shutil
 import subprocess
@@ -238,6 +237,7 @@ def test_cli_success_json() -> None:
                 str(tmp),
                 "--run-id",
                 "cli-json",
+                "--offline-noop",
                 "--json",
             ],
             cwd=tmp,
@@ -268,6 +268,7 @@ def test_cli_boundary_error_json() -> None:
                 str(tmp),
                 "--run-id",
                 "cli-error",
+                "--offline-noop",
                 "--json",
             ],
             cwd=tmp,
@@ -287,6 +288,223 @@ def test_cli_boundary_error_json() -> None:
         shutil.rmtree(tmp, ignore_errors=True)
 
 
+def _fake_issue(number: int = 12, *, state: str = "OPEN", labels: list[str] | None = None) -> dict:
+    return {
+        "number": number,
+        "title": "Document Stage R worker output",
+        "url": f"https://github.com/Baokai-and-his-agents/self-evo/issues/{number}",
+        "state": state,
+        "body": "Create runtime-only work artifacts for Stage R.",
+        "updatedAt": "2026-06-28T00:00:00Z",
+        "assignees": [],
+        "labels": [{"name": label} for label in (labels or ["risk:low"])],
+    }
+
+
+def test_stage_r_no_suitable_issue_writes_reviewed_noop() -> None:
+    print("\n== Stage R no suitable issue writes reviewed no-op ==")
+    tmp = _seed_repo(ignore_runtime=True)
+    try:
+        def fetcher(repo_root, *, labels, limit):
+            return []
+
+        summary = tick.run_stage_r_tick(tmp, run_id="no-issue", issue_fetcher=fetcher)
+        run_dir = tmp / summary["run_dir"]
+        result = json.loads((run_dir / "result.json").read_text(encoding="utf-8"))
+        review = (run_dir / "review.md").read_text(encoding="utf-8")
+        expect("result is noop", result.get("status") == "noop", str(result))
+        expect("outcome is no_suitable_issue",
+               result.get("outcome") == "no_suitable_issue", str(result))
+        expect("review is advisory abstain", "disposition: `abstain`" in review, review)
+        expect("no work artifact is written", not (run_dir / "work.md").exists())
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
+def test_stage_r_selected_issue_writes_worker_artifacts() -> None:
+    print("\n== Stage R selected issue writes worker artifacts ==")
+    tmp = _seed_repo(ignore_runtime=True)
+    try:
+        def fetcher(repo_root, *, labels, limit):
+            return [_fake_issue()]
+
+        summary = tick.run_stage_r_tick(tmp, run_id="issue-work", issue_fetcher=fetcher)
+        run_dir = tmp / summary["run_dir"]
+        expected = {
+            "input.json",
+            "decision.md",
+            "work.md",
+            "evidence.md",
+            "proposed.patch",
+            "review.md",
+            "result.json",
+        }
+        actual = {p.name for p in run_dir.iterdir()}
+        result = json.loads((run_dir / "result.json").read_text(encoding="utf-8"))
+        expect("full artifact set exists", expected <= actual, str(sorted(actual)))
+        expect("selected issue is recorded",
+               result.get("selected_issue", {}).get("number") == 12, str(result))
+        expect("empty patch requires revision",
+               result.get("outcome") == "needs_revision", str(result))
+        expect("review verdict requires revision",
+               result.get("review_verdict") == "needs_revision", str(result))
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
+def test_stage_r_valid_patch_can_be_ready_for_promote() -> None:
+    print("\n== Stage R valid patch can become ready for promote ==")
+    tmp = _seed_repo(ignore_runtime=True)
+    try:
+        def fetcher(repo_root, *, labels, limit):
+            return [_fake_issue()]
+
+        patch_text = "\n".join([
+            "diff --git a/README.md b/README.md",
+            "index df967b9..8b4e377 100644",
+            "--- a/README.md",
+            "+++ b/README.md",
+            "@@ -1 +1 @@",
+            "-base",
+            "+base updated",
+            "",
+        ])
+        summary = tick.run_stage_r_tick(
+            tmp,
+            run_id="valid-patch",
+            issue_fetcher=fetcher,
+            proposed_patch_text=patch_text,
+        )
+        run_dir = tmp / summary["run_dir"]
+        result = json.loads((run_dir / "result.json").read_text(encoding="utf-8"))
+        expect("outcome is ready_for_promote",
+               result.get("outcome") == "ready_for_promote", str(result))
+        expect("review approves applicable patch",
+               result.get("review_verdict") == "approved", str(result))
+        expect("patch was not applied to checkout",
+               (tmp / "README.md").read_text(encoding="utf-8") == "base\n")
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
+def test_stage_r_fetch_failed_writes_error_result() -> None:
+    print("\n== Stage R fetch failure writes runtime error result ==")
+    tmp = _seed_repo(ignore_runtime=True)
+    try:
+        def fetcher(repo_root, *, labels, limit):
+            raise tick.IssueFetchError("network unavailable")
+
+        summary = tick.run_stage_r_tick(tmp, run_id="fetch-failed", issue_fetcher=fetcher)
+        run_dir = tmp / summary["run_dir"]
+        result = json.loads((run_dir / "result.json").read_text(encoding="utf-8"))
+        expect("result status is error", result.get("status") == "error", str(result))
+        expect("outcome is fetch_failed", result.get("outcome") == "fetch_failed", str(result))
+        expect("error is captured", "network unavailable" in result.get("error", ""), str(result))
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
+def test_patch_check_valid_and_invalid() -> None:
+    print("\n== Patch check valid and invalid patches ==")
+    tmp = _seed_repo(ignore_runtime=True)
+    try:
+        valid_patch = tmp / "valid.patch"
+        valid_patch.write_text(
+            "\n".join([
+                "diff --git a/README.md b/README.md",
+                "index df967b9..8b4e377 100644",
+                "--- a/README.md",
+                "+++ b/README.md",
+                "@@ -1 +1 @@",
+                "-base",
+                "+base updated",
+                "",
+            ]),
+            encoding="utf-8",
+        )
+        invalid_patch = tmp / "invalid.patch"
+        invalid_patch.write_text("not a patch\n", encoding="utf-8")
+        valid = tick.check_patch_applicability(tmp, valid_patch)
+        invalid = tick.check_patch_applicability(tmp, invalid_patch)
+        expect("valid patch is applicable", valid.applicable, str(valid))
+        expect("invalid patch is rejected", not invalid.applicable, str(invalid))
+        expect("valid check did not apply patch",
+               (tmp / "README.md").read_text(encoding="utf-8") == "base\n")
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
+def test_patch_check_rejects_unsafe_paths() -> None:
+    print("\n== Patch check rejects unsafe paths ==")
+    tmp = _seed_repo(ignore_runtime=True)
+    try:
+        unsafe_patch = tmp / "unsafe.patch"
+        unsafe_patch.write_text(
+            "\n".join([
+                "diff --git a/../../escape b/../../escape",
+                "--- a/../../escape",
+                "+++ b/../../escape",
+                "@@ -0,0 +1 @@",
+                "+bad",
+                "",
+            ]),
+            encoding="utf-8",
+        )
+        result = tick.check_patch_applicability(tmp, unsafe_patch)
+        expect("unsafe path is rejected", result.status == "unsafe_patch_path", str(result))
+        expect("unsafe patch is not applicable", not result.applicable, str(result))
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
+def test_runtime_review_does_not_mutate_worker_artifacts() -> None:
+    print("\n== Runtime review does not mutate worker artifacts ==")
+    tmp = _seed_repo(ignore_runtime=True)
+    try:
+        def fetcher(repo_root, *, labels, limit):
+            return [_fake_issue()]
+
+        summary = tick.run_stage_r_tick(tmp, run_id="review-no-mutate", issue_fetcher=fetcher)
+        run_dir = tmp / summary["run_dir"]
+        before = {
+            name: (run_dir / name).read_text(encoding="utf-8")
+            for name in ("work.md", "evidence.md", "proposed.patch")
+        }
+        # Reading review.md should be the only reviewer interaction in PR 2.
+        (run_dir / "review.md").read_text(encoding="utf-8")
+        after = {
+            name: (run_dir / name).read_text(encoding="utf-8")
+            for name in ("work.md", "evidence.md", "proposed.patch")
+        }
+        expect("worker artifacts are unchanged", before == after, str(after))
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
+def test_stage_r_tick_keeps_tracked_diff_clean() -> None:
+    print("\n== Stage R tick keeps tracked diff clean ==")
+    tmp = _seed_repo(ignore_runtime=True)
+    try:
+        def fetcher(repo_root, *, labels, limit):
+            return [_fake_issue()]
+
+        tick.run_stage_r_tick(tmp, run_id="tracked-clean", issue_fetcher=fetcher)
+        status = _git(tmp, "status", "--porcelain").stdout.strip()
+        expect("git status remains clean", status == "", repr(status))
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
+def test_gh_issue_list_command_is_read_only() -> None:
+    print("\n== GitHub issue list command is read-only ==")
+    cmd = tick.build_gh_issue_list_command(labels=["risk:low", "loop"], limit=5)
+    text = " ".join(cmd)
+    expect("uses gh issue list", cmd[:3] == ["gh", "issue", "list"], text)
+    for forbidden in ("create", "edit", "close", "comment", "pr"):
+        expect(f"does not contain write verb: {forbidden}", forbidden not in cmd, text)
+    expect("labels are included", cmd.count("--label") == 2, text)
+
+
 def main() -> int:
     print("self-evo Stage R runtime tick tests")
     test_runtime_writer_allows_runtime_writes()
@@ -301,6 +519,15 @@ def main() -> int:
     test_noop_tick_does_not_create_tracked_diff()
     test_cli_success_json()
     test_cli_boundary_error_json()
+    test_stage_r_no_suitable_issue_writes_reviewed_noop()
+    test_stage_r_selected_issue_writes_worker_artifacts()
+    test_stage_r_valid_patch_can_be_ready_for_promote()
+    test_stage_r_fetch_failed_writes_error_result()
+    test_patch_check_valid_and_invalid()
+    test_patch_check_rejects_unsafe_paths()
+    test_runtime_review_does_not_mutate_worker_artifacts()
+    test_stage_r_tick_keeps_tracked_diff_clean()
+    test_gh_issue_list_command_is_read_only()
     print("\n" + "=" * 48)
     print(f"RESULT: {PASS} passed, {FAIL} failed")
     return 1 if FAIL else 0
