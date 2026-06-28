@@ -324,11 +324,12 @@ python scripts/validate_run.py --issue <number>
 | [`docs/autonomous-agent-blueprint.md`](docs/autonomous-agent-blueprint.md) | 完整项目蓝图 |
 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | 当前架构摘要 |
 | [`docs/DECISIONS.md`](docs/DECISIONS.md) | 已确认的长期决策 |
-| [`data/tasks/`](data/tasks/) | 本地任务镜像、Inbox、Review、Done |
-| [`data/runs/`](data/runs/) | 每次 Agent 运行的摘要与证据 |
-| [`data/exploration/`](data/exploration/) | 调研、日报、复用图谱和反馈 |
-| [`data/memory/`](data/memory/) | 热记忆、冷记忆和记忆提案 |
+| [`data/tasks/`](data/tasks/) | 本地任务镜像、Inbox、Review、Done（含 `project` 归属字段） |
+| [`data/runs/`](data/runs/) | 运营方式自身的运行摘要（业务项目 run 见对应 `projects/`） |
+| [`data/exploration/`](data/exploration/) | 系统自身调研、日报、复用图谱（业务项目调研见对应 `projects/`） |
+| [`data/memory/`](data/memory/) | 系统级热记忆、冷记忆和记忆提案 |
 | [`data/proposals/`](data/proposals/) | 规则、资源和项目候选提案 |
+| [`projects/fx-strategy-research/`](projects/fx-strategy-research/) | 业务项目产出区：FX 量化策略研究的实验、调研、运行记录与项目记忆 |
 | [`scripts/README.md`](scripts/README.md) | Hooks、Validator 和测试说明 |
 | [`rules/RESOURCE_APPROVALS.yaml`](rules/RESOURCE_APPROVALS.yaml) | 已批准的外部资源能力 |
 
