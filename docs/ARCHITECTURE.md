@@ -13,4 +13,10 @@ The current architecture is described in detail in:
 docs/autonomous-agent-blueprint.md
 ```
 
+Loop-native runtime behavior is described in:
+
+```text
+docs/STAGE_R_LOOP.md
+```
+
 Keep this file as a short, current summary. Detailed design changes should be proposed through issues or rule-change proposals.
