@@ -1,55 +1,48 @@
 # Stage R Loop
 
-Stage R is the first loop-native operating mode for self-evo. It lets an agent
-wake up, inspect GitHub Issues in read-only mode, produce local candidate work,
-ask for an advisory runtime review, and stop without changing the canonical
-repository or GitHub state.
+Stage R 是 self-evo 的第一个 loop-native 工作模式。它让 agent 可以被手动唤醒，读取 GitHub Issues，产出本地候选工作，执行一次 advisory runtime review，然后停止；整个过程不修改仓库的 canonical 文件，也不写入 GitHub 状态。
 
-The goal is useful loop output without PR noise or accidental authority. Stage R
-is intentionally smaller than the future full loop runner.
+它的目标不是一步到位实现完整自动化，而是在一个清晰、安全、可理解的边界里，让 loop 先产生有用结果。
 
-## What Stage R Does
+## Stage R 做什么
 
-One Stage R tick:
+一次 Stage R tick 会：
 
-1. Checks that `.self-evo/runtime/` is ignored by Git.
-2. Reads open GitHub Issues through `gh issue list`.
-3. Selects zero or one suitable issue.
-4. Writes one run directory under `.self-evo/runtime/runs/<run_id>/`.
-5. Produces runtime-only candidate artifacts.
-6. Runs an advisory Runtime Review pass.
-7. Stops.
+1. 检查 `.self-evo/runtime/` 是否已被 Git 忽略。
+2. 通过 `gh issue list` 只读读取打开的 GitHub Issues。
+3. 选择零个或一个适合处理的 issue。
+4. 在 `.self-evo/runtime/runs/<run_id>/` 下写入一个运行目录。
+5. 产出 runtime-only 的候选工作 artifact。
+6. 执行一次 advisory Runtime Review。
+7. 停止。
 
-No-op is a valid result. A tick may decide that no issue is suitable and still
-write evidence explaining that decision.
+no-op 是合法结果。如果当前没有适合处理的 issue，tick 可以什么任务都不选，但仍然写出 artifact 解释为什么这次不工作。
 
-## What Stage R Does Not Do
+## Stage R 不做什么
 
-Stage R does not:
+Stage R 不会：
 
-- write tracked repository files
-- write GitHub comments, labels, statuses, issues, or pull requests
-- create branches, commits, pushes, or merges
-- apply `proposed.patch` to the checkout
-- promote runtime artifacts into canonical project files
-- run as a scheduler
-- run multiple workers
+- 写 tracked repository files
+- 写 GitHub comments、labels、statuses、issues 或 pull requests
+- 创建 branches、commits、pushes 或 merges
+- 把 `proposed.patch` 应用到 checkout
+- 把 runtime artifacts promote 成 canonical project files
+- 作为 scheduler 运行
+- 启动多个 worker
 
-This boundary is the central Stage R design choice. The tick can be useful, but
-it cannot silently become authoritative.
+这个边界是 Stage R 最重要的设计选择：tick 可以产生有用工作，但不能静默获得真正的仓库权威。
 
-## Runtime And Canonical Records
+## Runtime 记录与 Canonical 记录
 
-Runtime outputs live only under:
+runtime 输出只放在：
 
 ```text
 .self-evo/runtime/**
 ```
 
-This path is gitignored. Runtime outputs are local, disposable, and
-non-authoritative.
+这个路径被 Git 忽略。runtime 输出是本地的、可丢弃的、非权威的候选工作记录。
 
-Canonical records live in tracked project paths such as:
+canonical 记录是仓库中被追踪的项目文件，例如：
 
 ```text
 rules/**
@@ -60,18 +53,17 @@ scripts/**
 .github/**
 ```
 
-Changing canonical records requires the normal repository workflow: branch,
-commit, review, and merge. Stage R does not do that promotion step.
+修改 canonical 记录必须走正常仓库流程：branch、commit、review、merge。Stage R 不执行这个 promote 步骤。
 
-## Run Directory Contract
+## 运行目录约定
 
-Each tick writes exactly one run directory:
+每次 tick 都会写入一个运行目录：
 
 ```text
 .self-evo/runtime/runs/<run_id>/
 ```
 
-Required artifacts:
+必需 artifact：
 
 ```text
 input.json
@@ -79,7 +71,7 @@ decision.md
 result.json
 ```
 
-Conditional artifacts:
+条件 artifact：
 
 ```text
 work.md
@@ -88,19 +80,19 @@ proposed.patch
 review.md
 ```
 
-Artifact meanings:
+artifact 含义：
 
-- `input.json`: compact issue and runtime context used by the tick
-- `decision.md`: why one issue was selected, or why the tick no-oped
-- `work.md`: candidate analysis for a selected issue
-- `evidence.md`: issue metadata, runtime boundary evidence, and confidence
-- `proposed.patch`: candidate patch text; never applied by Stage R
-- `review.md`: advisory Runtime Review output
-- `result.json`: machine-readable status and artifact index
+- `input.json`：tick 使用的 issue 和 runtime 上下文摘要
+- `decision.md`：为什么选择某个 issue，或者为什么这次 no-op
+- `work.md`：针对所选 issue 的候选分析
+- `evidence.md`：issue 元数据、runtime 边界证据和置信度
+- `proposed.patch`：候选 patch 文本；Stage R 永远不会应用它
+- `review.md`：advisory Runtime Review 输出
+- `result.json`：机器可读的状态和 artifact 索引
 
-## Outcomes
+## 结果状态
 
-`result.json.status` is one of:
+`result.json.status` 是以下之一：
 
 ```text
 work
@@ -108,7 +100,7 @@ noop
 error
 ```
 
-Common `result.json.outcome` values:
+常见的 `result.json.outcome`：
 
 ```text
 ready_for_promote
@@ -118,16 +110,13 @@ fetch_failed
 runtime_boundary_violation
 ```
 
-`ready_for_promote` means the candidate patch passed `git apply --check` and the
-runtime review approved it. It does not mean the patch has been applied, merged,
-or accepted by a human.
+`ready_for_promote` 只表示候选 patch 通过了 `git apply --check`，并且 runtime review 给出 approved。它不表示 patch 已经被应用、合并，或者被人类接受。
 
 ## Runtime Review
 
-The Runtime Review pass is advisory. It reads the runtime artifacts and writes
-`review.md`.
+Runtime Review 是 advisory 的。它读取 runtime artifacts，并写入 `review.md`。
 
-It may say:
+它可能给出：
 
 ```text
 approved
@@ -136,26 +125,23 @@ rejected
 abstain
 ```
 
-It must not edit worker artifacts, post to GitHub, apply a patch, promote files,
-or replace human approval.
+Runtime Review 不允许编辑 worker artifacts，不允许写 GitHub，不允许应用 patch，不允许 promote 文件，也不能替代人类最终审批。
 
-## Patch Handling
+## Patch 处理
 
-Stage R may write `proposed.patch`, but it never applies the patch.
+Stage R 可以写 `proposed.patch`，但永远不会应用它。
 
-Patch validation is limited to:
+patch 校验只限于：
 
 ```bash
 git apply --check .self-evo/runtime/runs/<run_id>/proposed.patch
 ```
 
-The implementation also rejects unsafe patch paths such as absolute paths or
-paths containing `..`. A successful check only means the patch is mechanically
-applicable to the current checkout.
+实现还会拒绝不安全 patch path，例如绝对路径或包含 `..` 的路径。校验成功只表示 patch 对当前 checkout 来说“机械上可应用”，不代表语义正确。
 
-## Running A Tick
+## 如何运行
 
-Manual invocation:
+手动运行：
 
 ```bash
 python scripts/loop_runtime_tick.py
@@ -164,30 +150,27 @@ python scripts/loop_runtime_tick.py --label risk:low --limit 10 --json
 python scripts/loop_runtime_tick.py --offline-noop --json
 ```
 
-Multiple `--label` flags use GitHub CLI AND semantics: an issue must carry every
-requested label.
+多个 `--label` 使用 GitHub CLI 的 AND 语义：issue 必须同时带有所有指定 label 才会被 `gh issue list` 返回。
 
-Exit codes:
+退出码：
 
-- `0`: the tick completed and wrote a success or no-op result
-- `1`: the tick wrote runtime artifacts, but `result.json.status` is `error`
-- `2`: the tick hit a runtime boundary violation before normal completion
+- `0`：tick 完成，并写出 success 或 no-op 结果
+- `1`：tick 写出了 runtime artifacts，但 `result.json.status` 是 `error`
+- `2`：tick 在正常完成前遇到 runtime boundary violation
 
-## Promote Is Future Work
+## Promote 是未来工作
 
-Promote is outside Stage R.
+Promote 不属于 Stage R。
 
-A future promote command may consume a reviewed Stage R run, apply
-`proposed.patch` to the real checkout, run validation, create a branch, commit,
-and open a draft PR. That step must be explicit and human-authorized.
+未来可以有一个 promote 命令读取已经 review 过的 Stage R run，把 `proposed.patch` 应用到真实 checkout，运行验证，创建 branch，commit，并打开 draft PR。这个步骤必须是显式的，并且需要人类授权。
 
-Until then, Stage R output is candidate work only.
+在此之前，Stage R 输出都只是候选工作。
 
-## Future Loop Map
+## 未来的 Loop Map
 
-Stage R is one manually invokable tick, not the full loop system.
+Stage R 是一个可以手动调用的 tick，不是完整 loop system。
 
-Future loops may include:
+未来可能包括：
 
 - governance loop
 - issue intake loop
@@ -195,12 +178,11 @@ Future loops may include:
 - task execution loop
 - memory reflection loop
 
-Those loops should build on the Stage R boundary instead of weakening it.
+这些未来 loop 应该建立在 Stage R 的边界之上，而不是削弱这个边界。
 
-## Initial Implementation
+## 初始实现
 
-The initial Stage R implementation landed in:
+Stage R 的初始实现来自：
 
-- PR #24: Stage R runtime boundary and no-op tick
-- PR #25: read-only issue intake, candidate artifacts, patch check, and Runtime Review
-
+- PR #24：Stage R runtime boundary 和 no-op tick
+- PR #25：只读 issue intake、候选 artifacts、patch check 和 Runtime Review
