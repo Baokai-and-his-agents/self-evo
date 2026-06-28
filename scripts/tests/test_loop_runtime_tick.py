@@ -288,7 +288,13 @@ def test_cli_boundary_error_json() -> None:
         shutil.rmtree(tmp, ignore_errors=True)
 
 
-def _fake_issue(number: int = 12, *, state: str = "OPEN", labels: list[str] | None = None) -> dict:
+def _fake_issue(
+    number: int = 12,
+    *,
+    state: str = "OPEN",
+    labels: list[str] | None = None,
+    assignees: list[str] | None = None,
+) -> dict:
     return {
         "number": number,
         "title": "Document Stage R worker output",
@@ -296,7 +302,7 @@ def _fake_issue(number: int = 12, *, state: str = "OPEN", labels: list[str] | No
         "state": state,
         "body": "Create runtime-only work artifacts for Stage R.",
         "updatedAt": "2026-06-28T00:00:00Z",
-        "assignees": [],
+        "assignees": [{"login": login} for login in (assignees or [])],
         "labels": [{"name": label} for label in (labels or ["risk:low"])],
     }
 
@@ -495,6 +501,66 @@ def test_stage_r_tick_keeps_tracked_diff_clean() -> None:
         shutil.rmtree(tmp, ignore_errors=True)
 
 
+def test_stage_r_skips_issue_with_assignees() -> None:
+    print("\n== Stage R skips an issue that is already assigned ==")
+    tmp = _seed_repo(ignore_runtime=True)
+    try:
+        def fetcher(repo_root, *, labels, limit):
+            return [
+                _fake_issue(12, assignees=["other-worker"]),
+                _fake_issue(13),
+            ]
+
+        summary = tick.run_stage_r_tick(tmp, run_id="skip-assigned", issue_fetcher=fetcher)
+        run_dir = tmp / summary["run_dir"]
+        result = json.loads((run_dir / "result.json").read_text(encoding="utf-8"))
+        expect("assigned issue #12 is skipped",
+               result.get("selected_issue", {}).get("number") == 13, str(result))
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
+def test_stage_r_skips_issue_with_active_claim_label() -> None:
+    print("\n== Stage R skips an issue carrying a status:running claim ==")
+    tmp = _seed_repo(ignore_runtime=True)
+    try:
+        def fetcher(repo_root, *, labels, limit):
+            return [
+                _fake_issue(14, labels=["risk:low", "status:running"]),
+                _fake_issue(15, labels=["risk:low"]),
+            ]
+
+        summary = tick.run_stage_r_tick(tmp, run_id="skip-running", issue_fetcher=fetcher)
+        run_dir = tmp / summary["run_dir"]
+        result = json.loads((run_dir / "result.json").read_text(encoding="utf-8"))
+        expect("status:running issue #14 is skipped",
+               result.get("selected_issue", {}).get("number") == 15, str(result))
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
+def test_stage_r_no_suitable_issue_when_all_claimed() -> None:
+    print("\n== Stage R writes no-op when every open issue is claimed ==")
+    tmp = _seed_repo(ignore_runtime=True)
+    try:
+        def fetcher(repo_root, *, labels, limit):
+            return [
+                _fake_issue(16, assignees=["worker-a"]),
+                _fake_issue(17, labels=["risk:low", "status:claimed"]),
+                _fake_issue(18, labels=["risk:low", "status:blocked"]),
+            ]
+
+        summary = tick.run_stage_r_tick(tmp, run_id="all-claimed", issue_fetcher=fetcher)
+        run_dir = tmp / summary["run_dir"]
+        result = json.loads((run_dir / "result.json").read_text(encoding="utf-8"))
+        expect("result is noop when all issues claimed",
+               result.get("status") == "noop", str(result))
+        expect("outcome is no_suitable_issue",
+               result.get("outcome") == "no_suitable_issue", str(result))
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
 def test_gh_issue_list_command_is_read_only() -> None:
     print("\n== GitHub issue list command is read-only ==")
     cmd = tick.build_gh_issue_list_command(labels=["risk:low", "loop"], limit=5)
@@ -527,6 +593,9 @@ def main() -> int:
     test_patch_check_rejects_unsafe_paths()
     test_runtime_review_does_not_mutate_worker_artifacts()
     test_stage_r_tick_keeps_tracked_diff_clean()
+    test_stage_r_skips_issue_with_assignees()
+    test_stage_r_skips_issue_with_active_claim_label()
+    test_stage_r_no_suitable_issue_when_all_claimed()
     test_gh_issue_list_command_is_read_only()
     print("\n" + "=" * 48)
     print(f"RESULT: {PASS} passed, {FAIL} failed")
