@@ -31,6 +31,25 @@ No open tasks.
 - delivery: Draft PR #33 opened by clawbie, awaiting jlcbk review; scheduler NOT armed
 - pr: https://github.com/Baokai-and-his-agents/self-evo/pull/33
 
+### T-20260629-002 - Issue #28
+
+- project: self-evo
+- type: scout
+- status: claimed
+- risk: low
+- goal: Stage R roadmap 探索 brief —— M1/M2/M4 在 worker loop 落地后的重框定
+- source: https://github.com/Baokai-and-his-agents/self-evo/issues/28
+- branch: agent/clawbie/28-stage-r-roadmap-brief
+- github_issue: 28
+- worker_identity: clawbie
+- run_id: 2026-06-29-clawbie-loop-002
+- claimed_at: 2026-06-28T23:37:44Z
+- lease_until: 2026-06-29T03:37:44Z
+- claim: claimed (lease active)
+- heartbeat: running
+- delivery: Draft PR #34 opened by clawbie, awaiting jlcbk review
+- pr: https://github.com/Baokai-and-his-agents/self-evo/pull/34
+
 ## Review
 
 ### T-20260623-004 - Issue #18
