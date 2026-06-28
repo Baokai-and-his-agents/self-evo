@@ -112,6 +112,8 @@ runtime_boundary_violation
 
 `ready_for_promote` 只表示候选 patch 通过了 `git apply --check`，并且 runtime review 给出 approved。它不表示 patch 已经被应用、合并，或者被人类接受。
 
+当前实现里，CLI 不暴露候选 patch 注入能力；真实运行时 `proposed.patch` 通常为空，因此 `ready_for_promote` 主要用于测试路径或未来真实 worker 产出 patch 之后的状态。现在的真实 tick 更常见结果是 `needs_revision` 或 `no_suitable_issue`。
+
 ## Runtime Review
 
 Runtime Review 是 advisory 的。它读取 runtime artifacts，并写入 `review.md`。
@@ -179,6 +181,10 @@ Stage R 是一个可以手动调用的 tick，不是完整 loop system。
 - memory reflection loop
 
 这些未来 loop 应该建立在 Stage R 的边界之上，而不是削弱这个边界。
+
+## 治理流程
+
+Stage R 改变的是项目工作方式，而不只是一个脚本。后续如果要改变 Stage R 的边界，例如加入 promote、scheduler、真实 worker、GitHub 写操作或多 agent 执行，应先通过 GitHub Issue 或 `data/proposals/**` 讨论清楚，再进入实现。
 
 ## 初始实现
 
