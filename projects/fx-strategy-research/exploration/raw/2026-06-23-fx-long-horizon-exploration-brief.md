@@ -131,14 +131,14 @@ Phase B 至少交付：
 5. **2026-06-23-fx-long-horizon-position-sizing-math.md:** 仓位管理数学分析
 6. **2026-06-23-fx-long-horizon-failure-landscape.md:** 失败景观
 7. **2026-06-23-fx-long-horizon-evidence-map.md:** 证据地图
-8. **data/exploration/daily_reports/2026-06-23-fx-long-horizon-phase-b.md:** Phase B 中文研究报告
+8. **../daily_reports/2026-06-23-fx-long-horizon-phase-b.md:** Phase B 中文研究报告
 
 Phase A+B 综合交付：
 
-9. **data/exploration/reuse_maps/2026-06-23-fx-quant-strategies.md:** 复用地图
-10. **data/exploration/daily_reports/2026-06-23-fx-quant-strategy-research.md:** 综合中文研究报告
+9. **../reuse_maps/2026-06-23-fx-quant-strategies.md:** 复用地图
+10. **../daily_reports/2026-06-23-fx-quant-strategy-research.md:** 综合中文研究报告
 11. **data/proposals/project_candidates/2026-06-23-fx-quant-followups.md:** 后续实验候选
-12. **data/memory/proposals/2026-06-23-fx-quant-research.md:** 记忆提案
+12. **../../memory/2026-06-23-fx-quant-research.md:** 记忆提案
 
 ---
 

@@ -48,10 +48,10 @@ All tests pass:
 
 ```powershell
 # Run with synthetic fixture (current: 1 trade)
-python data/experiments/fx_backtest/run.py --config data/experiments/fx_backtest/configs/mvp_daily.yaml
+python projects/fx-strategy-research/experiments/fx_backtest/run.py --config projects/fx-strategy-research/experiments/fx_backtest/configs/mvp_daily.yaml
 
 # Run with real data (if provided)
-python data/experiments/fx_backtest/run.py --config data/experiments/fx_backtest/configs/mvp_daily.yaml --real-data
+python projects/fx-strategy-research/experiments/fx_backtest/run.py --config projects/fx-strategy-research/experiments/fx_backtest/configs/mvp_daily.yaml --real-data
 ```
 
 ## Next Steps for Meaningful Results

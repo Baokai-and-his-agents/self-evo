@@ -12,6 +12,7 @@ No open tasks.
 
 ### T-20260623-004 - Issue #18
 
+- project: fx-strategy-research
 - type: build
 - status: review
 - risk: high
@@ -36,6 +37,7 @@ No open tasks.
 
 ### T-20260623-003 - Issue #15
 
+- project: fx-strategy-research
 - type: scout
 - status: review
 - risk: high
@@ -58,6 +60,7 @@ No open tasks.
 
 ### T-20260623-002 - Issue #13
 
+- project: fx-strategy-research
 - type: scout
 - status: review
 - risk: medium
@@ -80,6 +83,7 @@ No open tasks.
 
 ### T-20260621-003 - Issue #7
 
+- project: self-evo
 - type: scout
 - status: done
 - risk: medium
@@ -103,6 +107,7 @@ No open tasks.
 
 ### T-20260618-002 · Issue #5
 
+- project: self-evo
 - type: build
 - status: done
 - risk: medium
@@ -125,6 +130,7 @@ No open tasks.
 
 ### T-20260618-001 · Issue #1
 
+- project: self-evo
 - type: review
 - status: done
 - risk: low
