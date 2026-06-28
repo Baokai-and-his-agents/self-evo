@@ -42,6 +42,6 @@
       }
     }
   },
-  "output_dir": "data/experiments/fx_backtest/output",
+  "output_dir": "projects/fx-strategy-research/experiments/fx_backtest/output",
   "_note": "These parameters are illustrative MVP configs, not recommendations. They are fixed before seeing results to avoid in-sample optimization."
 }

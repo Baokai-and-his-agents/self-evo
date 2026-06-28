@@ -36,8 +36,8 @@ self-evo 希望建立一个可以长期演化的“人类 + Agent”工作系统
 2. **GitHub 是协调与审计平面**  
    Issue 负责任务状态，分支和 PR 负责文件型交付，评论和标签负责人类反馈。GitHub 不承载高频遥测、大文件缓存或私密凭证。
 
-3. **规则区与工作区分离**  
-   `rules/**` 是 Agent 只读的治理区；`data/**` 是主要工作区。Agent 若认为规则需要变化，只能提交 proposal，由人类批准后修改规则。
+3. **运营方式与运营项目分离**  
+   `rules/**` 是 Agent 只读的治理区；`data/**` 是运营方式自身的工作区（系统级记忆、审计、提案、任务镜像）；`projects/<项目名>/**` 是各业务项目的产出区（实验、调研、运行记录、项目记忆）。Agent 若认为规则需要变化，只能提交 proposal，由人类批准后修改规则。
 
 4. **先复用，再自研**  
    面对长期方向或构建任务，Agent 应先调查教程、工具、项目、模板、案例和现有 workflow，并说明采用、组合或自研的理由。
@@ -59,18 +59,20 @@ GitHub
   ▼
 本地 Code Agent（Claude Code 等）
   │  读取规则、认领任务、调研/学习/实现、提交证据
-  ├── rules/   治理规则，只读
-  ├── data/    研究、运行记录、提案、记忆和交付物
-  ├── state/   claim、heartbeat 和本地运行状态
-  └── scripts/ Hooks、Validator 和后续 Worker 工具
+  ├── rules/      治理规则，只读
+  ├── data/       运营方式自身：系统记忆、审计、提案、任务镜像
+  ├── projects/   业务项目产出：实验、调研、运行记录、项目记忆
+  ├── state/      claim、heartbeat 和本地运行状态
+  └── scripts/    Hooks、Validator 和后续 Worker 工具
 ```
 
-四个主要平面：
+运营方式与运营项目两个区域：
 
-| 平面 | 作用 | 典型内容 |
+| 区域/平面 | 作用 | 典型内容 |
 |---|---|---|
-| `rules/` | 定义 Agent 能做什么、如何审批 | 权限、任务、GitHub、记忆、探索策略 |
-| `data/` | 保存可审阅的工作成果 | 研究、日报、run summary、proposal、memory |
+| `rules/` | 定义 Agent 能做什么、如何审批（运营方式） | 权限、任务、GitHub、记忆、探索策略 |
+| `data/` | 保存运营方式自身的工作成果 | 系统记忆、审计、proposal、任务镜像、系统调研 |
+| `projects/<项目名>/` | 保存各业务项目的产出 | 实验、研究、run summary、项目记忆 |
 | `state/` | 保存运行协调状态 | claims、heartbeat、cursor、cache |
 | `.github/` | 提供 GitHub 协作入口 | Issue 模板、PR 模板、CODEOWNERS |
 
@@ -322,11 +324,12 @@ python scripts/validate_run.py --issue <number>
 | [`docs/autonomous-agent-blueprint.md`](docs/autonomous-agent-blueprint.md) | 完整项目蓝图 |
 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | 当前架构摘要 |
 | [`docs/DECISIONS.md`](docs/DECISIONS.md) | 已确认的长期决策 |
-| [`data/tasks/`](data/tasks/) | 本地任务镜像、Inbox、Review、Done |
-| [`data/runs/`](data/runs/) | 每次 Agent 运行的摘要与证据 |
-| [`data/exploration/`](data/exploration/) | 调研、日报、复用图谱和反馈 |
-| [`data/memory/`](data/memory/) | 热记忆、冷记忆和记忆提案 |
+| [`data/tasks/`](data/tasks/) | 本地任务镜像、Inbox、Review、Done（含 `project` 归属字段） |
+| [`data/runs/`](data/runs/) | 运营方式自身的运行摘要（业务项目 run 见对应 `projects/`） |
+| [`data/exploration/`](data/exploration/) | 系统自身调研、日报、复用图谱（业务项目调研见对应 `projects/`） |
+| [`data/memory/`](data/memory/) | 系统级热记忆、冷记忆和记忆提案 |
 | [`data/proposals/`](data/proposals/) | 规则、资源和项目候选提案 |
+| [`projects/fx-strategy-research/`](projects/fx-strategy-research/) | 业务项目产出区：FX 量化策略研究的实验、调研、运行记录与项目记忆 |
 | [`scripts/README.md`](scripts/README.md) | Hooks、Validator 和测试说明 |
 | [`rules/RESOURCE_APPROVALS.yaml`](rules/RESOURCE_APPROVALS.yaml) | 已批准的外部资源能力 |
 

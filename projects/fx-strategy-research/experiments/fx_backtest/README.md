@@ -55,10 +55,10 @@ fx_backtest/
 
 ```powershell
 # 使用 fixture
-python data/experiments/fx_backtest/run.py --config data/experiments/fx_backtest/configs/mvp_daily.yaml
+python projects/fx-strategy-research/experiments/fx_backtest/run.py --config projects/fx-strategy-research/experiments/fx_backtest/configs/mvp_daily.yaml
 
 # 真实数据（如果可用）
-python data/experiments/fx_backtest/run.py --config data/experiments/fx_backtest/configs/mvp_daily.yaml --real-data
+python projects/fx-strategy-research/experiments/fx_backtest/run.py --config projects/fx-strategy-research/experiments/fx_backtest/configs/mvp_daily.yaml --real-data
 ```
 
 ## 依赖

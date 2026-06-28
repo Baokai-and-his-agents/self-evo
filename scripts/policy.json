@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "description": "Executable guardrail contract for self-evo. Mirrors the intent of rules/PERMISSIONS.yaml and rules/GITHUB_POLICY.md. This file is the single source of truth shared by the PowerShell entrypoints, the Python hooks, and the offline tests, so the three cannot diverge on what counts as dangerous.",
+  "description": "Executable guardrail contract for self-evo. Mirrors the intent of rules/PERMISSIONS.yaml and rules/GITHUB_POLICY.md. This file is the single source of truth shared by the PowerShell entrypoints, the Python hooks, and the offline tests, so the three cannot diverge on what counts as dangerous. Note: projects/** is the writable zone for operated business projects (e.g. projects/fx-strategy-research/), parallel to data/** which is the operating-method workspace.",
   "default_rollout_mode": "audit",
   "rollout_modes": {
     "audit": {
@@ -29,7 +29,8 @@
     ],
     "read_write": [
       "data/**",
-      "state/**"
+      "state/**",
+      "projects/**"
     ],
     "protected_hook_implementation": [
       "scripts/**"
@@ -40,7 +41,8 @@
     "authorized_write_roots": [
       "data/",
       "state/",
-      "scripts/"
+      "scripts/",
+      "projects/"
     ]
   },
   "branches": {
