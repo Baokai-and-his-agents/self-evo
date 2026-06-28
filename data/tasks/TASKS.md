@@ -8,6 +8,29 @@ This file is not the source of truth. GitHub Issues are the primary task state.
 
 No open tasks.
 
+## Claimed
+
+### T-20260629-001 - Issue #32
+
+- project: self-evo
+- type: build
+- status: claimed
+- risk: low
+- permission: data-write, repo-branch-write
+- goal: 引入 clawbie 会话级 worker loop（runbook + 授权提案 + 首次 dry-run）
+- source: https://github.com/Baokai-and-his-agents/self-evo/issues/32
+- branch: agent/clawbie/32-worker-loop
+- github_issue: 32
+- worker_identity: clawbie
+- run_id: 2026-06-29-clawbie-loop-001
+- claimed_at: 2026-06-28T23:23:00Z
+- lease_until: 2026-06-29T03:23:00Z
+- claim: claimed (lease active)
+- heartbeat: running
+- execution_strategy: bootstrap delivery; awaiting jlcbk review before arming scheduler
+- delivery: Draft PR #33 opened by clawbie, awaiting jlcbk review; scheduler NOT armed
+- pr: https://github.com/Baokai-and-his-agents/self-evo/pull/33
+
 ## Review
 
 ### T-20260623-004 - Issue #18
