@@ -242,12 +242,31 @@ def fetch_open_issues(repo_root: Path, *, labels: list[str], limit: int) -> list
     return [issue for issue in payload if isinstance(issue, dict)]
 
 
+# Status labels that mark an issue as actively claimed by another worker.
+# Per rules/TASK_POLICY.md ("If an issue already has an active claim, do not
+# work on it unless the lease has expired."), Stage R must not pick these up.
+# GitHub labels + assignees are the authoritative source; state/claims/ is only
+# a coordination mirror, so claim awareness is based on issue fields alone.
+ACTIVE_CLAIM_LABELS = frozenset(
+    {"status:claimed", "status:running", "status:blocked"}
+)
+
+
+def _has_active_claim(issue: dict[str, Any], labels: set[str]) -> bool:
+    if labels & ACTIVE_CLAIM_LABELS:
+        return True
+    assignees = issue.get("assignees")
+    return bool(assignees)
+
+
 def select_issue(issues: list[dict[str, Any]]) -> dict[str, Any] | None:
     for issue in issues:
         if str(issue.get("state", "")).upper() != "OPEN":
             continue
         labels = {name.lower() for name in issue_label_names(issue)}
         if "in review" in labels or "status:review" in labels:
+            continue
+        if _has_active_claim(issue, labels):
             continue
         if not issue.get("number") or not issue.get("title"):
             continue
@@ -699,8 +718,18 @@ def run_stage_r_tick(
     labels: list[str] | None = None,
     limit: int = 20,
     issue_fetcher: Any | None = None,
+    # NOTE: the CLI (main()) does not expose this; real runs leave it empty, so
+    # the patch check falls back to empty_patch and the outcome is always
+    # `needs_revision`. `ready_for_promote` is only reached when a caller
+    # (currently tests, or a future worker) injects a non-empty patch here.
     proposed_patch_text: str | None = None,
 ) -> dict[str, Any]:
+    """Run a single advisory-only Stage R runtime tick.
+
+    Reads open issues, picks at most one, writes runtime-only candidate
+    artifacts under ``.self-evo/runtime/runs/<run_id>/``, and runs an advisory
+    Runtime Review. Nothing canonical or on GitHub is mutated.
+    """
     repo_root = repo_root.resolve()
     require_runtime_ignored(repo_root)
 
@@ -762,7 +791,9 @@ def run_stage_r_tick(
 
 def parse_args(argv: list[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Run one Stage R runtime-confined no-op tick."
+        description="Run one Stage R runtime-confined tick: read open GitHub "
+        "issues, write candidate runtime artifacts, and run an advisory "
+        "Runtime Review. Does not modify canonical files or GitHub state."
     )
     parser.add_argument(
         "--repo-root",
