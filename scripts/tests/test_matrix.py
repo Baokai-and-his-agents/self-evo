@@ -248,6 +248,45 @@ def test_audit_log_secrecy():
            summ2.get("target_zone") == "read_only" and "PERMISSIONS" not in blob2, blob2)
 
 
+def test_projects_zone_authorization():
+    """Operating-method/projects split: projects/** is a writable zone for
+    operated business projects, parallel to data/**. The split must not weaken
+    the other boundaries: rules/** stays read-only and .github/docs stay
+    proposal_required."""
+    print("\n== projects/ zone authorization ==")
+
+    # 1. projects/** write -> PASS (no block, no finding) — same as data/**
+    f = write("projects/fx-strategy-research/experiments/fx_backtest/README.md")
+    expect("projects/** write: PASS (no findings)", f == [], str(codes(f)))
+
+    # 2. a new file deep under projects/** is also writable
+    f = write("projects/fx-strategy-research/runs/2026-06-29/run-001.summary.md")
+    expect("new projects/** file writable", not has_block(f), str(codes(f)))
+
+    # 3. a brand-new project dir is writable too (not just fx-strategy-research)
+    f = write("projects/new-project/experiments/x.md")
+    expect("new projects/<project>/ writable", not has_block(f), str(codes(f)))
+
+    # 4. shell write under projects/** -> PASS (authorized zone)
+    f = bash("echo hi > projects/fx-strategy-research/memory/note.md")
+    expect("shell write under projects/**: PASS", not has_block(f), str(codes(f)))
+
+    # 5. regression: rules/** still read-only (split did not weaken it)
+    f = write("rules/PERMISSIONS.yaml")
+    expect("rules/** still read-only after split",
+           "write_to_rules" in codes(f), str(codes(f)))
+
+    # 6. regression: .github/** still proposal_required
+    f = write(".github/CODEOWNERS")
+    expect(".github/** still proposal_required",
+           any(x["code"] == "write_proposal_required" for x in f), str(codes(f)))
+
+    # 7. regression: docs/** still proposal_required
+    f = write("docs/ARCHITECTURE.md")
+    expect("docs/** still proposal_required",
+           any(x["code"] == "write_proposal_required" for x in f), str(codes(f)))
+
+
 # --------------------------------------------------------------------------- #
 # Fake repo state for lifecycle/Stop tests                                    #
 # --------------------------------------------------------------------------- #
@@ -537,6 +576,7 @@ def main() -> int:
     test_pretool_matrix()
     test_shell_write_bypasses()
     test_audit_log_secrecy()
+    test_projects_zone_authorization()
     test_draft_pr_gate()
     test_run_summary_specificity()
     test_issue_derivation()
