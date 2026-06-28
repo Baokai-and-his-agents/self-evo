@@ -1,0 +1,16 @@
+{
+  "issue": 32,
+  "worker": "clawbie",
+  "run_id": "2026-06-29-clawbie-loop-001",
+  "branch": "agent/clawbie/32-worker-loop",
+  "claimed_at": "2026-06-28T23:23:00Z",
+  "status": "claimed",
+  "lease_until": "2026-06-29T03:23:00Z",
+  "execution_strategy": "bootstrap delivery of loop runbook + authorization proposal + rationale; first dry-run of claim→branch→PR chain. Awaiting jlcbk review before arming scheduler.",
+  "deliverables": {
+    "proposal": "data/proposals/rule_changes/2026-06-29-clawbie-worker-loop.md",
+    "runbook": "data/runbooks/clawbie-worker-loop.md",
+    "rationale": "data/exploration/2026-06-29-worker-loop-rationale.md",
+    "run_summary": "data/runs/2026-06-29/2026-06-29-clawbie-loop-001.summary.md"
+  }
+}
