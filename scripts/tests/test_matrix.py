@@ -252,7 +252,12 @@ def test_projects_zone_authorization():
     """Operating-method/projects split: projects/** is a writable zone for
     operated business projects, parallel to data/**. The split must not weaken
     the other boundaries: rules/** stays read-only and .github/docs stay
-    proposal_required."""
+    proposal_required.
+
+    NOTE: project isolation is SOFT at the policy layer — projects/** is a
+    single shared writable zone (any project writable). Cross-project write
+    protection lives in the run validator (write_wrong_project check), not here.
+    These assertions cover the policy-zone level only."""
     print("\n== projects/ zone authorization ==")
 
     # 1. projects/** write -> PASS (no block, no finding) — same as data/**
@@ -386,6 +391,52 @@ def test_issue_derivation():
            validate_run.issue_from_branch("agent/local-code-worker-01/5-hooks-validator") == 5)
     expect("issue_from_branch on non-agent branch -> None",
            validate_run.issue_from_branch("main") is None)
+
+
+def test_project_consistency_check():
+    """SOFT isolation: writing into a project tree that differs from the claim's
+    project is BLOCKed; matching project is PASS; missing claim/project is skipped."""
+    print("\n== Project-consistency check (soft isolation) ==")
+    fs = FakeState()
+    try:
+        # 1. matching project -> PASS
+        fs.claim = {"issue": 18, "project": "fx-strategy-research", "status": "released"}
+        fs.changed = ["projects/fx-strategy-research/experiments/run.py",
+                      "data/tasks/TASKS.md"]
+        fs.install()
+        r = validate_run.check_changed_files_match_project(18)
+        expect("matching project -> PASS", r["level"] == "PASS", str(r["detail"]))
+
+        # 2. cross-project write -> BLOCK
+        fs.changed = ["projects/other-project/experiments/x.md",
+                      "projects/fx-strategy-research/runs/r.md"]
+        fs.install()
+        r = validate_run.check_changed_files_match_project(18)
+        expect("cross-project write -> BLOCK", r["level"] == "BLOCK", str(r["detail"]))
+        expect("wrong file named in detail", "other-project" in r["detail"], str(r["detail"]))
+
+        # 3. writes only outside projects/ (data/**) -> PASS (unconstrained)
+        fs.claim = {"issue": 5, "project": "self-evo", "status": "released"}
+        fs.changed = ["data/tasks/TASKS.md", "data/memory/hot/project/goals.md"]
+        fs.install()
+        r = validate_run.check_changed_files_match_project(5)
+        expect("data/** only -> PASS", r["level"] == "PASS", str(r["detail"]))
+
+        # 4. legacy claim without project field -> PASS (skipped, not blocked)
+        fs.claim = {"issue": 5, "status": "released"}  # no project
+        fs.changed = ["projects/anything/x.md"]
+        fs.install()
+        r = validate_run.check_changed_files_match_project(5)
+        expect("legacy claim (no project) -> PASS (skipped)",
+               r["level"] == "PASS", str(r["detail"]))
+
+        # 5. no claim at all -> PASS (skipped)
+        fs.claim = None
+        fs.install()
+        r = validate_run.check_changed_files_match_project(5)
+        expect("no claim -> PASS (skipped)", r["level"] == "PASS", str(r["detail"]))
+    finally:
+        restore_accessors()
 
 
 # --------------------------------------------------------------------------- #
@@ -580,6 +631,7 @@ def main() -> int:
     test_draft_pr_gate()
     test_run_summary_specificity()
     test_issue_derivation()
+    test_project_consistency_check()
     test_stop_matrix()
     test_stop_loop_cap()
     test_stop_emit_contract()

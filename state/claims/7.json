@@ -1,5 +1,6 @@
 {
   "issue": 7,
+  "project": "self-evo",
   "worker": "scout-worker-01",
   "run_id": "2026-06-21-run-003",
   "branch": "agent/scout-worker-01/7-autonomous-agent-ecosystem",

@@ -561,6 +561,67 @@ def test_stage_r_no_suitable_issue_when_all_claimed() -> None:
         shutil.rmtree(tmp, ignore_errors=True)
 
 
+def test_stage_r_project_filter_restricts_issue_pool() -> None:
+    print("\n== Stage R --project adds a project:<name> label filter ==")
+    tmp = _seed_repo(ignore_runtime=True)
+    try:
+        seen_labels: dict = {}
+
+        def fetcher(repo_root, *, labels, limit):
+            seen_labels["labels"] = list(labels)
+            return []  # no issues -> noop, we only assert the filter here
+
+        tick.run_stage_r_tick(
+            tmp, run_id="project-filter", issue_fetcher=fetcher,
+            project="fx-strategy-research",
+        )
+        expect("project filter injected as label",
+               "project:fx-strategy-research" in seen_labels["labels"],
+               str(seen_labels))
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
+def test_stage_r_project_filter_combines_with_other_labels() -> None:
+    print("\n== Stage R --project combines with --label (AND semantics) ==")
+    tmp = _seed_repo(ignore_runtime=True)
+    try:
+        seen_labels: dict = {}
+
+        def fetcher(repo_root, *, labels, limit):
+            seen_labels["labels"] = list(labels)
+            return []
+
+        tick.run_stage_r_tick(
+            tmp, run_id="project-and-label", issue_fetcher=fetcher,
+            labels=["risk:low"], project="self-evo",
+        )
+        expect("both risk:low and project:self-evo present",
+               "risk:low" in seen_labels["labels"]
+               and "project:self-evo" in seen_labels["labels"],
+               str(seen_labels))
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
+def test_stage_r_no_project_keeps_global_pool() -> None:
+    print("\n== Stage R without --project keeps the global issue pool ==")
+    tmp = _seed_repo(ignore_runtime=True)
+    try:
+        seen_labels: dict = {}
+
+        def fetcher(repo_root, *, labels, limit):
+            seen_labels["labels"] = list(labels)
+            return []
+
+        tick.run_stage_r_tick(tmp, run_id="no-project", issue_fetcher=fetcher)
+        expect("no project label injected",
+               not any(l.startswith("project:") for l in seen_labels["labels"]),
+               str(seen_labels))
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
 def test_gh_issue_list_command_is_read_only() -> None:
     print("\n== GitHub issue list command is read-only ==")
     cmd = tick.build_gh_issue_list_command(labels=["risk:low", "loop"], limit=5)
@@ -596,6 +657,9 @@ def main() -> int:
     test_stage_r_skips_issue_with_assignees()
     test_stage_r_skips_issue_with_active_claim_label()
     test_stage_r_no_suitable_issue_when_all_claimed()
+    test_stage_r_project_filter_restricts_issue_pool()
+    test_stage_r_project_filter_combines_with_other_labels()
+    test_stage_r_no_project_keeps_global_pool()
     test_gh_issue_list_command_is_read_only()
     print("\n" + "=" * 48)
     print(f"RESULT: {PASS} passed, {FAIL} failed")

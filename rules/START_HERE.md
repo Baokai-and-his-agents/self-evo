@@ -40,17 +40,24 @@ Before doing any task work, read:
 - Work on exactly one claimed GitHub Issue per run.
 - If a needed resource is not approved in `rules/RESOURCE_APPROVALS.yaml`, request approval instead of using it.
 - Before building from scratch, search for existing mature solutions first.
-- Prefer writing outputs under `data/**` unless the issue explicitly requires code or rule proposals.
+- Prefer writing outputs under `data/**` (for `project:self-evo`) or
+  `projects/<project>/**` (for business projects) unless the issue explicitly
+  requires code or rule proposals.
 
 ## Task Flow
 
 1. Find open GitHub Issues for this repository.
-2. Select one suitable issue according to `rules/TASK_POLICY.md`.
-3. Claim it with a GitHub Issue comment including worker identity, branch name, lease expiration, and run id.
-4. Check permissions and resource approvals.
-5. Work only within the allowed scope.
-6. Record evidence under `data/**`.
-7. Update the GitHub Issue before stopping.
+2. Identify the issue's `project:<name>` label. Business work goes under
+   `projects/<name>/`; tasks labelled `project:self-evo` belong to the operating
+   method itself and stay under `data/**`.
+3. Select one suitable issue according to `rules/TASK_POLICY.md`.
+4. Claim it with a GitHub Issue comment including worker identity, project,
+   branch name, lease expiration, and run id.
+5. Check permissions and resource approvals.
+6. Work only within the allowed scope, and within the matching project tree.
+7. Record evidence under `data/**` (for `project:self-evo`) or
+   `projects/<name>/**` (for business projects).
+8. Update the GitHub Issue before stopping.
 
 ## Before Stopping
 

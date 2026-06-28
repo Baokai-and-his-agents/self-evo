@@ -718,6 +718,7 @@ def run_stage_r_tick(
     labels: list[str] | None = None,
     limit: int = 20,
     issue_fetcher: Any | None = None,
+    project: str | None = None,
     # NOTE: the CLI (main()) does not expose this; real runs leave it empty, so
     # the patch check falls back to empty_patch and the outcome is always
     # `needs_revision`. `ready_for_promote` is only reached when a caller
@@ -729,6 +730,10 @@ def run_stage_r_tick(
     Reads open issues, picks at most one, writes runtime-only candidate
     artifacts under ``.self-evo/runtime/runs/<run_id>/``, and runs an advisory
     Runtime Review. Nothing canonical or on GitHub is mutated.
+
+    If ``project`` is given, only issues carrying the ``project:<name>`` label
+    are considered (translated to a ``--label project:<name>`` filter), so the
+    tick works within a single project's issue pool instead of the global one.
     """
     repo_root = repo_root.resolve()
     require_runtime_ignored(repo_root)
@@ -737,7 +742,9 @@ def run_stage_r_tick(
     resolved_run_id = run_id or format_run_id(started)
     validate_run_id(resolved_run_id)
     writer = RuntimeWriter(repo_root, resolved_run_id)
-    label_filter = labels or []
+    label_filter = list(labels or [])
+    if project:
+        label_filter.append(f"project:{project}")
     fetcher = issue_fetcher or fetch_open_issues
     started_at = started.isoformat().replace("+00:00", "Z")
 
@@ -821,6 +828,11 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         help="GitHub issue label filter; may be provided more than once",
     )
     parser.add_argument(
+        "--project",
+        help="restrict the tick to one project's issues by adding a "
+        "`project:<name>` label filter (e.g. fx-strategy-research)",
+    )
+    parser.add_argument(
         "--limit",
         type=int,
         default=20,
@@ -840,6 +852,7 @@ def main(argv: list[str] | None = None) -> int:
                 run_id=args.run_id,
                 labels=args.label,
                 limit=args.limit,
+                project=args.project,
             )
     except (RuntimeBoundaryError, IssueFetchError) as exc:
         payload = {

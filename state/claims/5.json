@@ -1,5 +1,6 @@
 {
   "issue": 5,
+  "project": "self-evo",
   "worker": "local-code-worker-01",
   "run_id": "2026-06-18-run-002",
   "branch": "agent/local-code-worker-01/5-hooks-validator",

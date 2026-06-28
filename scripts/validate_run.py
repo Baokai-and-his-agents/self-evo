@@ -541,6 +541,47 @@ def check_no_unauthorized_rules_changes() -> dict:
     }
 
 
+def check_changed_files_match_project(issue_number: int) -> dict:
+    """SOFT project isolation: a worker may only write into the project tree
+    that matches the claimed issue's project. Cross-project writes (e.g. an
+    issue claimed for fx-strategy-research writing under projects/other/) are
+    blocked here, since the policy layer treats all of projects/** as writable.
+
+    Uses the claim record's `project` field as the source of truth (mirrored
+    from the issue's `project:<name>` label). Falls back gracefully when no
+    claim or no project field exists (legacy data), so this never blocks on
+    missing metadata — it only blocks on a confirmed mismatch."""
+    claim = claim_for_issue(issue_number)
+    if not claim:
+        return {"check": "changed_files_match_project", "level": "PASS",
+                "detail": f"no claim record for issue #{issue_number}; project check skipped"}
+    expected = claim.get("project")
+    if not expected:
+        return {"check": "changed_files_match_project", "level": "PASS",
+                "detail": f"claim for issue #{issue_number} has no project field; check skipped"}
+    policy = _policy.load_policy()
+    changed = changed_files(policy)
+    prefix = "projects/"
+    wrong: list[str] = []
+    for f in changed:
+        rel = f.replace("\\", "/")
+        if not rel.startswith(prefix):
+            continue  # writes outside projects/ (data/**, etc.) are unconstrained here
+        rest = rel[len(prefix):]
+        seg = rest.split("/", 1)[0]  # the <project> segment
+        if seg != expected:
+            wrong.append(f"{f} (project:{seg})")
+    if not wrong:
+        return {"check": "changed_files_match_project", "level": "PASS",
+                "detail": f"all projects/** changes match claim project '{expected}'"}
+    return {
+        "check": "changed_files_match_project",
+        "level": "BLOCK",
+        "detail": f"changed files belong to a different project than claim "
+                  f"'{expected}': " + "; ".join(wrong),
+    }
+
+
 # --------------------------------------------------------------------------- #
 # Orchestration                                                               #
 # --------------------------------------------------------------------------- #
@@ -557,6 +598,7 @@ def collect_findings(policy, *, issue_number: int, date_str: str) -> list[dict]:
         check_tasks_md_matches_issue(issue_number),
         check_changed_files_within_authorized(policy),
         check_no_unauthorized_rules_changes(),
+        check_changed_files_match_project(issue_number),
     ]
 
 

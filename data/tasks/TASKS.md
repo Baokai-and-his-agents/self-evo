@@ -33,8 +33,6 @@ No open tasks.
 - pr: https://github.com/Baokai-and-his-agents/self-evo/pull/19
 - status_update: 核心架构修正进行中，已完成事件模型、cycle管理、G置换逻辑、成本单位统一
 
-## Review
-
 ### T-20260623-003 - Issue #15
 
 - project: fx-strategy-research

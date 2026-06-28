@@ -37,6 +37,25 @@ permission:external-resource
 permission:needs-human
 ```
 
+## Project Labels
+
+Every issue and PR must carry exactly one `project:` label recording which project
+(or the operating method itself) it belongs to. The label value MUST equal the
+directory name under `projects/`:
+
+```text
+project:fx-strategy-research
+project:self-evo
+```
+
+- `project:<name>` corresponds one-to-one with `projects/<name>/`.
+- `project:self-evo` marks tasks that belong to the operating method itself
+  (protocol dry-runs, ecosystem research, governance), not to any business
+  project. Their output stays under `data/**`.
+- This label is the authoritative project signal consumed by the Stage R loop
+  (`--label project:<name>` filter), the claim record, and the run validator's
+  project-consistency check.
+
 ## Claim Rules
 
 Each worker run must claim exactly one issue.
@@ -46,6 +65,7 @@ Claim comment format:
 ```md
 Agent claim:
 - worker: local-code-worker-01
+- project: <project-label-value, e.g. fx-strategy-research or self-evo>
 - run_id: 2026-06-18-run-001
 - branch: agent/local-code-worker-01/<issue-number>-<slug>
 - lease_until: 2026-06-18T18:30:00+08:00

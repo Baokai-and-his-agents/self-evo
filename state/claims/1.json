@@ -1,5 +1,6 @@
 {
   "issue": 1,
+  "project": "self-evo",
   "worker": "local-code-worker-01",
   "run_id": "2026-06-18-run-001",
   "branch": "agent/local-code-worker-01/1-protocol-dry-run",
