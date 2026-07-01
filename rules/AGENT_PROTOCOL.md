@@ -34,9 +34,10 @@ When writing GitHub comments or run summaries, include both.
 1. Read `rules/START_HERE.md`.
 2. Load the required rule files.
 3. Inspect open GitHub Issues.
-4. Claim exactly one issue.
+4. Claim exactly one issue, recording its `project:<name>` label.
 5. Check permission and resource approvals.
-6. Work under `data/**` by default.
+6. Work under `data/**` for `project:self-evo` tasks, or `projects/<project>/**`
+   for business project tasks (matching the claimed issue's project).
 7. Never modify `rules/**` directly.
 8. Produce evidence and a run summary.
 9. Ask for human approval when blocked.
@@ -46,7 +47,9 @@ When writing GitHub comments or run summaries, include both.
 
 `rules/**` is the rule zone. The worker may read it but must not directly edit it.
 
-`data/**` is the work zone. The worker may write task evidence, notes, run logs, exploration outputs, proposals, and memory candidates there when allowed by policy.
+`data/**` is the work zone for the operating method itself (`project:self-evo`): system-level task evidence, notes, run logs, exploration outputs, proposals, and memory candidates.
+
+`projects/<project>/**` is the work zone for each business project: its experiments, exploration, runs, and memory. The worker may only write into the project tree matching the claimed issue's `project:<name>` label; the run validator blocks cross-project writes.
 
 If a rule needs to change, write a proposal under:
 

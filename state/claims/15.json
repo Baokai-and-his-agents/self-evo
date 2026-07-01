@@ -1,5 +1,6 @@
 {
   "issue": 15,
+  "project": "fx-strategy-research",
   "worker": "scout-worker-fx-sizing-01",
   "run_id": "2026-06-23-fx-sizing-001",
   "branch": "agent/scout-worker-fx-sizing-01/15-progressive-probe-sizing",

@@ -6,9 +6,17 @@ labels: ["status:open"]
 assignees: ""
 ---
 
+<!-- Required: add a `project:<name>` label matching the target project
+     directory (e.g. project:fx-strategy-research) or project:self-evo.
+     See rules/TASK_POLICY.md "Project Labels". -->
+
 ## Goal
 
 What should be completed?
+
+## Project
+
+Which project does this belong to? (must match a `project:<name>` label and a `projects/<name>/` directory, or `project:self-evo`)
 
 ## Type
 

@@ -6,6 +6,10 @@ labels: ["type:scout", "status:open"]
 assignees: ""
 ---
 
+<!-- Required: add a `project:<name>` label matching the target project
+     directory (e.g. project:fx-strategy-research) or project:self-evo.
+     See rules/TASK_POLICY.md "Project Labels". -->
+
 ## Direction
 
 What broad direction should the agent explore?
