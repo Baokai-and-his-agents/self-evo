@@ -10,45 +10,7 @@ No open tasks.
 
 ## Claimed
 
-### T-20260629-001 - Issue #32
-
-- project: self-evo
-- type: build
-- status: claimed
-- risk: low
-- permission: data-write, repo-branch-write
-- goal: 引入 clawbie 会话级 worker loop（runbook + 授权提案 + 首次 dry-run）
-- source: https://github.com/Baokai-and-his-agents/self-evo/issues/32
-- branch: agent/clawbie/32-worker-loop
-- github_issue: 32
-- worker_identity: clawbie
-- run_id: 2026-06-29-clawbie-loop-001
-- claimed_at: 2026-06-28T23:23:00Z
-- lease_until: 2026-06-29T03:23:00Z
-- claim: claimed (lease active)
-- heartbeat: running
-- execution_strategy: bootstrap delivery; awaiting jlcbk review before arming scheduler
-- delivery: Draft PR #33 opened by clawbie, awaiting jlcbk review; scheduler NOT armed
-- pr: https://github.com/Baokai-and-his-agents/self-evo/pull/33
-
-### T-20260629-002 - Issue #28
-
-- project: self-evo
-- type: scout
-- status: claimed
-- risk: low
-- goal: Stage R roadmap 探索 brief —— M1/M2/M4 在 worker loop 落地后的重框定
-- source: https://github.com/Baokai-and-his-agents/self-evo/issues/28
-- branch: agent/clawbie/28-stage-r-roadmap-brief
-- github_issue: 28
-- worker_identity: clawbie
-- run_id: 2026-06-29-clawbie-loop-002
-- claimed_at: 2026-06-28T23:37:44Z
-- lease_until: 2026-06-29T03:37:44Z
-- claim: claimed (lease active)
-- heartbeat: running
-- delivery: Draft PR #34 opened by clawbie, awaiting jlcbk review
-- pr: https://github.com/Baokai-and-his-agents/self-evo/pull/34
+No claimed tasks.
 
 ## Review
 
@@ -120,6 +82,48 @@ No open tasks.
 - pr: https://github.com/Baokai-and-his-agents/self-evo/pull/14
 
 ## Done
+
+### T-20260629-002 - Issue #28
+
+- project: self-evo
+- type: scout
+- status: done
+- risk: low
+- goal: Stage R roadmap 探索 brief —— M1/M2/M4 在 worker loop 落地后的重框定
+- source: https://github.com/Baokai-and-his-agents/self-evo/issues/28
+- branch: agent/clawbie/28-stage-r-roadmap-brief
+- github_issue: 28
+- worker_identity: clawbie
+- run_id: 2026-06-29-clawbie-loop-002
+- claimed_at: 2026-06-28T23:37:44Z
+- released_at: 2026-07-02T00:00:00Z
+- claim: released
+- heartbeat: stopped
+- delivery: PR #34 merged by jlcbk
+- pr: https://github.com/Baokai-and-his-agents/self-evo/pull/34
+- completed_at: 2026-07-02
+
+### T-20260629-001 - Issue #32
+
+- project: self-evo
+- type: build
+- status: done
+- risk: low
+- permission: data-write, repo-branch-write
+- goal: 引入 clawbie 会话级 worker loop（runbook + 授权提案 + 首次 dry-run）
+- source: https://github.com/Baokai-and-his-agents/self-evo/issues/32
+- branch: agent/clawbie/32-worker-loop
+- github_issue: 32
+- worker_identity: clawbie
+- run_id: 2026-06-29-clawbie-loop-001
+- claimed_at: 2026-06-28T23:23:00Z
+- released_at: 2026-07-02T00:00:00Z
+- claim: released
+- heartbeat: stopped
+- execution_strategy: bootstrap delivery; scheduler NOT armed (awaiting jlcbk go)
+- delivery: PR #33 merged by jlcbk
+- pr: https://github.com/Baokai-and-his-agents/self-evo/pull/33
+- completed_at: 2026-07-02
 
 ### T-20260621-003 - Issue #7
 
