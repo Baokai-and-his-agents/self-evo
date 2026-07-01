@@ -1,0 +1,15 @@
+{
+  "issue": 28,
+  "project": "self-evo",
+  "worker": "clawbie",
+  "run_id": "2026-06-29-clawbie-loop-002",
+  "branch": "agent/clawbie/28-stage-r-roadmap-brief",
+  "claimed_at": "2026-06-28T23:37:44Z",
+  "status": "claimed",
+  "lease_until": "2026-06-29T03:37:44Z",
+  "execution_strategy": "type:scout tick: produce exploration brief re-framing #28's M1/M2/M4 in light of the new worker loop. Output under data/exploration/. No code changes.",
+  "deliverables": {
+    "brief": "data/exploration/2026-06-29-stage-r-roadmap-brief.md",
+    "run_summary": "data/runs/2026-06-29/2026-06-29-clawbie-loop-002.summary.md"
+  }
+}

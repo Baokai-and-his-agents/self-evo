@@ -50,14 +50,14 @@
     },
     {
       "worker": "clawbie",
-      "run_id": "2026-06-29-clawbie-loop-001",
-      "issue": 32,
+      "run_id": "2026-06-29-clawbie-loop-002",
+      "issue": 28,
       "project": "self-evo",
-      "branch": "agent/clawbie/32-worker-loop",
+      "branch": "agent/clawbie/28-stage-r-roadmap-brief",
       "status": "running",
-      "phase": "bootstrap delivery / awaiting jlcbk review",
-      "last_seen": "2026-06-28T23:23:00Z"
+      "phase": "scout brief delivered / awaiting jlcbk review",
+      "last_seen": "2026-06-28T23:37:44Z"
     }
   ],
-  "updated_at": "2026-06-28T23:23:00Z"
+  "updated_at": "2026-06-28T23:37:44Z"
 }
