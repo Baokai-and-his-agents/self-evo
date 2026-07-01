@@ -52,6 +52,7 @@
       "worker": "clawbie",
       "run_id": "2026-06-29-clawbie-loop-001",
       "issue": 32,
+      "project": "self-evo",
       "branch": "agent/clawbie/32-worker-loop",
       "status": "running",
       "phase": "bootstrap delivery / awaiting jlcbk review",

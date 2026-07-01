@@ -1,5 +1,6 @@
 {
   "issue": 32,
+  "project": "self-evo",
   "worker": "clawbie",
   "run_id": "2026-06-29-clawbie-loop-001",
   "branch": "agent/clawbie/32-worker-loop",
