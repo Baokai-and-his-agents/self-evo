@@ -47,7 +47,17 @@
       "status": "stopped",
       "phase": "implementation complete / final review",
       "last_seen": "2026-06-23T19:30:00+08:00"
+    },
+    {
+      "worker": "clawbie",
+      "run_id": "2026-06-29-clawbie-loop-001",
+      "issue": 32,
+      "project": "self-evo",
+      "branch": "agent/clawbie/32-worker-loop",
+      "status": "running",
+      "phase": "bootstrap delivery / awaiting jlcbk review",
+      "last_seen": "2026-06-28T23:23:00Z"
     }
   ],
-  "updated_at": "2026-06-23T19:30:00+08:00"
+  "updated_at": "2026-06-28T23:23:00Z"
 }
