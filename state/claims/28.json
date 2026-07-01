@@ -1,5 +1,6 @@
 {
   "issue": 28,
+  "project": "self-evo",
   "worker": "clawbie",
   "run_id": "2026-06-29-clawbie-loop-002",
   "branch": "agent/clawbie/28-stage-r-roadmap-brief",
