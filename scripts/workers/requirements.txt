@@ -1,0 +1,7 @@
+# Scout Runner 依赖
+# 安装: pip3 install -r scripts/workers/requirements.txt
+#
+# Runner 解析 data/exploration/scout-sources.yaml 需要 PyYAML。
+# 自写的极简 YAML parser 被证明不可靠(见 docs/REFACTOR-final-review-by-codex.md),
+# 已移除,改为强制要求 PyYAML。
+PyYAML>=5.1

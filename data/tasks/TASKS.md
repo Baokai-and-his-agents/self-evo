@@ -6,7 +6,27 @@ This file is not the source of truth. GitHub Issues are the primary task state.
 
 ## Open
 
-No open tasks.
+### T-20260704-001 - Issue #38
+
+- project: self-evo
+- type: build
+- status: open
+- risk: medium
+- permission: data-write, repo-branch-write, public-web-read
+- goal: 交付 Autonomous Scout Runner (Stage A) 垂直切片
+- source: https://github.com/Baokai-and-his-agents/self-evo/issues/38
+- branch: agent/refactor-worker-01/scout-runner-stage-a
+- github_issue: 38
+- worker_identity: refactor-worker-01
+- run_id: 2026-07-04-refactor-001
+- claimed_at: 2026-07-04T19:18:00+0800
+- released_at: 2026-07-04T23:10:00+0800
+- claim: released
+- heartbeat: stopped
+- execution_strategy: GLM 主导 + Codex 独立审查(4 轮,实验性,非强制流程)
+- delivery: Draft PR #37 opened by clawbie, awaiting jlcbk review
+- pr: https://github.com/Baokai-and-his-agents/self-evo/pull/37
+- scope_note: 本 PR 仅含 data/scripts/state 实现;README/.gitignore/docs 改动拆到单独的文档 PR
 
 ## Claimed
 
