@@ -1,0 +1,44 @@
+# Scout Source Registry — 实例 (Stage A)
+# 对应 schema: data/exploration/scout-source-registry.schema.yaml
+# 所有来源在 public-web-read scope 内 (rules/RESOURCE_APPROVALS.yaml 已批准)
+# 新增公开只读来源可直接在此添加;需 token/付费/写操作须先提交 resource approval proposal
+
+version: "1.0"
+
+sources:
+  - id: hacker-news-top
+    type: api
+    base_url: https://hacker-news.firebaseio.com/v0/topstories.json
+    access_mode: public-web-read
+    resource_approval_id: public-web-read
+    required_scopes:
+      - read_public_docs
+    enabled: true
+    cursor_strategy: item_id
+    notes: "HN top stories IDs (JSON array); fetch top N then item details. First version reads ID list only."
+
+  - id: arxiv-cs-ai-recent
+    type: rss
+    base_url: https://export.arxiv.org/api/query?search_query=cat:cs.AI&sortBy=submittedDate&sortOrder=descending&max_results=20
+    access_mode: public-web-read
+    resource_approval_id: public-web-read
+    required_scopes:
+      - read_public_docs
+    enabled: true
+    cursor_strategy: timestamp
+    notes: "arXiv CS.AI recent submissions (Atom XML — must use type: rss so Atom parser is used, not JSON)."
+
+  - id: github-trending-daily
+    type: web
+    base_url: https://github.com/trending
+    access_mode: public-web-read
+    resource_approval_id: public-web-read
+    required_scopes:
+      - read_public_pages
+    enabled: true
+    cursor_strategy: timestamp
+    notes: "GitHub trending HTML. Public web scrape, no login."
+
+# 延后清单 (审查报告 Q5 结论: 第一版砍掉, 单 worker 手动启动阶段不需要):
+#   - Product Hunt API: 需 token, 未批准 (schema 第 220 行已注明)
+#   - Reddit / X / Discord: 高噪声, 待 preference learner 建立后再接入
