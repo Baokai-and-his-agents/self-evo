@@ -1,8 +1,3 @@
 .DS_Store
 .claude/
 .self-evo/runtime/
-# Scout runner 去重游标是运行时状态,保持本地,不进 git
-state/scout-cursor.json
-# Scout runner 每次运行产生的日报是运行时产物,保持本地
-# (保留已 tracked 的历史日报和 README;只忽略未来的 *-scout.md 自动产物)
-data/exploration/daily_reports/*-scout.md

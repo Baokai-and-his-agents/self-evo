@@ -57,7 +57,17 @@
       "status": "stopped",
       "phase": "idle — all in-flight PRs merged; awaiting next issue",
       "last_seen": "2026-07-02T00:00:00Z"
+    },
+    {
+      "worker": "refactor-worker-01",
+      "run_id": "2026-07-04-refactor-001",
+      "issue": 38,
+      "project": "self-evo",
+      "branch": "agent/refactor-worker-01/scout-runner-stage-a",
+      "status": "stopped",
+      "phase": "PR #37 in review — claim released",
+      "last_seen": "2026-07-04T23:10:00+0800"
     }
   ],
-  "updated_at": "2026-07-02T00:00:00Z"
+  "updated_at": "2026-07-04T23:10:00+0800"
 }

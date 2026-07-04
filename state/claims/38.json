@@ -1,0 +1,10 @@
+{
+  "issue": 38,
+  "project": "self-evo",
+  "worker": "refactor-worker-01",
+  "run_id": "2026-07-04-refactor-001",
+  "branch": "agent/refactor-worker-01/scout-runner-stage-a",
+  "claimed_at": "2026-07-04T19:18:00+0800",
+  "released_at": "2026-07-04T23:10:00+0800",
+  "status": "released"
+}

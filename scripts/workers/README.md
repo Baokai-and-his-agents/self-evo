@@ -25,17 +25,26 @@ Runner 强制执行以下硬限制,超限即停止并保留部分结果:
 
 **Token/Cost:** fetch 接口(urllib/gh)不暴露模型 token 用量,如实记录为 `unknown`,不伪装可强制控制(README 阶段 A 诚实规则)。
 
+## 前置条件
+
+- Python 3(README 资源表已要求)
+- PyYAML ≥ 5.1(解析 sources registry;自写 parser 被证明不可靠已移除)
+
+```bash
+pip3 install -r scripts/workers/requirements.txt
+```
+
 ## 用法
 
 ```bash
 # 默认边界
-python scripts/workers/scout_runner.py
+python3 scripts/workers/scout_runner.py
 
 # 自定义边界(快速测试)
-python scripts/workers/scout_runner.py --max-wall-clock 30 --max-items-kept 5
+python3 scripts/workers/scout_runner.py --max-wall-clock 30 --max-items-kept 5
 
 # 指定 sources 文件
-python scripts/workers/scout_runner.py --sources-file path/to/sources.yaml
+python3 scripts/workers/scout_runner.py --sources-file path/to/sources.yaml
 ```
 
 ## 输出
@@ -47,7 +56,7 @@ python scripts/workers/scout_runner.py --sources-file path/to/sources.yaml
 ## 测试
 
 ```bash
-python scripts/tests/test_scout_runner.py
+python3 scripts/tests/test_scout_runner.py
 ```
 
 42 个单元测试,网络无关(解析器喂入固定内容,边界强制逻辑独立测试)。

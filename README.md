@@ -11,7 +11,7 @@
 - 将结果沉淀为项目资产、技能、记忆和下一步决策；
 - 通过 GitHub Issue、Draft PR 和中文审阅材料与人类持续协作。
 
-> 当前阶段：单 Agent 协作协议、GitHub 交付流程、安全 Hooks、运行验证器、Scout 研究路线和 **Autonomous Scout Runner (Stage A) 垂直切片**已经建立；Runner 已能在真实来源上跑通抓取→去重→决策日报的闭环（已知限制见 `scripts/workers/README.md`）；定时运行、多 Agent 调度和语义去重仍待实现。
+> 当前阶段：单 Agent 协作协议、GitHub 交付流程、安全 Hooks、运行验证器和 Scout 研究路线已经建立；Autonomous Scout 的实际 Runner、增量抓取、定时运行和多 Agent 调度仍待实现。
 
 ## 项目目标
 
@@ -174,18 +174,19 @@ Agent 在权限范围内调研、学习、实验或实现，并保留：
 - **探索工作流**：exploration brief、capability map、existing-work survey、reuse map、项目候选和决策报告。
 - **运行时数据隔离**：telemetry、cursor、数据库、缓存和完整 ledger 保持本地且 gitignored；精简决策证据可以进入 Git。
 - **Scout 来源契约**：已定义来源 registry schema，以及能力批准与具体来源 allowlist 的分层模型。
-- **Autonomous Scout Runner (Stage A)**：`scripts/workers/scout_runner.py` 已实现，强制墙钟/来源数/保留数/重试/超时边界，URL hash 跨运行去重，生成决策导向日报。对接 `scout-source-registry.schema.yaml` 契约。来源实例 `data/exploration/scout-sources.yaml` 已建立（HN / arXiv / GitHub Trending）。已知限制见 `scripts/workers/README.md`。
 
 ### 尚未实现
 
+- 可运行的 `scripts/workers/scout_runner.py`；
+- 实际的 `data/exploration/scout-sources.yaml` 来源实例；
+- 来源抓取、cursor、跨运行去重和恢复；
+- 自动生成每日 Scout 决策报告；
 - GitHub 人工反馈自动同步到 review labels；
 - 定时唤醒和长期无人值守 supervisor；
 - GitHub Issue 与本地任务镜像的自动同步；
 - 多 Agent 自动分工、并发 claim 和结果聚合；
 - 大文件、PDF、视频和媒体资产的统一外部存储适配；
-- OpenViking、SQLite FTS 或其它记忆索引的正式接入；
-- 语义去重（当前为 URL hash，blueprint 第 49 行"复杂性由证据触发"原则下延后）；
-- GitHub Trending 真实仓库抓取（当前纯 HTML 抓取受 JS 渲染限制，见 workers/README.md）。
+- OpenViking、SQLite FTS 或其它记忆索引的正式接入。
 
 ## 发展规划
 
@@ -193,13 +194,11 @@ Agent 在权限范围内调研、学习、实验或实现，并保留：
 
 当前最高优先级是交付一个真实可运行、受边界约束的 Scout：
 
-1. ~~批准 `scripts/workers/**` 权限方案~~（复用现有 github-repo-issue-and-branch-work + public-web-read，无需新增）；
-2. ~~建立来源 registry 实例和 Scout runner~~ ✅ 已交付（`scripts/workers/scout_runner.py` + scout-sources.yaml）；
-3. ~~实现 cursor、去重和可恢复 ledger~~ ✅ 已交付（URL hash 去重 + cursor 持久化；ledger 按"复杂性由证据触发"降级为最简实现）；
-4. ~~生成面向决策的日报与项目候选~~ ✅ 已交付（`data/exploration/daily_reports/<run-id>-scout.md`）；
-5. 接入 GitHub 人工反馈标签（延后：单 worker 阶段手动 review 够用）。
-
-阶段 A 核心闭环已完成。Runner 边界设计依据见 `scripts/workers/README.md`。
+1. 批准 `scripts/workers/**` 权限方案；
+2. 建立来源 registry 实例和 Scout runner；
+3. 实现 cursor、去重和可恢复 ledger；
+4. 生成面向决策的日报与项目候选；
+5. 接入 GitHub 人工反馈标签。
 
 Runner 首先强制执行可实际控制的边界：
 
@@ -332,9 +331,6 @@ python scripts/validate_run.py --issue <number>
 | [`data/proposals/`](data/proposals/) | 规则、资源和项目候选提案 |
 | [`projects/fx-strategy-research/`](projects/fx-strategy-research/) | 业务项目产出区：FX 量化策略研究的实验、调研、运行记录与项目记忆 |
 | [`scripts/README.md`](scripts/README.md) | Hooks、Validator 和测试说明 |
-| [`scripts/workers/README.md`](scripts/workers/README.md) | Scout Runner 设计、边界、用法和已知限制 |
-| [`data/exploration/reuse_maps/2026-07-04-scout-runner.md`](data/exploration/reuse_maps/2026-07-04-scout-runner.md) | Scout Runner 复用地图（抓取层复用、决策层自研） |
-| [`docs/REFACTOR-direction-review.md`](docs/REFACTOR-direction-review.md) | 方向审查报告（5 个核心问题判断） |
 | [`rules/RESOURCE_APPROVALS.yaml`](rules/RESOURCE_APPROVALS.yaml) | 已批准的外部资源能力 |
 
 ## 安全与治理
