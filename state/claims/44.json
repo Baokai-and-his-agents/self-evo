@@ -1,0 +1,10 @@
+{
+  "issue": 44,
+  "project": "content-operator",
+  "worker": "content-writer-01",
+  "run_id": "2026-07-10-writing-001",
+  "branch": "agent/content-writer-01/44-beginner-content-batch",
+  "claimed_at": "2026-07-10T07:12:00+0800",
+  "lease_until": "2026-07-10T14:00:00+0800",
+  "status": "claimed"
+}
