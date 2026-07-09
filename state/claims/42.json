@@ -1,0 +1,10 @@
+{
+  "issue": 42,
+  "project": "content-operator",
+  "worker": "content-scout-worker-01",
+  "run_id": "2026-07-10-content-scout-001",
+  "branch": "agent/content-scout-worker-01/42-ai-agent-content-research",
+  "claimed_at": "2026-07-10T06:28:00+0800",
+  "lease_until": "2026-07-10T12:30:00+0800",
+  "status": "claimed"
+}
