@@ -1,0 +1,10 @@
+{
+  "issue": 40,
+  "project": "content-operator",
+  "worker": "local-code-worker-01",
+  "run_id": "2026-07-10-run-001",
+  "branch": "agent/local-code-worker-01/40-content-operator-bootstrap",
+  "claimed_at": "2026-07-10T06:19:39+0800",
+  "lease_until": "2026-07-10T08:30:00+0800",
+  "status": "claimed"
+}
