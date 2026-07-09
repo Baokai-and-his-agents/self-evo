@@ -34,6 +34,26 @@ No claimed tasks.
 
 ## Review
 
+### T-20260710-001 - Issue #40
+
+- project: content-operator
+- type: scout
+- status: review
+- risk: low
+- permission: external-resource, repo-branch-write
+- goal: 建立 AI Agent 内容生产项目与首轮调研契约
+- source: https://github.com/Baokai-and-his-agents/self-evo/issues/40
+- branch: agent/local-code-worker-01/40-content-operator-bootstrap
+- github_issue: 40
+- worker_identity: local-code-worker-01
+- run_id: 2026-07-10-run-001
+- claimed_at: 2026-07-10T06:19:39+0800
+- released_at: 2026-07-10T06:30:00+0800
+- claim: released
+- heartbeat: stopped
+- delivery: Draft PR #41 opened by clawbie, awaiting jlcbk review
+- pr: https://github.com/Baokai-and-his-agents/self-evo/pull/41
+
 ### T-20260623-004 - Issue #18
 
 - project: fx-strategy-research
