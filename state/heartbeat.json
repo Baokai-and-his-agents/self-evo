@@ -87,7 +87,17 @@
       "status": "stopped",
       "phase": "Draft PR #43 opened — awaiting human topic selection",
       "last_seen": "2026-07-10T07:05:00+0800"
+    },
+    {
+      "worker": "content-writer-01",
+      "run_id": "2026-07-10-writing-001",
+      "issue": 44,
+      "project": "content-operator",
+      "branch": "agent/content-writer-01/44-beginner-content-batch",
+      "status": "stopped",
+      "phase": "Draft PR #45 opened — awaiting human editorial review",
+      "last_seen": "2026-07-10T07:25:00+0800"
     }
   ],
-  "updated_at": "2026-07-10T07:05:00+0800"
+  "updated_at": "2026-07-10T07:25:00+0800"
 }
