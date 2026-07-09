@@ -94,10 +94,10 @@
       "issue": 44,
       "project": "content-operator",
       "branch": "agent/content-writer-01/44-beginner-content-batch",
-      "status": "running",
-      "phase": "three beginner drafts complete — preparing review evidence",
-      "last_seen": "2026-07-10T07:15:00+0800"
+      "status": "stopped",
+      "phase": "Draft PR #45 opened — awaiting human editorial review",
+      "last_seen": "2026-07-10T07:25:00+0800"
     }
   ],
-  "updated_at": "2026-07-10T07:15:00+0800"
+  "updated_at": "2026-07-10T07:25:00+0800"
 }
