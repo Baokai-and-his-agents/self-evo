@@ -6,6 +6,7 @@
 **Issue:** #42
 **Branch:** agent/content-scout-worker-01/42-ai-agent-content-research
 **Project:** content-operator
+**PR:** https://github.com/Baokai-and-his-agents/self-evo/pull/43
 
 ## Execution Summary
 

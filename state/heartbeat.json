@@ -84,10 +84,10 @@
       "issue": 42,
       "project": "content-operator",
       "branch": "agent/content-scout-worker-01/42-ai-agent-content-research",
-      "status": "running",
-      "phase": "research complete — preparing evidence and Draft PR",
-      "last_seen": "2026-07-10T06:55:00+0800"
+      "status": "stopped",
+      "phase": "Draft PR #43 opened — awaiting human topic selection",
+      "last_seen": "2026-07-10T07:05:00+0800"
     }
   ],
-  "updated_at": "2026-07-10T06:55:00+0800"
+  "updated_at": "2026-07-10T07:05:00+0800"
 }

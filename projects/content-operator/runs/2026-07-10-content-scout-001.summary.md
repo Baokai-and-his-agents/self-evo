@@ -5,6 +5,7 @@
 **Run ID:** 2026-07-10-content-scout-001  
 **Issue:** #42  
 **Project:** content-operator
+**PR:** https://github.com/Baokai-and-his-agents/self-evo/pull/43
 
 ## Execution Summary
 
@@ -44,4 +45,3 @@
 ## Next Step
 
 由 `jlcbk` 从前三项中选择第一篇。未经选择，不进入提纲或初稿阶段。
-
