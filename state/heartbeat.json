@@ -74,10 +74,10 @@
       "issue": 40,
       "project": "content-operator",
       "branch": "agent/local-code-worker-01/40-content-operator-bootstrap",
-      "status": "running",
-      "phase": "building project skeleton and first Scout contract",
-      "last_seen": "2026-07-10T06:19:39+0800"
+      "status": "stopped",
+      "phase": "Draft PR #41 opened — claim released for human review",
+      "last_seen": "2026-07-10T06:30:00+0800"
     }
   ],
-  "updated_at": "2026-07-10T06:19:39+0800"
+  "updated_at": "2026-07-10T06:30:00+0800"
 }
